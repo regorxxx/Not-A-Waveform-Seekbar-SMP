@@ -14,3 +14,16 @@ It's based on RMS or peak levels, instead of the actual waveform.
 		: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\ia32\\ffprobe.exe',
 ```
 4. Load seekbar.js in a blank panel.
+
+Waveform full
+![imagen](https://user-images.githubusercontent.com/83307074/214268040-55fe0213-2ddc-44e6-9286-68590f7b0eb9.png)
+Waveform partial + future
+![imagen](https://user-images.githubusercontent.com/83307074/214268107-22c3a76b-7a31-4b6e-b4e7-c401089e9817.png)
+Waveform partial
+![imagen](https://user-images.githubusercontent.com/83307074/214268200-64942fc4-458b-416b-a77d-eb14f17c0336.png)
+Bars full
+![imagen](https://user-images.githubusercontent.com/83307074/214268369-f12ffe73-6fc9-4685-8c93-05c5c74833ec.png)
+Bars partial
+![imagen](https://user-images.githubusercontent.com/83307074/214268312-0b5b9ee5-b399-4fdc-91b5-7b296bce2436.png)
+
+R. Click to configure. Configuration lost on restart.
