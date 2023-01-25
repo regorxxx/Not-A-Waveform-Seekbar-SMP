@@ -127,6 +127,7 @@ function _seekbar({
 	};
 	
 	this.paint = (gr) => {
+		if (!fb.IsPlaying) {this.current = [];} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
 		// Panel background
 		gr.FillSolidRect(this.x , this.y, this.w, this.h, this.colors.bg);
