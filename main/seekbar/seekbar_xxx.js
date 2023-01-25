@@ -51,6 +51,7 @@ function _seekbar({
 		this.current = [];
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
+			// Uncompressed file -> Compressed file -> Analyze
 			if (_isFile(seekbarFile)) {
 				this.current = _jsonParseFile(seekbarFile, this.codePage) || [];
 			} else if (_isFile(seekbarFile + '.lz')) {
@@ -61,6 +62,7 @@ function _seekbar({
 				window.Repaint();
 				this.analyze(handle, seekbarFolder, seekbarFile);
 			}
+			// Calculate waveform on the fly
 			if (this.current.length) {
 				// Calculate max values
 				let max = 0;
@@ -115,11 +117,15 @@ function _seekbar({
 	
 	this.paint = (gr) => {
 		const frames = this.current.length;
+		// Panel background
 		gr.FillSolidRect(this.x , this.y, this.w, this.h, this.colors.bg);
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW = (this.w - this.marginW * 2) / frames;
 			const barBgW = (this.w - this.marginW * 2) / 100;
+			// The painting is done as "negative", first the background with the waveform color, then the waveform values with the background color
+			// As result the waveform is painted without requiring to recalculate coordinates since gr methods paint from up to down...
+			// Waveform background
 			if (this.waveMode === 'waveform') {
 				gr.FillSolidRect(this.x + this.marginW, this.h / 2 - size / 6, this.w - this.marginW * 2, size / 6, this.colors.barBg);
 				gr.FillSolidRect(this.x + this.marginW, this.h / 2, this.w - this.marginW * 2, size / 6, this.colors.barBg);
@@ -131,7 +137,8 @@ function _seekbar({
 					gr.DrawRect(x, this.h / 2, barBgW, size / 6, 1, this.colors.barLine);
 				}
 			}
-			if (this.waveMode === 'waveform' && this.bPaintFuture && this.paintMode === 'partial') { // Semi-random future waveform
+			// Semi-random future waveform
+			if (this.waveMode === 'waveform' && this.bPaintFuture && this.paintMode === 'partial') {
 				let n = 0;
 				for (let frame of this.current) { // [time, rms, rmsPeak, peak, scale]
 					if (frame[0] < this.time) {n++; continue;}
@@ -156,6 +163,7 @@ function _seekbar({
 				}
 			}
 			let n = 0, nFull = 0;
+			// Paint waveform layer
 			for (let frame of this.current) { // [time, rms, rmsPeak, peak, scale]
 				if (this.paintMode === 'partial' && frame[0] > this.time) {break;}
 				const scale = frame[4];
@@ -187,6 +195,7 @@ function _seekbar({
 				n++;
 				if (this.paintMode === 'full' && frame[0] <= this.time) {nFull++;}
 			}
+			// Paint rectangles
 			if (this.waveMode === 'bars') {
 				if (this.paintMode === 'full') {n = nFull;}
 				for (let i = 0; i < 100; i++){
@@ -288,7 +297,9 @@ function _seekbar({
 					});
 					const str = JSON.stringify(this.current);
 					if (this.bCompress) {
-						const profiler = new FbProfiler('LZUTF8');				
+						const profiler = new FbProfiler('LZUTF8');
+						// Only Base64 strings can be saved on UTF8 files... but it requires more space
+						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
 						profiler.Print('Compress.');
 						_save(seekbarFile + '.lz', compressed);

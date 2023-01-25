@@ -9,7 +9,7 @@ function bindMenu(parent) {
 	return _attachedMenu.call(parent, {rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
 }
 
-// Generic statistics menu which should work on almost any chart...
+// Generic menu for config
 function createSeekbarMenu(bClear = true) {
 	if (!this.menu) {this.menu = new _menu();}
 	const menu = this.menu;

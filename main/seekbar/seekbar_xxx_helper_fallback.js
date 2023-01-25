@@ -145,6 +145,7 @@ function _gdiFont(name, size, style) {
 	return fonts[id];
 }
 
+// These ones not used yet, meant to be used on final release (specially to make the waveform prettier with transparencies).
 function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 600) {
 	this.tooltip = window.Tooltip;
 	this.font = {name: font, size: fontSize};
@@ -210,7 +211,6 @@ function toRGB(color) { // returns an array like [192, 0, 0]
 	const a = color - 0xFF000000;
 	return [a >> 16, a >> 8 & 0xFF, a & 0xFF];
 }
-
 
 function getAlpha(color) {
 	return ((color >> 24) & 0xff);
