@@ -1,5 +1,6 @@
 'use strict';
-//24/01/23
+//25/01/23
+include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 
 function _seekbar({
 		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%DESCRIPTION%,%COMMENT%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
@@ -10,9 +11,11 @@ function _seekbar({
 		bPaintCurrent = true,
 		bPaintFuture = waveMode === 'waveform' && paintMode === 'partial',
 		resolution = 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
+		bNormalize = true, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
 		gFont = _gdiFont('Segoe UI', _scale(15)),
 		colors = {bg: colours.Black, bar: colours.LimeGreen, barBg: colours.Gray, barLine: colours.DimGray, currPos: colours.White},
 		bAutoAnalysis = true,
+		bCompress = false,
 		x = 0, 
 		y = 0, 
 		w = window.Width,
@@ -28,7 +31,10 @@ function _seekbar({
 	this.waveMode = waveMode;
 	this.analysisMode = analysisMode;
 	this.bPaintCurrent = bPaintCurrent;
+	this.bPaintFuture = bPaintFuture;
+	this.bNormalize = bNormalize;
 	this.resolution = resolution;
+	this.bCompress = bCompress;
 	this.x = x; this.y = y; this.w = w; this.h = h;
 	this.scaleH = scaleH; this.marginW = marginW;
 	// Internals
@@ -37,21 +43,60 @@ function _seekbar({
 	this.codePage = convertCharsetToCodepage('UTF-8');
 	this.current = [];
 	this.time = 0;
-	this.bPaintFuture = bPaintFuture;
+	const modes = {RMS_level: {key: 'rms', pos: 1}, RMS_peak: {key: 'rmsPeak', pos: 2}, Peak_level: {key: 'peak', pos: 3}}
 	
 	if (!_isFolder(this.folder)) {_createFolder(this.folder);}
 	
-	this.newTrack = (handle) => {
+	this.newTrack = (handle = fb.GetNowPlaying()) => {
+		this.current = [];
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
 			if (_isFile(seekbarFile)) {
 				this.current = _jsonParseFile(seekbarFile, this.codePage) || [];
+			} else if (_isFile(seekbarFile + '.lz')) {
+				let str = _open(seekbarFile + '.lz', this.codePage) || '';
+				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
+				this.current = str ? JSON.parse(str) || [] : [];
 			} else if (this.bAutoAnalysis && _isFile(handle.Path)) {
-				this.current = [];
 				window.Repaint();
 				this.analyze(handle, seekbarFolder, seekbarFile);
-			} else {
-				this.current = [];
+			}
+			if (this.current.length) {
+				// Calculate max values
+				let max = 0;
+				const key = modes[this.analysisMode].key; 
+				const pos = modes[this.analysisMode].pos;
+				this.current.forEach((frame) => {
+					// After parsing JSON, restore infinity values
+					if (frame[pos] === null) {frame[pos] = -Infinity;}
+					const val = frame[pos];
+					max = Math.min(max, isFinite(val) ? val : 0);
+				});
+				// Calculate point scale
+				let maxVal = 1;
+				if (this.analysisMode !== 'RMS_level') {
+					this.current.forEach((frame, n) => {
+						if (frame.length === 5) {frame.length = 4;}
+						frame.push(
+							isFinite(frame[pos]) 
+								? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max))) 
+								: 1
+						);
+						if (!isFinite(frame[4])) {frame[4] = 0;}
+						maxVal = Math.min(maxVal, frame[4]);
+					});
+				} else {
+					this.current.forEach((frame) => {
+						frame.push(isFinite(frame[pos]) ? 1 - Math.abs((frame[pos] - max) / max) : 1);
+						maxVal = Math.min(maxVal, frame[4]);
+					});
+				}
+				// Normalize
+				if (this.bNormalize && maxVal !== 0) {
+					this.current.forEach((frame) => {
+						if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
+					});
+				}
 			}
 		}
 		window.Repaint();
@@ -185,13 +230,13 @@ function _seekbar({
 		const handle = fb.GetSelection();
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
-			if (_isFile(handle.Path) && !_isFile(seekbarFile)) { // Manual analysis
+			if (_isFile(handle.Path) && !_isFile(seekbarFile) && !_isFile(seekbarFile + '.lz')) { // Manual analysis
 				this.analyze(handle, seekbarFolder, seekbarFile);
 			} else if (fb.IsPlaying) { // Seek
 				const frames = this.current.length;
 				if (frames !== 0) {
 					const barW = (this.w - this.marginW * 2) / frames;
-					let time = fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW ;
+					let time = Math.round(fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW);
 					if (time < 0) {time = 0;}
 					else if (time > fb.PlaybackLength) {time = fb.PlaybackLength;}
 					fb.PlaybackTime = time;
@@ -227,30 +272,29 @@ function _seekbar({
 			_deleteFile(seekbarFolder + 'data.json');
 			if (data && data.frames) {
 				if (data.frames.length) {
-					let max = {rms: 0, rmsPeak: 0, peak: 0};
 					data.frames.forEach((frame) => {
 						// Save values as array to compress file as much as possible, also round decimals...
 						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf' 
-							? round(Number(frame.tags['lavfi.astats.Overall.RMS_level']), 0)
+							? round(Number(frame.tags['lavfi.astats.Overall.RMS_level']), 1)
 							: -Infinity;
 						const rmsPeak = frame.tags['lavfi.astats.Overall.RMS_peak'] !== '-inf' 
-							? round(Number(frame.tags['lavfi.astats.Overall.RMS_peak']), 0)
+							? round(Number(frame.tags['lavfi.astats.Overall.RMS_peak']), 1)
 							: -Infinity;
 						const peak = frame.tags['lavfi.astats.Overall.Peak_level'] !== '-inf' 
-							? round(Number(frame.tags['lavfi.astats.Overall.Peak_level']), 0)
+							? round(Number(frame.tags['lavfi.astats.Overall.Peak_level']), 1)
 							: -Infinity;
-						this.current.push([round(Number(frame.pkt_pts_time), 1), rms, rmsPeak, peak]);
-						max.rms = Math.min(max.rms, isFinite(rms) ? rms : 0);
-						max.rmsPeak = Math.min(max.rmsPeak, isFinite(rmsPeak) ? rmsPeak : 0);
-						max.peak = Math.min(max.peak, isFinite(peak) ? peak : 0);
+						const time = round(Number(frame.pkt_pts_time), 2);
+						this.current.push([time, rms, rmsPeak, peak]);
 					});
-					const key = (this.analysisMode === 'RMS_level' ? 'rms' : this.analysisMode === 'RMS_peak' ? 'rmsPeak' : 'peak');
-					const keyArr = (this.analysisMode === 'RMS_level' ? 1 : this.analysisMode === 'RMS_peak' ? 2 : 3);
-					this.current.forEach((frame) => {
-						// < 2 decimals, too much quantization distortion
-						frame.push(isFinite(frame[keyArr]) ? round(1 - Math.abs((frame[keyArr] - max[key]) / max[key]), 2) : 1);
-					});
-					_save(seekbarFile, JSON.stringify(this.current));
+					const str = JSON.stringify(this.current);
+					if (this.bCompress) {
+						const profiler = new FbProfiler('LZUTF8');				
+						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
+						profiler.Print('Compress.');
+						_save(seekbarFile + '.lz', compressed);
+					} else {
+						_save(seekbarFile, str);
+					}
 					profiler.Print('Retrieve volume levels.');
 				}
 			}

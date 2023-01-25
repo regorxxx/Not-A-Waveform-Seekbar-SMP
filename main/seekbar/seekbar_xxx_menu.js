@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/23
+//25/01/23
 
 // Don't load this helper unless menu framework is also present
 // https://github.com/regorxxx/Menu-Framework-SMP
@@ -19,11 +19,37 @@ function createSeekbarMenu(bClear = true) {
 	menu.newEntry({entryText: 'sep'});
 	// Menus
 	{
+		const subMenu = menu.newMenu('Analysis type...');
+		const options = ['RMS_level', 'Peak_level', 'RMS_peak'];
+		options.forEach((s) => {
+			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
+				this.analysisMode = s;
+				this.newTrack();
+				window.Repaint();
+			}});
+		});
+		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.analysisMode);});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		{
+			['bNormalize']
+				.forEach((s) => {
+					menu.newEntry({menuName: subMenu, entryText: s, func: () => {
+						this[s] = !this[s];
+						this.newTrack();
+						window.Repaint();
+					}});
+					menu.newCheckMenu(subMenu, s, void(0), () => {return this[s];});
+				});
+		}
+	}
+	menu.newEntry({entryText: 'sep'});
+	{
 		const subMenu = menu.newMenu('Waveform type...');
 		const options = ['waveform', 'bars'];
 		options.forEach((s) => {
 			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
 				this.waveMode = s;
+				window.Repaint();
 			}});
 		});
 		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.waveMode);});
