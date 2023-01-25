@@ -1,12 +1,13 @@
 'use strict';
 //25/01/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
+include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
 function _seekbar({
 		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%DESCRIPTION%,%COMMENT%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
 		ffprobe = fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe',
 		waveMode = 'waveform', // waveform | bars
-		analysisMode = 'RMS_level', // RMS_level | Peak_level | RMS_peak
+		analysisMode = 'Peak_level', // RMS_level | Peak_level | RMS_peak
 		paintMode = 'full', // // full | partial
 		bPaintCurrent = true,
 		bPaintFuture = waveMode === 'waveform' && paintMode === 'partial',
@@ -15,7 +16,7 @@ function _seekbar({
 		gFont = _gdiFont('Segoe UI', _scale(15)),
 		colors = {bg: colours.Black, bar: colours.LimeGreen, barBg: colours.Gray, barLine: colours.DimGray, currPos: colours.White},
 		bAutoAnalysis = true,
-		bCompress = false,
+		bCompress = true,
 		x = 0, 
 		y = 0, 
 		w = window.Width,
@@ -35,12 +36,14 @@ function _seekbar({
 	this.bNormalize = bNormalize;
 	this.resolution = resolution;
 	this.bCompress = bCompress;
+	this.bCompressV2 = this.bCompress && true;
 	this.x = x; this.y = y; this.w = w; this.h = h;
 	this.scaleH = scaleH; this.marginW = marginW;
 	// Internals
 	this.TF = fb.TitleFormat(matchPattern);
 	this.folder = fb.ProfilePath + 'js_data\\seekbar\\';
 	this.codePage = convertCharsetToCodepage('UTF-8');
+	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	this.current = [];
 	this.time = 0;
 	const modes = {RMS_level: {key: 'rms', pos: 1}, RMS_peak: {key: 'rmsPeak', pos: 2}, Peak_level: {key: 'peak', pos: 3}}
@@ -51,13 +54,21 @@ function _seekbar({
 		this.current = [];
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
-			// Uncompressed file -> Compressed file -> Analyze
+			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (_isFile(seekbarFile)) {
 				this.current = _jsonParseFile(seekbarFile, this.codePage) || [];
 			} else if (_isFile(seekbarFile + '.lz')) {
+				const profiler = new FbProfiler('LZUTF8');
 				let str = _open(seekbarFile + '.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
+				profiler.Print('Decompress.');
+			} else if (_isFile(seekbarFile + '.lz16')) {
+				const profiler = new FbProfiler('LZString');
+				let str = _open(seekbarFile + '.lz16', this.codePageV2) || '';
+				str = LZString.decompressFromUTF16(str) || null;
+				this.current = str ? JSON.parse(str) || [] : [];
+				profiler.Print('Decompress.');
 			} else if (this.bAutoAnalysis && _isFile(handle.Path)) {
 				window.Repaint();
 				this.analyze(handle, seekbarFolder, seekbarFile);
@@ -239,7 +250,7 @@ function _seekbar({
 		const handle = fb.GetSelection();
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
-			if (_isFile(handle.Path) && !_isFile(seekbarFile) && !_isFile(seekbarFile + '.lz')) { // Manual analysis
+			if (_isFile(handle.Path) && !_isFile(seekbarFile) && !_isFile(seekbarFile + '.lz') && !_isFile(seekbarFile + '.lz16')) { // Manual analysis
 				this.analyze(handle, seekbarFolder, seekbarFile);
 			} else if (fb.IsPlaying) { // Seek
 				const frames = this.current.length;
@@ -295,14 +306,25 @@ function _seekbar({
 						const time = round(Number(frame.pkt_pts_time), 2);
 						this.current.push([time, rms, rmsPeak, peak]);
 					});
+					// Save data and optionally compress it
+					// To Base64:	~50% compression
+					// To UTF16-LE:	~70% compression
+					// To 7zip:		~80% compression
 					const str = JSON.stringify(this.current);
-					if (this.bCompress) {
+					if (this.bCompressV2) {
+						const profiler = new FbProfiler('LZString');
+						// To save UTF16-LE files, FSO is needed.
+						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+						const compressed = LZString.compressToUTF16(str);
+						_saveFSO(seekbarFile + '.lz16', compressed, true);
+						profiler.Print('Compress.');
+					} else if (this.bCompress) {
 						const profiler = new FbProfiler('LZUTF8');
-						// Only Base64 strings can be saved on UTF8 files... but it requires more space
+						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
-						profiler.Print('Compress.');
 						_save(seekbarFile + '.lz', compressed);
+						profiler.Print('Compress.');
 					} else {
 						_save(seekbarFile, str);
 					}
