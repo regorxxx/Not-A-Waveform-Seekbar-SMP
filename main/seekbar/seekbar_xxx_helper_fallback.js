@@ -1,6 +1,5 @@
 ﻿'use strict';
 //24/01/23
-include(fb.ComponentPath + 'docs\\flags.js');
 
 /* 
 	helpers_xxx_prototypes.js

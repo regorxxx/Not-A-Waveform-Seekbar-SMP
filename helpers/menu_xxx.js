@@ -409,7 +409,7 @@ function _attachedMenu({rMenu = null, lMenu = null, popup = null} = {}) {
 
 const invsId = (function() {
 		let nextIndex = [0,0,0,0,0];
-		const chars = hiddenChars;
+		const chars = ['\u200b','\u200c','\u200d','\u200e'];
 		const num = chars.length;
 		let prevId = nextIndex.length;
 		return function(bNext = true) {
