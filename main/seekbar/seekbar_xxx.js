@@ -197,6 +197,8 @@ function _seekbar({
 		if (reason !== 2) {window.Repaint();}
 	};
 	
+	const throttlePaint = throttle(() => window.Repaint(), 200);
+	
 	this.paint = (gr) => {
 		if (!fb.IsPlaying) {this.current = [];} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
@@ -338,6 +340,7 @@ function _seekbar({
 				gr.GdiDrawText('Analyzing track...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center)
 			}
 		}
+		if (this.preset.bPaintFuture) {throttlePaint();} // Animate smoothly
 	};
 	
 	this.trace = (x, y) => {
@@ -347,20 +350,23 @@ function _seekbar({
 	this.lbtnUp = (x, y, mask) => {
 		if (!this.trace(x,y)) {return false;}
 		const handle = fb.GetSelection();
-		if (handle) {
-			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
-			if (_isFile(handle.Path) && !_isFile(seekbarFile) && !_isFile(seekbarFile + '.lz') && !_isFile(seekbarFile + '.lz16')) { // Manual analysis
-				this.analyze(handle, seekbarFolder, seekbarFile);
-			} else if (fb.IsPlaying) { // Seek
-				const frames = this.current.length;
-				if (frames !== 0) {
-					const barW = (this.w - this.marginW * 2) / frames;
-					let time = Math.round(fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW);
-					if (time < 0) {time = 0;}
-					else if (time > fb.PlaybackLength) {time = fb.PlaybackLength;}
-					fb.PlaybackTime = time;
-				}
+		if (handle && fb.IsPlaying) { // Seek
+			const frames = this.current.length;
+			if (frames !== 0) {
+				const barW = (this.w - this.marginW * 2) / frames;
+				let time = Math.round(fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW);
+				if (time < 0) {time = 0;}
+				else if (time > fb.PlaybackLength) {time = fb.PlaybackLength;}
+				fb.PlaybackTime = time;
+				return true;
 			}
+		}
+		return false;
+	};
+	
+	this.move = (x, y, mask) => {
+		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
+			throttlePaint();
 		}
 	};
 	
@@ -470,7 +476,7 @@ function _seekbar({
 			}
 			profiler.Print('Retrieve volume levels.');
 			if (this.current.length) {window.Repaint();}
-			else {console.log(this.analysis.binaryMode + ': failed anylizing the file -> ' + handle.Path);}
+			else {console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path);}
 		}
 	};
 }

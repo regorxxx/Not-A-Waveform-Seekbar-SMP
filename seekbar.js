@@ -21,7 +21,8 @@ const seekbar = new _seekbar({
 	},
 	preset: {
 		waveMode: 'points',
-		paintMode: 'full'
+		paintMode: 'partial',
+		bPaintFuture: true
 	},
 	ui: {
 		x: 0,
@@ -58,6 +59,10 @@ addEventListener('on_paint', (gr) => {
 
 addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 	seekbar.lbtnUp(x, y, mask);
+});
+
+addEventListener('on_mouse_move', (x, y, mask) => {
+	seekbar.move(x, y, mask);
 });
 
 addEventListener('on_script_unload', () => {
