@@ -4,9 +4,7 @@ A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Pan
 It's based on RMS or peak levels, instead of the actual waveform.
 
 1. Download this repository and copy at desired folder within foobar profile folder.
-
-2.A Download [ffprobe](https://ffmpeg.org/download.html) and copy ffprobe.exe into the scripts folder.
-2.B Download [audiowaveform](https://github.com/bbc/audiowaveform) and copy audiowaveform.exe into the scripts folder.
+2. Script uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included), but [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into the scripts folder.
 
 3. At seekbar.js, line 11, edit paths as needed:
 ```
