@@ -1,17 +1,21 @@
-# Not-A-Waveform-Seekbar-SMP
-A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel) and [ffmpeg](https://ffmpeg.org/ffprobe.html).
+# Not-A-Waveform-Seekbar-SMP [WIP]
+A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel), [audiowaveform](https://github.com/bbc/audiowaveform) or [ffprobe](https://ffmpeg.org/ffprobe.html).
 
 It's based on RMS or peak levels, instead of the actual waveform.
 
 1. Download this repository and copy at desired folder within foobar profile folder.
+2. Script uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included), but [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into the scripts folder.
 
-2. Download [ffprobe](https://ffmpeg.org/download.html) and copy ffprobe.exe into the scripts folder.
-
-3. At seekbar.js, edit ffprobe path as needed:
+3. At seekbar.js, line 11, edit paths as needed:
 ```
-	ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
-		? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe'
-		: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\ia32\\ffprobe.exe',
+	binaries: {
+		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
+			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe'
+			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe_32.exe',
+		audiowaveform: arch === 'x64
+			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe''
+			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform_32.exe'',
+	},
 ```
 4. Load seekbar.js in a blank panel.
 
@@ -26,4 +30,6 @@ Bars full
 Bars partial
 ![imagen](https://user-images.githubusercontent.com/83307074/214268312-0b5b9ee5-b399-4fdc-91b5-7b296bce2436.png)
 
-R. Click to configure. Configuration lost on restart.
+5. R. Click to configure. Configuration lost on restart. (i.e. apply it directly on main file once found your desired settings)
+
+[See discussion for development](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1)
