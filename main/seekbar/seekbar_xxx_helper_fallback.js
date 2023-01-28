@@ -28,6 +28,21 @@ function tryMethod(fn, parent) {
 	};
 }
 
+const throttle = (fn, delay, immediate = false, parent = this) => {
+	let timerId;
+	return (...args) => {
+		const boundFunc = fn.bind(parent, ...args);
+		if (timerId) {return;}
+		if (immediate && !timerId) {boundFunc();}
+		timerId = setTimeout(() => {
+			if(!immediate) {
+				boundFunc(); 
+			}
+			timerId = null; 
+		}, delay);
+	};
+};
+
 /* 
 	helpers_xxx_file.js
 */
