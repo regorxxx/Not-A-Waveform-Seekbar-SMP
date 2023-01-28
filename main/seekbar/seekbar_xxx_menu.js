@@ -53,6 +53,17 @@ function createSeekbarMenu(bClear = true) {
 					menu.newCheckMenu(subMenu, s, void(0), () => {return this.analysis[s];});
 				});
 		}
+		{
+			['bAutoDelete']
+				.forEach((s) => {
+					menu.newEntry({menuName: subMenu, entryText: s, func: () => {
+						this.analysis[s] = !this.analysis[s];
+						this.newTrack();
+						window.Repaint();
+					}});
+					menu.newCheckMenu(subMenu, s, void(0), () => {return this.analysis[s];});
+				});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
@@ -71,7 +82,7 @@ function createSeekbarMenu(bClear = true) {
 		const options = ['full', 'partial'];
 		options.forEach((s) => {
 			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-				this.vpaintMode = s;
+				this.preset.paintMode = s;
 				window.Repaint();
 			}});
 		});
