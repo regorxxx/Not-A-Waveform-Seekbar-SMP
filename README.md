@@ -30,7 +30,6 @@ Bars full
 Bars partial
 ![imagen](https://user-images.githubusercontent.com/83307074/214268312-0b5b9ee5-b399-4fdc-91b5-7b296bce2436.png)
 
-R. Click to configure. Configuration lost on restart.
+5. R. Click to configure. Configuration lost on restart. (i.e. apply it directly on main file once found your desired settings)
 
-See discussion for development:
-https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1
+[See discussion for developmen](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1)
