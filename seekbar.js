@@ -1,5 +1,5 @@
 'use strict';
-//27/01/23
+//28/01/23
 include('main\\seekbar\\seekbar_xxx_helper.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js'); // Not needed if event listeners below are implemented as callbacks
@@ -10,8 +10,11 @@ const arch = 'x64'; // No need once path is manually set...
 const seekbar = new _seekbar({
 	binaries: {
 		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
-			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe'
-			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\ia32\\ffprobe.exe',
+			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe'
+			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe_32.exe',
+		audiowaveform: arch === 'x64
+			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform_32.exe'
 	},
 	analysis: {
 		binaryMode: 'audiowaveform',
