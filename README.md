@@ -32,4 +32,4 @@ Bars partial
 
 5. R. Click to configure. Configuration lost on restart. (i.e. apply it directly on main file once found your desired settings)
 
-[See discussion for developmen](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1)
+[See discussion for development](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1)
