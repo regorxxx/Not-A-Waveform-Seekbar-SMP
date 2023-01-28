@@ -1,5 +1,5 @@
 'use strict';
-//25/01/23
+//27/01/23
 include('main\\seekbar\\seekbar_xxx_helper.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js'); // Not needed if event listeners below are implemented as callbacks
@@ -8,18 +8,34 @@ window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.
 
 const arch = 'x64'; // No need once path is manually set...
 const seekbar = new _seekbar({
-	ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
-		? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe'
-		: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\ia32\\ffprobe.exe',
-	waveMode: 'waveform',
-	paintMode: 'full',
-	analysisMode: 'Peak_level',
-	x: 0,
-	w: window.Width,
-	scaleH: 0.9
+	binaries: {
+		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
+			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe'
+			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\ia32\\ffprobe.exe',
+	},
+	analysis: {
+		binaryMode: 'audiowaveform',
+		analysisMode: 'Peak_level',
+		bCompress: false,
+		bAutoRemove: true
+	},
+	preset: {
+		waveMode: 'points',
+		paintMode: 'full'
+	},
+	ui: {
+		x: 0,
+		w: window.Width,
+		scaleH: 0.9
+	}
 });
 
 // Callbacks
+addEventListener('on_size', (width, height) => {
+	seekbar.w = window.Width;
+	seekbar.h = window.Height;
+});
+
 addEventListener('on_playback_new_track', (handle) => {
 	seekbar.newTrack(handle);
 });
@@ -42,6 +58,10 @@ addEventListener('on_paint', (gr) => {
 
 addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 	seekbar.lbtnUp(x, y, mask);
+});
+
+addEventListener('on_script_unload', () => {
+	seekbar.unload();
 });
 
 // Menu, requires menu framework
