@@ -110,6 +110,21 @@ function _deleteFile(file, bForce = true) {
 	return false;
 }
 
+// Delete. Can not be undone.
+function _deleteFolder(folder, bForce = true) {
+	if (_isFolder(folder)) {
+		if (folder.startsWith('.\\')) {folder = fb.FoobarPath + folder.replace('.\\','');}
+		if (folder.endsWith('\\')) {folder = folder.slice(0, -1);}
+		try {
+			fso.DeleteFolder(folder, bForce);
+		} catch (e) {
+			return false;
+		}
+		return !(_isFolder(folder));
+	}
+	return false;
+}
+
 function _jsonParse(value) {
 	try {
 		let data = JSON.parse(value);
