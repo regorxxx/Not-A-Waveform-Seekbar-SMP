@@ -6,8 +6,9 @@ It's based on RMS or peak levels, instead of the actual waveform.
 1. Download this repository and copy at desired folder within foobar profile folder.
 2. Script uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included), but [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into the scripts folder.
 
-3. At seekbar.js, line 11, edit paths as needed:
+3. At seekbar.js, line 11, edit paths and/or architecture as needed :
 ```
+	const arch = 'x64'; // No need once path is manually set...
 	binaries: {
 		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
 			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe'
