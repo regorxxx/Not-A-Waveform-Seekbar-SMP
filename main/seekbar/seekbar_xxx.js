@@ -1,5 +1,5 @@
 'use strict';
-//27/01/23
+//29/01/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -11,7 +11,7 @@ function _seekbar({
 		},
 		preset = {
 			waveMode: 'waveform', // waveform | bars | points
-			analysisMode: 'Peak_level', // RMS_level | Peak_level | RMS_peak
+			analysisMode: 'Peak_level', // RMS_level | Peak_level | RMS_peak (only available for ffprobe)
 			paintMode: 'full', // // full | partial
 			bPaintFuture: false,
 			bPaintCurrent: true,
@@ -24,7 +24,6 @@ function _seekbar({
 		analysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform
 			resolution: 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
-			bNormalize: true,
 			bAutoAnalysis: true,
 			bCompress: true,
 			bAutoRemove: false // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
@@ -51,7 +50,6 @@ function _seekbar({
 		const defAnalysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform
 			resolution: 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
-			bNormalize: true,
 			bAutoAnalysis: true,
 			bCompress: true,
 			bAutoRemove: false
@@ -167,7 +165,7 @@ function _seekbar({
 						});
 					}
 					// Normalize
-					if (this.analysis.bNormalize && maxVal !== 0) {
+					if (maxVal !== 0) {
 						this.current.forEach((frame) => {
 							if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
 						});
@@ -254,8 +252,8 @@ function _seekbar({
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
-						if (this.preset.bPaintCurrent) {
-							if (x <= currX + barW && x >= currX - barW) {color = altColor = this.ui.colors.currPos;}
+						if (this.preset.bPaintCurrent && this.analysis.binaryMode !== 'ffprobe') {
+							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
 						}
 						if (y > 0) {
 							if (altColor !== color) {
@@ -274,8 +272,8 @@ function _seekbar({
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
-						if (this.preset.bPaintCurrent) {
-							if (x <= currX + barW && x >= currX - barW) {color = altColor = this.ui.colors.currPos;}
+						if (this.preset.bPaintCurrent && this.analysis.binaryMode !== 'ffprobe') {
+							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
 						}
 						if (y > 0) { // Split waveform in 2, and then each half in 2 for highlighting
 							if (altColor !== color) {
@@ -327,7 +325,7 @@ function _seekbar({
 			if (this.preset.bPaintCurrent) {
 				const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 				if (this.analysis.binaryMode === 'ffprobe') {
-					// gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
+					gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
 				} else if (this.preset.waveMode === 'waveform' || this.preset.waveMode === 'points') {
 					gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
 				}
