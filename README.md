@@ -20,17 +20,24 @@ It's based on RMS or peak levels, instead of the actual waveform.
 ```
 4. Load seekbar.js in a blank panel.
 
-Waveform full
-![imagen](https://user-images.githubusercontent.com/83307074/214268040-55fe0213-2ddc-44e6-9286-68590f7b0eb9.png)
-Waveform partial + future
-![imagen](https://user-images.githubusercontent.com/83307074/214268107-22c3a76b-7a31-4b6e-b4e7-c401089e9817.png)
-Waveform partial
-![imagen](https://user-images.githubusercontent.com/83307074/214268200-64942fc4-458b-416b-a77d-eb14f17c0336.png)
-Bars full
-![imagen](https://user-images.githubusercontent.com/83307074/214268369-f12ffe73-6fc9-4685-8c93-05c5c74833ec.png)
-Bars partial
-![imagen](https://user-images.githubusercontent.com/83307074/214268312-0b5b9ee5-b399-4fdc-91b5-7b296bce2436.png)
-
 5. R. Click to configure. Configuration lost on restart. (i.e. apply it directly on main file once found your desired settings)
 
 [See discussion for development](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1)
+
+Waveform (ffprobe):
+![seek5](https://user-images.githubusercontent.com/83307074/215299705-5705544e-0b78-462c-b0ee-a3220fc72552.gif)
+
+Waveform:
+![seek2](https://user-images.githubusercontent.com/83307074/215299699-ab57c6ec-1f3a-4c56-ad45-fdcf94980d60.gif)
+
+Points:
+![seek1](https://user-images.githubusercontent.com/83307074/215299701-1a97ca0a-fed1-4ed0-b8b8-796b3a9fe581.gif)
+
+Half-Bars:
+![seek4](https://user-images.githubusercontent.com/83307074/215299707-2e3d41b6-89e6-4d74-90fb-fcf25efa7632.gif)
+
+Bars:
+![seek3](https://user-images.githubusercontent.com/83307074/215299708-c70d1ebc-1c81-4af4-8cc5-183e03cfb4f5.gif)
+
+Partial:
+![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
