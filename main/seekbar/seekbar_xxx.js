@@ -5,6 +5,8 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
 
 function _seekbar({
 		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%DESCRIPTION%,%COMMENT%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
+		bDebug = true,
+		bProfile = true,
 		binaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe.exe',
 			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe'
@@ -85,6 +87,8 @@ function _seekbar({
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
 	// Internals
 	this.TF = fb.TitleFormat(matchPattern);
+	this.bDebug = bDebug;
+	this.bProfile = bProfile;
 	this.folder = fb.ProfilePath + 'js_data\\seekbar\\';
 	this.codePage = convertCharsetToCodepage('UTF-8');
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
@@ -103,31 +107,23 @@ function _seekbar({
 			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile)) {
 				this.current = _jsonParseFile(seekbarFile, this.codePage) || [];
 			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.lz')) {
-				const profiler = new FbProfiler('LZUTF8');
 				let str = _open(seekbarFile + '.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				profiler.Print('Decompress.');
 			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.lz16')) {
-				const profiler = new FbProfiler('LZString');
 				let str = _open(seekbarFile + '.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				profiler.Print('Decompress.');
 			} else if (this.analysis.binaryMode === 'audiowaveform' && _isFile(seekbarFile + '.json')) {
 				this.current = _jsonParseFile(seekbarFile + '.json', this.codePage) || [];
 			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.json.lz')) {
-				const profiler = new FbProfiler('LZUTF8');
 				let str = _open(seekbarFile + '.json.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				profiler.Print('Decompress.');
 			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.json.lz16')) {
-				const profiler = new FbProfiler('LZString');
 				let str = _open(seekbarFile + '.json.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				profiler.Print('Decompress.');
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
 				window.Repaint();
 				this.analyze(handle, seekbarFolder, seekbarFile);
@@ -394,12 +390,12 @@ function _seekbar({
 		const handleFolder = handle.Path.replace(handleFileName, '');
 		let cmd;
 		if (this.analysis.binaryMode === 'audiowaveform') {
-			profiler = new FbProfiler('audiowaveform');
+			if (this.bProfile) {profiler = new FbProfiler('audiowaveform');}
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
 				' --pixels-per-second ' + (this.analysis.resolution || 1) + ' -o ' + _q(seekbarFolder + 'data.json');
 		} else if (this.analysis.binaryMode === 'ffprobe') {
-			profiler = new FbProfiler('ffprobe');
+			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.ffprobe) + ' -f lavfi -i amovie=' + _q(handleFileName) +
@@ -407,7 +403,7 @@ function _seekbar({
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak -print_format json > ' +
 				_q(seekbarFolder + 'data.json');
 		}
-		console.log(cmd);
+		if (this.bDebug) {console.log(cmd);}
 		const bDone = _runCmd(cmd, true);
 		if (bDone) {
 			const data = _jsonParseFile(seekbarFolder + 'data.json', this.codePage);
@@ -434,19 +430,15 @@ function _seekbar({
 					// To 7zip:		~80% compression
 					const str = JSON.stringify(this.current);
 					if (this.analysis.bCompressV2) {
-						const profiler = new FbProfiler('LZString');
 						// To save UTF16-LE files, FSO is needed.
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZString.compressToUTF16(str);
 						_saveFSO(seekbarFile + '.lz16', compressed, true);
-						profiler.Print('Compress.');
 					} else if (this.analysis.bCompress) {
-						const profiler = new FbProfiler('LZUTF8');
 						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
 						_save(seekbarFile + '.lz', compressed);
-						profiler.Print('Compress.');
 					} else {
 						_save(seekbarFile, str);
 					}
@@ -454,25 +446,23 @@ function _seekbar({
 					this.current = data.data;
 					const str = JSON.stringify(this.current);
 					if (this.analysis.bCompressV2) {
-						const profiler = new FbProfiler('LZString');
 						// To save UTF16-LE files, FSO is needed.
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZString.compressToUTF16(str);
 						_saveFSO(seekbarFile + '.json.lz16', compressed, true);
-						profiler.Print('Compress.');
 					} else if (this.analysis.bCompress) {
-						const profiler = new FbProfiler('LZUTF8');
 						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
 						_save(seekbarFile + '.json.lz', compressed);
-						profiler.Print('Compress.');
 					} else {
 						_save(seekbarFile + '.json', str);
 					}
 				}
 			}
-			profiler.Print('Retrieve volume levels.');
+			if (this.bProfile) {
+				profiler.Print('Retrieve volume levels. Compression: ' + (this.analysis.bCompressV2 ? 'LZString' : this.analysis.bCompress ? 'LZUTF8' : 'None'));
+			}
 			if (this.current.length) {window.Repaint();}
 			else {console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path);}
 		}
