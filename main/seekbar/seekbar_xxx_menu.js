@@ -43,17 +43,6 @@ function createSeekbarMenu(bClear = true) {
 		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.analysis.analysisMode);});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{
-			['bNormalize']
-				.forEach((s) => {
-					menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-						this.analysis[s] = !this.analysis[s];
-						this.newTrack();
-						window.Repaint();
-					}});
-					menu.newCheckMenu(subMenu, s, void(0), () => {return this.analysis[s];});
-				});
-		}
-		{
 			['bAutoDelete']
 				.forEach((s) => {
 					menu.newEntry({menuName: subMenu, entryText: s, func: () => {
