@@ -12,15 +12,15 @@ const seekbar = new _seekbar({
 		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
 			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe'
 			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe_32.exe',
-		audiowaveform: arch === 'x64
-			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+		audiowaveform: arch === 'x64'
+			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe'
 			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform_32.exe'
 	},
 	analysis: {
 		binaryMode: 'audiowaveform',
 		analysisMode: 'Peak_level',
-		bCompress: false,
-		bAutoRemove: true
+		bCompress: true,
+		bAutoRemove: false
 	},
 	preset: {
 		waveMode: 'points',
