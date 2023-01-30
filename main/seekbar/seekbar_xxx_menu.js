@@ -20,7 +20,7 @@ function createSeekbarMenu(bClear = true) {
 	// Menus
 	{
 		const subMenu = menu.newMenu('Binary type...');
-		const options = ['ffprobe', 'audiowaveform'];
+		const options = ['ffprobe', 'audiowaveform', 'visualizer'];
 		options.forEach((s) => {
 			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
 				this.updateConfig({analysis: {binaryMode: s}});
@@ -34,7 +34,7 @@ function createSeekbarMenu(bClear = true) {
 		options.forEach((s) => {
 			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
 				this.updateConfig({preset: {analysisMode: s}});
-			}});
+			}, flags: this.analysis.binaryMode === 'ffprobe' ? MF_STRING : MF_GRAYED});
 		});
 		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.preset.analysisMode);});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
@@ -43,7 +43,7 @@ function createSeekbarMenu(bClear = true) {
 				.forEach((s) => {
 					menu.newEntry({menuName: subMenu, entryText: s, func: () => {
 						this.updateConfig({analysis: {[s]: !this.analysis[s]}});
-					}});
+					}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED});
 					menu.newCheckMenu(subMenu, s, void(0), () => {return this.analysis[s];});
 				});
 		}
@@ -65,7 +65,7 @@ function createSeekbarMenu(bClear = true) {
 		options.forEach((s) => {
 			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
 				this.updateConfig({preset: {paintMode: s}});
-			}});
+			}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED});
 		});
 		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.preset.paintMode);});
 	}
@@ -75,7 +75,7 @@ function createSeekbarMenu(bClear = true) {
 			.forEach((s) => {
 				menu.newEntry({entryText: s, func: () => {
 					this.updateConfig({preset: {[s]: !this.preset[s]}});
-				}, flags: this.paintMode === 'full' && s === 'bPaintFuture' ? MF_GRAYED : MF_STRING});
+				}, flags: (this.paintMode === 'full' || this.analysis.binaryMode === 'visualizer') && s === 'bPaintFuture' ? MF_GRAYED : MF_STRING});
 				menu.newCheckMenu(void(0), s, void(0), () => {return this.preset[s];});
 			});
 	}

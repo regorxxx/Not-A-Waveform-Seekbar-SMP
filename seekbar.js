@@ -17,7 +17,7 @@ const seekbar = new _seekbar({
 			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform_32.exe'
 	},
 	analysis: {
-		binaryMode: 'audiowaveform',
+		binaryMode: 'visualizer',
 		analysisMode: 'peak_level',
 		compressionMode: 'utf-16',
 		bAutoRemove: false

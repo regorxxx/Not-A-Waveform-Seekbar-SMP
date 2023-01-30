@@ -9,7 +9,8 @@ function _seekbar({
 		bProfile = true,
 		binaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe.exe',
-			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe'
+			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+			visualizer: fb.ProfilePath + 'running', // Just a placeholder
 		},
 		preset = {
 			waveMode: 'waveform', // waveform | bars | points
@@ -24,7 +25,7 @@ function _seekbar({
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30}
 		},
 		analysis = {
-			binaryMode: 'audiowaveform', // ffprobe | audiowaveform
+			binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
 			resolution: 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
 			compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
 			bAutoAnalysis: true,
@@ -35,7 +36,8 @@ function _seekbar({
 	this.defaults = () => {
 		const defBinaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe',
-			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe'
+			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+			visualizer: fb.ProfilePath + 'running',
 		};
 		const defPreset = {
 			waveMode: 'waveform',
@@ -96,6 +98,7 @@ function _seekbar({
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	this.current = [];
 	this.time = 0;
+	this.mouseDown = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
 	// Check
 	this.checkConfig();
@@ -104,7 +107,7 @@ function _seekbar({
 	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
-		this.newTrack();
+		if (newConfig.analysis) {this.newTrack();}
 		window.Repaint();
 	};
 	
@@ -175,7 +178,7 @@ function _seekbar({
 							if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
 						});
 					}
-				} else if (this.analysis.binaryMode === 'audiowaveform') {
+				} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer') {
 					// Calculate max values
 					let max = 0;
 					this.current.forEach((frame) => {
@@ -220,6 +223,7 @@ function _seekbar({
 			const bottom = this.h / 2 + size / 2;
 			const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
 			const timeConstant = fb.PlaybackLength / frames;
+			const bVisualizer = this.analysis.binaryMode === 'visualizer';
 			let current, xPast = this.x;
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
 			for (let frame of this.current) { // [peak]
@@ -232,32 +236,35 @@ function _seekbar({
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
 						const y =  (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1)) 
-							+ (bPaintFuture && bIsfuture ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
+							+ (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
 						let color = this.ui.colors.bar, altColor = colours.LawnGreen; // TODO change colors for future wave
-						if (y > 0) {
+						let z = bVisualizer ? Math.abs(y) : y;
+						if (z > 0) {
 							if (altColor !== color) {
-								gr.FillSolidRect(x, this.h / 2 - y, 1, y / 2, color);
-								gr.FillSolidRect(x, this.h / 2 - y / 2, 1, y / 2, altColor);
+								gr.FillSolidRect(x, this.h / 2 - z, 1, z / 2, color);
+								gr.FillSolidRect(x, this.h / 2 - z / 2, 1, z / 2, altColor);
 							} else {
-								gr.FillSolidRect(x, this.h / 2 - y, 1, y, color);
+								gr.FillSolidRect(x, this.h / 2 - z, 1, z, color);
 							}
-						} else if (y < 0) {
+						}
+						z = bVisualizer ? - Math.abs(y) : y;
+						if (z < 0) {
 							if (altColor !== color) {
-								gr.FillSolidRect(x, this.h / 2 - y / 2, 1, - y / 2, color);
-								gr.FillSolidRect(x, this.h / 2, 1, - y / 2, altColor);
+								gr.FillSolidRect(x, this.h / 2 - z / 2, 1, - z / 2, color);
+								gr.FillSolidRect(x, this.h / 2, 1, - z / 2, altColor);
 							} else {
-								gr.FillSolidRect(x, this.h / 2, 1, - y, color);
+								gr.FillSolidRect(x, this.h / 2, 1, - z, color);
 							}
 						}
 					} else if (this.preset.waveMode === 'halfbars') {
 						const scaledSize = size / 2 * scale;
 						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1)) 
-							+ (bPaintFuture && bIsfuture ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
+							+ (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
 						let color = this.ui.colors.bar, altColor = colours.LawnGreen; // TODO change colors for future wave
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
-						if (this.preset.bPaintCurrent && this.analysis.binaryMode !== 'ffprobe') {
+						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
 							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
 						}
 						if (y > 0) {
@@ -268,31 +275,33 @@ function _seekbar({
 								gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y  , barW, 2 * y, 1, color);
 							}
 						}
-						// }
 					} else if (this.preset.waveMode === 'bars') {
 						const scaledSize = size / 2 * scale;
 						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1)) 
-							+ (bPaintFuture && bIsfuture ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
+							+ (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
 						let color = this.ui.colors.barLine, altColor = colours.LawnGreen; // TODO change colors for future wave
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
-						if (this.preset.bPaintCurrent && this.analysis.binaryMode !== 'ffprobe') {
+						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
 							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
 						}
-						if (y > 0) { // Split waveform in 2, and then each half in 2 for highlighting
+						let z = bVisualizer ? Math.abs(y) : y;
+						if (z > 0) { // Split waveform in 2, and then each half in 2 for highlighting
 							if (altColor !== color) {
-								gr.DrawRect(x, this.h / 2 - y, barW, y / 2, 1, color);
-								gr.DrawRect(x, this.h / 2 - y / 2, barW, y / 2, 1, altColor);
+								gr.DrawRect(x, this.h / 2 - z, barW, z / 2, 1, color);
+								gr.DrawRect(x, this.h / 2 - z / 2, barW, z / 2, 1, altColor);
 							} else {
-								gr.DrawRect(x, this.h / 2 - y, barW, y, 1, color);
+								gr.DrawRect(x, this.h / 2 - z, barW, z, 1, color);
 							}
-						} else if (y < 0) {
+						}
+						z = bVisualizer ? - Math.abs(y) : y;
+						if (z < 0) {
 							if (altColor !== color) {
-								gr.DrawRect(x, this.h / 2 - y / 2, barW, - y / 2, 1, color);
-								gr.DrawRect(x, this.h / 2, barW, - y / 2, 1, altColor);
+								gr.DrawRect(x, this.h / 2 - z / 2, barW, - z / 2, 1, color);
+								gr.DrawRect(x, this.h / 2, barW, - z / 2, 1, altColor);
 							} else {
-								gr.DrawRect(x, this.h / 2, barW, - y, 1, color);
+								gr.DrawRect(x, this.h / 2, barW, - z, 1, color);
 							}
 						}
 					} else if (this.preset.waveMode === 'points') {
@@ -301,11 +310,11 @@ function _seekbar({
 						let color = this.ui.colors.bar, altColor = colours.LawnGreen; // TODO change colors for future wave
 						// // Current position
 						// const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
-						// if (this.preset.bPaintCurrent) {
+						// if (this.preset.bPaintCurrent || this.mouseDown) {
 							// if (x <= currX + barW && x >= currX - barW) {color = altColor = this.ui.colors.currPos;}
 						// }
 						const step = Math.max(this.h / 80,  5) // Point density
-							+ (bPaintFuture && bIsfuture ? Math.random() : 1); // Add movement when painting future
+							+ (bPaintFuture && bIsfuture  || bVisualizer ? Math.random() : 1); // Add movement when painting future
 						const circleSize = Math.max(step / 25, 1);
 						// Split waveform in 2, and then each half in 2 for highlighting. If colors match, the same amount of points are painted anyway...
 						const sign = Math.sign(y);
@@ -320,6 +329,20 @@ function _seekbar({
 							gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, color);
 							yCalc += (- sign) * step;
 						}
+						if (bVisualizer) {
+							const sign = - Math.sign(y);
+							let yCalc = this.h / 2;
+							let bottom = this.h / 2 + y / 2;
+							while (sign * (yCalc - bottom) > 0) {
+								gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor);
+								yCalc += (- sign) * step;
+							}
+							bottom += + y / 2;
+							while (sign * (yCalc - bottom) > 0) {
+								gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, color);
+								yCalc += (- sign) * step;
+							}
+						}
 					}
 					xPast = x;
 				}
@@ -327,7 +350,7 @@ function _seekbar({
 				if (this.preset.paintMode === 'full' && frame[0] <= this.time) {nFull++;}
 			}
 			// Current position
-			if (this.preset.bPaintCurrent) {
+			if (this.preset.bPaintCurrent || this.mouseDown) {
 				const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 				if (this.analysis.binaryMode === 'ffprobe') {
 					gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
@@ -351,6 +374,7 @@ function _seekbar({
 	};
 	
 	this.lbtnUp = (x, y, mask) => {
+		this.mouseDown = false;
 		if (!this.trace(x,y)) {return false;}
 		const handle = fb.GetSelection();
 		if (handle && fb.IsPlaying) { // Seek
@@ -369,6 +393,7 @@ function _seekbar({
 	
 	this.move = (x, y, mask) => {
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
+			this.mouseDown = true;
 			throttlePaint();
 		}
 	};
@@ -411,11 +436,13 @@ function _seekbar({
 				(this.analysis.resolution ? ',aresample=' + (this.analysis.resolution * 100) + ',asetnsamples=' + (this.analysis.resolution / 10)**2  : '') +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak -print_format json > ' +
 				_q(seekbarFolder + 'data.json');
+		} else if (this.analysis.binaryMode === 'visualizer') {
+			profiler = new FbProfiler('visualizer');
 		}
-		if (this.bDebug) {console.log(cmd);}
-		const bDone = _runCmd(cmd, true);
+		if (this.bDebug && cmd) {console.log(cmd);}
+		const bDone = cmd ? _runCmd(cmd, true) : true;
 		if (bDone) {
-			const data = _jsonParseFile(seekbarFolder + 'data.json', this.codePage);
+			const data = cmd ? _jsonParseFile(seekbarFolder + 'data.json', this.codePage) : this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
 			if (data) {
 				if (this.analysis.binaryMode === 'ffprobe' && data.frames && data.frames.length) {
@@ -464,13 +491,40 @@ function _seekbar({
 					} else {
 						_save(seekbarFile + '.json', str);
 					}
+				} else if (this.analysis.binaryMode === 'visualizer' && data.length) {
+					this.current = data;
 				}
 			}
 			if (this.bProfile) {
-				profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');
+				if (cmd) {profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');}
+				else {profiler.Print('Visualizer.');}
 			}
 			if (this.current.length) {window.Repaint();}
 			else {console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path);}
 		}
+	};
+	
+	this.visualizerData = (handle, preset = 'classic spectrum analyzer', bVariableLen = false) => {
+		const samples = bVariableLen 
+			? handle.Length / (this.analysis.resolution || 1) 
+			: this.w / _scale(5) / (this.analysis.resolution || 1);
+		const data = [];
+		switch (preset) {
+			case 'classic spectrum analyzer': {
+				const third = Math.round(samples / 3);
+				const half = Math.round(samples / 2);
+				for (let i = 0; i < third; i++) {
+					const val = (Math.random() * i) / third;
+					data.push(val);
+				}
+				for (let i = third; i < half; i++) {
+					const val = (Math.random() * i) / third;
+					data.push(val);
+				}
+				[...data].reverse().forEach((frame) => data.push(frame));
+				break;
+			}
+		}
+		return data;
 	};
 }
