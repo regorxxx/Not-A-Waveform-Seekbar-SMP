@@ -1,5 +1,5 @@
 'use strict';
-//29/01/23
+//30/01/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -13,8 +13,8 @@ function _seekbar({
 		},
 		preset = {
 			waveMode: 'waveform', // waveform | bars | points
-			analysisMode: 'Peak_level', // RMS_level | Peak_level | RMS_peak (only available for ffprobe)
-			paintMode: 'full', // // full | partial
+			analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
+			paintMode: 'full', // full | partial
 			bPaintFuture: false,
 			bPaintCurrent: true,
 		},
@@ -26,8 +26,8 @@ function _seekbar({
 		analysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform
 			resolution: 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
+			compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
 			bAutoAnalysis: true,
-			bCompress: true,
 			bAutoRemove: false // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
 		}
 	} = {}) {
@@ -38,9 +38,9 @@ function _seekbar({
 			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe'
 		};
 		const defPreset = {
-			waveMode: 'waveform', // waveform | bars | points
-			analysisMode: 'Peak_level', // RMS_level | Peak_level | RMS_peak
-			paintMode: 'full', // // full | partial
+			waveMode: 'waveform',
+			analysisMode: 'peak_level',
+			paintMode: 'full',
 			bPaintFuture: false,
 			bPaintCurrent: true,
 		};
@@ -50,10 +50,10 @@ function _seekbar({
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30}
 		};
 		const defAnalysis = {
-			binaryMode: 'audiowaveform', // ffprobe | audiowaveform
-			resolution: 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
+			binaryMode: 'audiowaveform',
+			resolution: 0,
+			compressionMode: 'utf-16',
 			bAutoAnalysis: true,
-			bCompress: true,
 			bAutoRemove: false
 		};
 		const options = [{from: defBinaries, to: binaries}, {from: defPreset, to: preset}, {from: defUi, to: ui}, {from: defAnalysis, to: analysis}];
@@ -73,6 +73,9 @@ function _seekbar({
 		if (!this.binaries.hasOwnProperty(this.analysis.binaryMode)) {
 			throw new Error('Binary mode not recognized or path not set: ' + this.analysis.binaryMode);
 		}
+		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
+			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + this.binaries[this.analysis.binaryMode], window.name);
+		}
 	};
 	// Add default args
 	this.defaults();
@@ -81,7 +84,6 @@ function _seekbar({
 	this.ui = ui;
 	this.preset = preset;
 	this.analysis = analysis;
-	this.analysis.bCompressV2 = this.analysis.bCompress && true; // Should be either enabled or completely disabled for audiowaveform mode. Standard compress is not good enough
 	// Easy access
 	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
@@ -94,10 +96,17 @@ function _seekbar({
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	this.current = [];
 	this.time = 0;
-	const modes = {RMS_level: {key: 'rms', pos: 1}, RMS_peak: {key: 'rmsPeak', pos: 2}, Peak_level: {key: 'peak', pos: 3}}; // For ffprobe
+	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
 	// Check
 	this.checkConfig();
 	if (!_isFolder(this.folder)) {_createFolder(this.folder);}
+	
+	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
+		if (newConfig) {deepAssign()(this, newConfig);}
+		this.checkConfig();
+		this.newTrack();
+		window.Repaint();
+	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
 		this.current = [];
@@ -425,16 +434,13 @@ function _seekbar({
 						this.current.push([time, rms, rmsPeak, peak]);
 					});
 					// Save data and optionally compress it
-					// To Base64:	~50% compression
-					// To UTF16-LE:	~70% compression
-					// To 7zip:		~80% compression
 					const str = JSON.stringify(this.current);
-					if (this.analysis.bCompressV2) {
+					if (this.analysis.compressionMode === 'utf-16') {
 						// To save UTF16-LE files, FSO is needed.
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZString.compressToUTF16(str);
 						_saveFSO(seekbarFile + '.lz16', compressed, true);
-					} else if (this.analysis.bCompress) {
+					} else if (this.analysis.compressionMode === 'utf-8') {
 						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
@@ -445,12 +451,12 @@ function _seekbar({
 				} else if (this.analysis.binaryMode === 'audiowaveform' && data.data && data.data.length) {
 					this.current = data.data;
 					const str = JSON.stringify(this.current);
-					if (this.analysis.bCompressV2) {
+					if (this.analysis.compressionMode === 'utf-16') {
 						// To save UTF16-LE files, FSO is needed.
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZString.compressToUTF16(str);
 						_saveFSO(seekbarFile + '.json.lz16', compressed, true);
-					} else if (this.analysis.bCompress) {
+					} else if (this.analysis.compressionMode === 'utf-8') {
 						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
@@ -461,7 +467,7 @@ function _seekbar({
 				}
 			}
 			if (this.bProfile) {
-				profiler.Print('Retrieve volume levels. Compression: ' + (this.analysis.bCompressV2 ? 'LZString' : this.analysis.bCompress ? 'LZUTF8' : 'None'));
+				profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');
 			}
 			if (this.current.length) {window.Repaint();}
 			else {console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path);}

@@ -1,5 +1,5 @@
 'use strict';
-//28/01/23
+//30/01/23
 include('main\\seekbar\\seekbar_xxx_helper.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js'); // Not needed if event listeners below are implemented as callbacks
@@ -18,8 +18,8 @@ const seekbar = new _seekbar({
 	},
 	analysis: {
 		binaryMode: 'audiowaveform',
-		analysisMode: 'Peak_level',
-		bCompress: true,
+		analysisMode: 'peak_level',
+		compressionMode: 'utf-16',
 		bAutoRemove: false
 	},
 	preset: {
