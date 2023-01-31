@@ -75,7 +75,7 @@ function createSeekbarMenu(bClear = true) {
 			.forEach((s) => {
 				menu.newEntry({entryText: s, func: () => {
 					this.updateConfig({preset: {[s]: !this.preset[s]}});
-				}, flags: (this.paintMode === 'full' || this.analysis.binaryMode === 'visualizer') && s === 'bPaintFuture' ? MF_GRAYED : MF_STRING});
+				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer') && s === 'bPaintFuture' ? MF_GRAYED : MF_STRING});
 				menu.newCheckMenu(void(0), s, void(0), () => {return this.preset[s];});
 			});
 	}
