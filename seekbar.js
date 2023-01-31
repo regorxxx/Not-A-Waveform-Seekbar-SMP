@@ -1,5 +1,5 @@
 'use strict';
-//30/01/23
+//31/01/23
 include('main\\seekbar\\seekbar_xxx_helper.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js'); // Not needed if event listeners below are implemented as callbacks
@@ -23,14 +23,15 @@ const seekbar = new _seekbar({
 		bAutoRemove: false
 	},
 	preset: {
-		waveMode: 'points',
+		waveMode: 'waveform',
 		paintMode: 'partial',
 		bPaintFuture: true
 	},
 	ui: {
 		x: 0,
 		w: window.Width,
-		scaleH: 0.9
+		scaleH: 0.9,
+		refreshRate: 200
 	}
 });
 
