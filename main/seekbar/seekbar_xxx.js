@@ -1,5 +1,5 @@
 'use strict';
-//30/01/23
+//31/01/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -21,9 +21,9 @@ function _seekbar({
 		},
 		ui = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
-			colors: {bg: colours.Black, bar: colours.LimeGreen, barBg: colours.Gray, barLine: colours.DimGray, currPos: colours.White},
+			colors: {bg: colours.Black, main: colours.LimeGreen, alt: colours.LawnGreen, bgFuture: 0xFF1B1B1B, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: colours.White},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
-			refreshRate: 200 // ms when using animations of any type
+			refreshRate: 200 // ms when using animations of any type. 100 is smooth enough but the performance hit is high
 		},
 		analysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
@@ -49,7 +49,7 @@ function _seekbar({
 		};
 		const defUi = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
-			colors: {bg: colours.Black, bar: colours.LimeGreen, barBg: colours.Gray, barLine: colours.DimGray, currPos: colours.White},
+			colors: {bg: colours.Black, main: colours.LimeGreen, alt: colours.LawnGreen, bgFuture: 0xFF1B1B1B, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: colours.White},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200
 		};
@@ -92,7 +92,8 @@ function _seekbar({
 	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
 	// Internals
-	this.TF = fb.TitleFormat(matchPattern);
+	this.Tf = fb.TitleFormat(matchPattern);
+	this.TfMaxStep = fb.TitleFormat('[%BPM%]');
 	this.bDebug = bDebug;
 	this.bProfile = bProfile;
 	this.folder = fb.ProfilePath + 'js_data\\seekbar\\';
@@ -100,6 +101,9 @@ function _seekbar({
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	this.current = [];
 	this.cache = null;
+	this.offset = [];
+	this.step = 0; // 0 - maxStep
+	this.maxStep = 6;
 	this.time = 0;
 	this.mouseDown = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
@@ -111,13 +115,13 @@ function _seekbar({
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
 		if (newConfig.analysis) {this.newTrack();}
+		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
 		if (newConfig.ui && newConfig.ui.refreshRate) {throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);}
 		window.Repaint();
 	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
-		this.current = [];
-		this.cache = null;
+		this.reset();
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
@@ -205,22 +209,30 @@ function _seekbar({
 		window.Repaint();
 	};
 	
-	this.stop = (reason) => {
+	this.reset = () => {
 		this.current = [];
 		this.cache = null;
 		this.time = 0;
+		this.step = 0;
+		this.maxStep = 6;
+		this.offset = [];
+	};
+	
+	this.stop = (reason) => {
+		this.reset();
 		if (reason !== 2) {window.Repaint();}
 	};
 	
 	let throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);
 	
 	this.paint = (gr) => {
-		if (!fb.IsPlaying) {this.current = []; this.cache = null;} // In case paint has been delayed after playback has stopped...
-		// Panel background
-		gr.FillSolidRect(this.x , this.y, this.w, this.h, this.ui.colors.bg);
+		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
 		const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
 		const bVisualizer = this.analysis.binaryMode === 'visualizer';
+		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPaintFuture;
+		// Panel background
+		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW = (this.w - this.marginW * 2) / frames;
@@ -239,14 +251,21 @@ function _seekbar({
 				current = timeConstant * n;
 				const bIsfuture = current > this.time;
 				if (this.preset.paintMode === 'partial' && !bPaintFuture && bIsfuture) {break;}
+				if (!this.offset[n]) {this.offset.push(0);}
 				const scale = frame;
 				const x = this.x + this.marginW + barW * n;
+				if (bIsfuture && bPaintFuture && !bPaintedBg) {
+					gr.FillSolidRect(x, this.y, this.w, this.h, this.ui.colors.bgFuture);
+					bPaintedBg = true;
+				}
 				if ((x - xPast) > 0) {
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
-						const y =  (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1)) 
-							+ (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
-						let color = this.ui.colors.bar, altColor = colours.LawnGreen; // TODO change colors for future wave
+						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						const rand = Math.sign(scale) * this.offset[n];
+						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
+						const color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						const altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						let z = bVisualizer ? Math.abs(y) : y;
 						if (z > 0) {
 							if (altColor !== color) {
@@ -267,9 +286,11 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'halfbars') {
 						const scaledSize = size / 2 * scale;
-						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1)) 
-							+ (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
-						let color = this.ui.colors.bar, altColor = colours.LawnGreen; // TODO change colors for future wave
+						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						const rand = Math.sign(scale) * this.offset[n];
+						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
+						let color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						let altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
@@ -286,9 +307,11 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'bars') {
 						const scaledSize = size / 2 * scale;
-						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1)) 
-							+ (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10: 0); // Add movement when painting future
-						let color = this.ui.colors.barLine, altColor = colours.LawnGreen; // TODO change colors for future wave
+						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						const rand = Math.sign(scale) * this.offset[n];
+						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
+						let color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						let altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
@@ -316,14 +339,16 @@ function _seekbar({
 					} else if (this.preset.waveMode === 'points') {
 						const scaledSize = size / 2 * scale;
 						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1));
-						let color = this.ui.colors.bar, altColor = colours.LawnGreen; // TODO change colors for future wave
+						const color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						const altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						// // Current position
 						// const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 						// if (this.preset.bPaintCurrent || this.mouseDown) {
 							// if (x <= currX + barW && x >= currX - barW) {color = altColor = this.ui.colors.currPos;}
 						// }
-						const step = Math.max(this.h / 80,  5) // Point density
-							+ (bPaintFuture && bIsfuture  || bVisualizer ? Math.random() : 1); // Add movement when painting future
+						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
+						const rand = this.offset[n];
+						const step = Math.max(this.h / 80, 5) + (rand || 1) // Point density
 						const circleSize = Math.max(step / 25, 1);
 						// Split waveform in 2, and then each half in 2 for highlighting. If colors match, the same amount of points are painted anyway...
 						const sign = Math.sign(y);
@@ -356,7 +381,6 @@ function _seekbar({
 					xPast = x;
 				}
 				n++;
-				if (this.preset.paintMode === 'full' && frame[0] <= this.time) {nFull++;}
 			}
 			// Current position
 			if (this.preset.bPaintCurrent || this.mouseDown) {
@@ -375,7 +399,14 @@ function _seekbar({
 				gr.GdiDrawText('Analyzing track...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center)
 			}
 		}
-		if (bPaintFuture || bVisualizer) {throttlePaint();} // Animate smoothly
+		// Incrementally draw animation on small steps
+		if (this.step >= this.maxStep) {this.step = - this.step;}
+		else {
+			if (this.step === 0) {this.offset = [];}
+			this.step++;
+		}
+		// Animate smoothly
+		if (bPaintFuture || bVisualizer) {throttlePaint();}
 	};
 	
 	this.trace = (x, y) => {
@@ -418,7 +449,7 @@ function _seekbar({
 	};
 	
 	this.getPaths = (handle) => {
-		const id = this.TF.EvalWithMetadb(handle);
+		const id = this.Tf.EvalWithMetadb(handle);
 		const fileName = id.split('\\').pop();
 		const seekbarFolder = this.folder + id.replace(fileName, '');
 		const seekbarFile = this.folder + id + '.txt';
@@ -504,6 +535,10 @@ function _seekbar({
 					this.current = data;
 				}
 			}
+			// Set animation using BPM if possible
+			const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
+			this.maxStep = Math.min((BPM ? BPM : 60) / 10, 10);
+			// Console and paint
 			if (this.bProfile) {
 				if (cmd) {profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');}
 				else {profiler.Print('Visualizer.');}
