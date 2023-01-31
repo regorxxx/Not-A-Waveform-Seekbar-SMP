@@ -22,7 +22,8 @@ function _seekbar({
 		ui = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
 			colors: {bg: colours.Black, bar: colours.LimeGreen, barBg: colours.Gray, barLine: colours.DimGray, currPos: colours.White},
-			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30}
+			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
+			refreshRate: 200 // ms when using animations of any type
 		},
 		analysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
@@ -49,7 +50,8 @@ function _seekbar({
 		const defUi = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
 			colors: {bg: colours.Black, bar: colours.LimeGreen, barBg: colours.Gray, barLine: colours.DimGray, currPos: colours.White},
-			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30}
+			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
+			refreshRate: 200
 		};
 		const defAnalysis = {
 			binaryMode: 'audiowaveform',
@@ -97,6 +99,7 @@ function _seekbar({
 	this.codePage = convertCharsetToCodepage('UTF-8');
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	this.current = [];
+	this.cache = null;
 	this.time = 0;
 	this.mouseDown = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
@@ -108,11 +111,13 @@ function _seekbar({
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
 		if (newConfig.analysis) {this.newTrack();}
+		if (newConfig.ui && newConfig.ui.refreshRate) {throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);}
 		window.Repaint();
 	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
 		this.current = [];
+		this.cache = null;
 		if (handle) {
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
@@ -194,22 +199,29 @@ function _seekbar({
 	
 	this.updateTime = (time) => {
 		this.time = time;
+		if (this.cache === this.current) { // Paint only once if there is no animation
+			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') {return;}
+		} else {this.cache = this.current;}
 		window.Repaint();
 	};
 	
 	this.stop = (reason) => {
 		this.current = [];
+		this.cache = null;
 		this.time = 0;
 		if (reason !== 2) {window.Repaint();}
 	};
 	
-	const throttlePaint = throttle(() => window.Repaint(), 200);
+	let throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);
 	
 	this.paint = (gr) => {
-		if (!fb.IsPlaying) {this.current = [];} // In case paint has been delayed after playback has stopped...
-		const frames = this.current.length;
+		if (!fb.IsPlaying) {this.current = []; this.cache = null;} // In case paint has been delayed after playback has stopped...
+		console.log('paint');
 		// Panel background
 		gr.FillSolidRect(this.x , this.y, this.w, this.h, this.ui.colors.bg);
+		const frames = this.current.length;
+		const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
+		const bVisualizer = this.analysis.binaryMode === 'visualizer';
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW = (this.w - this.marginW * 2) / frames;
@@ -221,9 +233,7 @@ function _seekbar({
 			// Paint waveform layer
 			const top = this.h / 2 - size / 2;
 			const bottom = this.h / 2 + size / 2;
-			const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
 			const timeConstant = fb.PlaybackLength / frames;
-			const bVisualizer = this.analysis.binaryMode === 'visualizer';
 			let current, xPast = this.x;
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
 			for (let frame of this.current) { // [peak]
@@ -366,7 +376,7 @@ function _seekbar({
 				gr.GdiDrawText('Analyzing track...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center)
 			}
 		}
-		if (this.preset.bPaintFuture) {throttlePaint();} // Animate smoothly
+		if (bPaintFuture || bVisualizer) {throttlePaint();} // Animate smoothly
 	};
 	
 	this.trace = (x, y) => {
