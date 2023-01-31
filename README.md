@@ -1,7 +1,7 @@
 # Not-A-Waveform-Seekbar-SMP [WIP]
 A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel), [audiowaveform](https://github.com/bbc/audiowaveform) or [ffprobe](https://ffmpeg.org/ffprobe.html).
 
-It's based on RMS or peak levels, instead of the actual waveform.
+It's based on RMS, peak levels, the actual waveform or visualization presets.
 
 1. Download this repository and copy at desired folder within foobar profile folder.
 2. Script uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included), but [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into the scripts folder.
@@ -42,7 +42,7 @@ Bars:
 Partial:
 ![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
 
-Visualizer mode (semi-random for every track, smooth animation):
+Visualizer mode (semi-random for every track, smooth animation per track's BPM):
 ![visualizer](https://user-images.githubusercontent.com/83307074/215602830-06a48290-99f7-4bf5-99cd-b5766c893498.gif)
 
 Alternate colors:
