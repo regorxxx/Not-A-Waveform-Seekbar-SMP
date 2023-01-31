@@ -42,5 +42,8 @@ Bars:
 Partial:
 ![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
 
-Visualizer mode (semi-random for every track):
+Visualizer mode (semi-random for every track, smooth animation):
 ![visualizer](https://user-images.githubusercontent.com/83307074/215602830-06a48290-99f7-4bf5-99cd-b5766c893498.gif)
+
+Alternate colors:
+![smooth2](https://user-images.githubusercontent.com/83307074/215738478-ea3e9a5e-3d19-49ff-a363-fc4b4be5499c.gif)
