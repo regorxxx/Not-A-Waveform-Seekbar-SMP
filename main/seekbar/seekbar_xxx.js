@@ -202,7 +202,15 @@ function _seekbar({
 				}
 			}
 		}
+		// Set animation using BPM if possible
+		this.bpmSteps(handle);
+		// And paint
 		throttlePaint();
+	};
+	
+	this.bpmSteps = (handle) => { // Don't allow anything faster than 2 steps and consider all tracks have 100 BPM as default
+		const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
+		this.maxStep = Math.max(Math.round(200 / (BPM ? BPM : 100) * 2), 2);
 	};
 	
 	this.updateTime = (time) => {
@@ -245,7 +253,7 @@ function _seekbar({
 		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPaintFuture;
 		// Panel background
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
-		const currX = (this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength);
+		const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW = (this.w - this.marginW * 2) / frames;
@@ -553,8 +561,7 @@ function _seekbar({
 				}
 			}
 			// Set animation using BPM if possible
-			const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
-			this.maxStep = Math.min((BPM ? BPM : 60) / 10, 10);
+			this.bpmSteps(handle);
 			// Console and paint
 			if (this.bProfile) {
 				if (cmd) {profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');}
