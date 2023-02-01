@@ -18,6 +18,8 @@ function _seekbar({
 			paintMode: 'full', // full | partial
 			bPaintFuture: false,
 			bPaintCurrent: true,
+			bUseBPM: true,
+			futureSecs: Infinity
 		},
 		ui = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
@@ -46,6 +48,8 @@ function _seekbar({
 			paintMode: 'full',
 			bPaintFuture: false,
 			bPaintCurrent: true,
+			bUseBPM: true,
+			futureSecs: Infinity
 		};
 		const defUi = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
@@ -80,6 +84,7 @@ function _seekbar({
 		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + this.binaries[this.analysis.binaryMode], window.name);
 		}
+		if (this.preset.futureSecs <= 0) {this.preset.futureSecs = Infinity;}
 	};
 	// Add default args
 	this.defaults();
@@ -103,7 +108,7 @@ function _seekbar({
 	this.cache = null;
 	this.offset = [];
 	this.step = 0; // 0 - maxStep
-	this.maxStep = 6;
+	this.maxStep = 4;
 	this.time = 0;
 	this.mouseDown = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
@@ -203,14 +208,14 @@ function _seekbar({
 			}
 		}
 		// Set animation using BPM if possible
-		this.bpmSteps(handle);
+		if (this.preset.bUseBPM) {this.bpmSteps(handle);}
 		// And paint
 		throttlePaint();
 	};
 	
-	this.bpmSteps = (handle) => { // Don't allow anything faster than 2 steps and consider all tracks have 100 BPM as default
+	this.bpmSteps = (handle) => { // Don't allow anything faster than 2 steps or slower than 10 and consider all tracks have 100 BPM as default
 		const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
-		this.maxStep = Math.max(Math.round(200 / (BPM ? BPM : 100) * 2), 2);
+		this.maxStep = Math.min(Math.max(Math.round(200 / (BPM ? BPM : 100) * 2), 2), 10);
 	};
 	
 	this.updateTime = (time) => {
@@ -271,7 +276,9 @@ function _seekbar({
 			for (let frame of this.current) { // [peak]
 				current = timeConstant * n;
 				const bIsfuture = current > this.time;
+				const bIsfutureAllowed = (current - this.time) < this.preset.futureSecs;
 				if (this.preset.paintMode === 'partial' && !bPaintFuture && bIsfuture) {break;}
+				else if (bPaintFuture && bIsfuture && !bIsfutureAllowed) {break;}
 				if (!this.offset[n]) {this.offset.push(0);}
 				const scale = frame;
 				const x = this.x + this.marginW + barW * n;
@@ -561,7 +568,7 @@ function _seekbar({
 				}
 			}
 			// Set animation using BPM if possible
-			this.bpmSteps(handle);
+			if (this.preset.bUseBPM) {this.bpmSteps(handle);}
 			// Console and paint
 			if (this.bProfile) {
 				if (cmd) {profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');}

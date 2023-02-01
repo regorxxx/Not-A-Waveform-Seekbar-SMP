@@ -71,12 +71,22 @@ function createSeekbarMenu(bClear = true) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
-		['bPaintCurrent', 'bPaintFuture']
+		['bPaintCurrent', 'bPaintFuture', 'bUseBPM']
 			.forEach((s) => {
 				menu.newEntry({entryText: s, func: () => {
 					this.updateConfig({preset: {[s]: !this.preset[s]}});
 				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer') && s === 'bPaintFuture' ? MF_GRAYED : MF_STRING});
 				menu.newCheckMenu(void(0), s, void(0), () => {return this.preset[s];});
+			});
+	}
+	{
+		const subMenu = menu.newMenu('Future paint...');
+		[Infinity, 2, 5, 10]
+			.forEach((s) => {
+				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
+					this.updateConfig({preset: {futureSecs: s}});
+				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPaintFuture) ? MF_GRAYED : MF_STRING});
+				menu.newCheckMenu(subMenu, s, void(0), () => {return (this.preset.futureSecs === s);});
 			});
 	}
 	menu.newEntry({entryText: 'sep'});
