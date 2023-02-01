@@ -1,5 +1,5 @@
 'use strict';
-//31/01/23
+//01/02/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -107,6 +107,10 @@ function _seekbar({
 	this.time = 0;
 	this.mouseDown = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
+	
+	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
+	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+	
 	// Check
 	this.checkConfig();
 	if (!_isFolder(this.folder)) {_createFolder(this.folder);}
@@ -117,7 +121,7 @@ function _seekbar({
 		if (newConfig.analysis) {this.newTrack();}
 		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
 		if (newConfig.ui && newConfig.ui.refreshRate) {throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);}
-		window.Repaint();
+		throttlePaint();
 	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
@@ -146,7 +150,7 @@ function _seekbar({
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
-				window.Repaint();
+				throttlePaint();
 				this.analyze(handle, seekbarFolder, seekbarFile);
 			}
 			// Calculate waveform on the fly
@@ -198,7 +202,7 @@ function _seekbar({
 				}
 			}
 		}
-		window.Repaint();
+		throttlePaint();
 	};
 	
 	this.updateTime = (time) => {
@@ -206,7 +210,17 @@ function _seekbar({
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') {return;}
 		} else {this.cache = this.current;}
-		window.Repaint();
+		// Repaint by zone when possible
+		if (this.analysis.binaryMode === 'visualizer' || !this.current.length) {throttlePaint();}
+		else if (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) {
+			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
+			const barW = (this.w - this.marginW * 2) / this.current.length;
+			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
+		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
+			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
+			const barW = (this.w - this.marginW * 2) / this.current.length;
+			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
+		}
 	};
 	
 	this.reset = () => {
@@ -220,10 +234,8 @@ function _seekbar({
 	
 	this.stop = (reason) => {
 		this.reset();
-		if (reason !== 2) {window.Repaint();}
+		if (reason !== 2) {throttlePaint();}
 	};
-	
-	let throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);
 	
 	this.paint = (gr) => {
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
@@ -233,6 +245,7 @@ function _seekbar({
 		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPaintFuture;
 		// Panel background
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
+		const currX = (this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength);
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW = (this.w - this.marginW * 2) / frames;
@@ -255,7 +268,7 @@ function _seekbar({
 				const scale = frame;
 				const x = this.x + this.marginW + barW * n;
 				if (bIsfuture && bPaintFuture && !bPaintedBg) {
-					gr.FillSolidRect(x, this.y, this.w, this.h, this.ui.colors.bgFuture);
+					gr.FillSolidRect(currX, this.y, this.w, this.h, this.ui.colors.bgFuture);
 					bPaintedBg = true;
 				}
 				if ((x - xPast) > 0) {
@@ -293,7 +306,6 @@ function _seekbar({
 						let altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
-						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
 							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
 						}
@@ -314,7 +326,6 @@ function _seekbar({
 						let altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
-						const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
 							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
 						}
@@ -342,7 +353,6 @@ function _seekbar({
 						const color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						const altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						// // Current position
-						// const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 						// if (this.preset.bPaintCurrent || this.mouseDown) {
 							// if (x <= currX + barW && x >= currX - barW) {color = altColor = this.ui.colors.currPos;}
 						// }
@@ -382,9 +392,9 @@ function _seekbar({
 				}
 				n++;
 			}
+			gr.SetSmoothingMode(0);
 			// Current position
 			if (this.preset.bPaintCurrent || this.mouseDown) {
-				const currX = (this.x + this.marginW + barW * fb.PlaybackTime / fb.PlaybackLength * frames);
 				if (this.analysis.binaryMode === 'ffprobe') {
 					gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
 				} else if (this.preset.waveMode === 'waveform' || this.preset.waveMode === 'points') {
@@ -405,8 +415,15 @@ function _seekbar({
 			if (this.step === 0) {this.offset = [];}
 			this.step++;
 		}
-		// Animate smoothly
-		if (bPaintFuture || bVisualizer) {throttlePaint();}
+		// Animate smoothly, Repaint by zone when possible
+		if (bVisualizer) {throttlePaint();}
+		else if (bPaintFuture) {
+			const barW = (this.w - this.marginW * 2) / frames;
+			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
+		} else if (this.preset.bPaintCurrent && frames) {
+			const barW = (this.w - this.marginW * 2) / frames;
+			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
+		}
 	};
 	
 	this.trace = (x, y) => {
@@ -425,6 +442,7 @@ function _seekbar({
 				if (time < 0) {time = 0;}
 				else if (time > fb.PlaybackLength) {time = fb.PlaybackLength;}
 				fb.PlaybackTime = time;
+				throttlePaint(true);
 				return true;
 			}
 		}
@@ -434,7 +452,6 @@ function _seekbar({
 	this.move = (x, y, mask) => {
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
-			throttlePaint();
 		}
 	};
 	
@@ -543,7 +560,7 @@ function _seekbar({
 				if (cmd) {profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');}
 				else {profiler.Print('Visualizer.');}
 			}
-			if (this.current.length) {window.Repaint();}
+			if (this.current.length) {throttlePaint();}
 			else {console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path);}
 		}
 	};
