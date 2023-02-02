@@ -33,7 +33,8 @@ function _seekbar({
 			resolution: 1, // pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
 			compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
 			bAutoAnalysis: true,
-			bAutoRemove: false // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
+			bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
+			bVisualizerFallback: true // Uses visualizer mode when file can not be processed (not compatible format)
 		}
 	} = {}) {
 		
@@ -64,7 +65,8 @@ function _seekbar({
 			resolution: 1,
 			compressionMode: 'utf-16',
 			bAutoAnalysis: true,
-			bAutoRemove: false
+			bAutoRemove: false,
+			bVisualizerFallback: true
 		};
 		const options = [{from: defBinaries, to: binaries}, {from: defPreset, to: preset}, {from: defUi, to: ui}, {from: defAnalysis, to: analysis}];
 		options.forEach((option) => {
@@ -114,7 +116,17 @@ function _seekbar({
 	this.time = 0;
 	this.ui.refreshRateOpt = this.ui.refreshRate;
 	this.mouseDown = false;
+	this.isAllowedFile = true;
+	this.isFallback = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
+	const compatibleFiles = {
+		ffprobe: new RegExp('\\.(' + 
+			['mp3', 'flac', 'wav' , 'ogg', 'opus', 'aac', 'ac3', 'aiff', 'ape', 'wv', 'wma', 'spx', 'spc', 'snd', 'ogx', 'mp4', 'au', 'aac', '2sf', 'dff', 'shn', 'tak', 'tta', 'vgm', 'minincsf', 'la', 'hmi']
+			.join('|') + ')$', 'i'),
+		audiowaveform: new RegExp('\\.(' + 
+			['mp3', 'flac', 'wav', 'ogg', 'opus']
+		.join('|') + ')$', 'i')
+	}
 	
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
@@ -144,6 +156,8 @@ function _seekbar({
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
 		this.reset();
 		if (handle) {
+			this.checkAllowedFile(handle);
+			let bAnalysis = false;
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile)) {
@@ -167,12 +181,14 @@ function _seekbar({
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
-				throttlePaint();
+				throttlePaint(true);
 				this.analyze(handle, seekbarFolder, seekbarFile);
+				bAnalysis  = true;
 			}
+			if (!bAnalysis) {this.isFallback = false;} // Allow reading data from files even if track is not compatible
 			// Calculate waveform on the fly
 			if (this.current.length) {
-				if (this.analysis.binaryMode === 'ffprobe') {
+				if (!this.isFallback && this.analysis.binaryMode === 'ffprobe') {
 					// Calculate max values
 					let max = 0;
 					const key = modes[this.preset.analysisMode].key; 
@@ -208,7 +224,7 @@ function _seekbar({
 							if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
 						});
 					}
-				} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer') {
+				} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer' || this.isFallback) {
 					// Calculate max values
 					let max = 0;
 					this.current.forEach((frame) => {
@@ -225,6 +241,11 @@ function _seekbar({
 		if (fb.IsPlaying) {this.time = fb.PlaybackTime;}
 		// And paint
 		throttlePaint();
+	};
+	
+	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
+		this.isAllowedFile = this.analysis.binaryMode !== 'visualizer' && handle.SubSong === 0 && compatibleFiles[this.analysis.binaryMode].test(handle.Path);
+		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
 	};
 	
 	this.bpmSteps = (handle = fb.GetNowPlaying()) => { 
@@ -266,6 +287,8 @@ function _seekbar({
 		this.step = 0;
 		this.maxStep = 6;
 		this.offset = [];
+		this.isAllowedFile = true;
+		this.isFallback = false;
 	};
 	
 	this.stop = (reason) => {
@@ -278,7 +301,7 @@ function _seekbar({
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
 		const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
-		const bVisualizer = this.analysis.binaryMode === 'visualizer';
+		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback;
 		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPaintFuture;
 		// Panel background
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
@@ -438,10 +461,12 @@ function _seekbar({
 			}
 		} else if (fb.IsPlaying) {
 			const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-			if (!this.analysis.bAutoAnalysis) {
-				gr.GdiDrawText('Click to analyze track', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center)
+			if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
+				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			} else if (!this.analysis.bAutoAnalysis) {
+				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else {
-				gr.GdiDrawText('Analyzing track...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center)
+				gr.GdiDrawText('Analyzing track...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			}
 		}
 		// Incrementally draw animation on small steps
@@ -505,7 +530,7 @@ function _seekbar({
 	};
 	
 	this.getPaths = (handle) => {
-		const id = this.Tf.EvalWithMetadb(handle);
+		const id = sanitizePath(this.Tf.EvalWithMetadb(handle)); // Ensure paths are valid!
 		const fileName = id.split('\\').pop();
 		const seekbarFolder = this.folder + id.replace(fileName, '');
 		const seekbarFile = this.folder + id + '.txt';
@@ -514,17 +539,16 @@ function _seekbar({
 	
 	this.analyze = (handle, seekbarFolder, seekbarFile) => {
 		if (!_isFolder(seekbarFolder)) {_createFolder(seekbarFolder);}
-		let profiler;
+		let profiler, cmd;
 		// Change to track folder since ffprobe has stupid escape rules which are impossible to apply right with amovie input mode
 		let handleFileName = handle.Path.split('\\').pop();
 		const handleFolder = handle.Path.replace(handleFileName, '');
-		let cmd;
-		if (this.analysis.binaryMode === 'audiowaveform') {
+		if (this.isAllowedFile && this.analysis.binaryMode === 'audiowaveform') {
 			if (this.bProfile) {profiler = new FbProfiler('audiowaveform');}
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
 				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --bits 8 -o ' + _q(seekbarFolder + 'data.json');
-		} else if (this.analysis.binaryMode === 'ffprobe') {
+		} else if (this.isAllowedFile && this.analysis.binaryMode === 'ffprobe') {
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
@@ -532,7 +556,7 @@ function _seekbar({
 				(this.analysis.resolution > 1 ? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) + ',asetnsamples=' + Math.round((this.analysis.resolution / 10)**2) : '') +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak -print_format json > ' +
 				_q(seekbarFolder + 'data.json');
-		} else if (this.analysis.binaryMode === 'visualizer') {
+		} else if (this.isFallback || this.analysis.binaryMode === 'visualizer') {
 			profiler = new FbProfiler('visualizer');
 		}
 		if (this.bDebug && cmd) {console.log(cmd);}
@@ -541,7 +565,7 @@ function _seekbar({
 			const data = cmd ? _jsonParseFile(seekbarFolder + 'data.json', this.codePage) : this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
 			if (data) {
-				if (this.analysis.binaryMode === 'ffprobe' && data.frames && data.frames.length) {
+				if (!this.isFallback && this.analysis.binaryMode === 'ffprobe' && data.frames && data.frames.length) {
 					data.frames.forEach((frame) => {
 						// Save values as array to compress file as much as possible, also round decimals...
 						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf' 
@@ -571,7 +595,7 @@ function _seekbar({
 					} else {
 						_save(seekbarFile, str);
 					}
-				} else if (this.analysis.binaryMode === 'audiowaveform' && data.data && data.data.length) {
+				} else if (!this.isFallback && this.analysis.binaryMode === 'audiowaveform' && data.data && data.data.length) {
 					this.current = data.data;
 					const str = JSON.stringify(this.current);
 					if (this.analysis.compressionMode === 'utf-16') {
@@ -587,7 +611,7 @@ function _seekbar({
 					} else {
 						_save(seekbarFile + '.json', str);
 					}
-				} else if (this.analysis.binaryMode === 'visualizer' && data.length) {
+				} else if ((this.isFallback || this.analysis.binaryMode === 'visualizer') && data.length) {
 					this.current = data;
 				}
 			}

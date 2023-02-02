@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/01/23
+//02/02/23
 
 /* 
 	helpers_xxx_prototypes.js
@@ -107,6 +107,12 @@ function _runCmd(command, bWait) {
 		console.log('_runCmd(): failed to run command ' + command + '(' + e + ')');
 		return false;
 	}
+}
+
+function sanitizePath(value) { // Sanitize illegal chars but skip drive
+	if (!value || !value.length) {return '';}
+	const disk = (value.match(/^\w:\\/g) || [''])[0];
+	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/[\/]/g, '\\').replace(/[|–]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
 }
 
 function _createFolder(folder) { // Creates complete dir tree if needed up to the final folder
