@@ -1,5 +1,5 @@
 'use strict';
-//01/02/23
+//02/02/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -124,12 +124,16 @@ function _seekbar({
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
 		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
-		if (newConfig.ui && newConfig.ui.refreshRate) {
+		if (newConfig.ui && newConfig.ui.hasOwnProperty('refreshRate')) {
 			throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 			throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
 		}
+		if (newConfig.preset && newConfig.preset.hasOwnProperty('bUseBPM')) {
+			if (newConfig.preset.bUseBPM) {this.bpmSteps();} else {this.defaultSteps();}
+		}
 		if (newConfig.analysis) {this.newTrack();}
 		else {throttlePaint();}
+		console.log(this.maxStep);
 	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
@@ -218,10 +222,19 @@ function _seekbar({
 		throttlePaint();
 	};
 	
-	this.bpmSteps = (handle) => { // Don't allow anything faster than 2 steps or slower than 10 and consider all tracks have 100 BPM as default
+	this.bpmSteps = (handle = fb.GetNowPlaying()) => { // Don't allow anything faster than 2 steps or slower than 10 and consider all tracks have 100 BPM as default
+		if (!handle) {return this.defaultSteps();}
 		const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
-		this.maxStep = Math.min(Math.max(Math.round(200 / (BPM ? BPM : 100) * 2), 2), 10);
+		// this.maxStep = Math.min(Math.max(Math.round(200 / (BPM ? BPM : 100) * 2), 2), 10);
+		this.maxStep = Math.round(Math.min(Math.max(200 / (BPM ? BPM : 100) * 2, 2), 10) * (200 / this.ui.refreshRate) ** (1/2));
+		return this.maxStep;
 	};
+	
+	this.defaultSteps = () => {
+		this.maxStep = Math.round(4 * (200 / this.ui.refreshRate) ** (1/2));
+		return this.maxStep;
+	};
+	this.defaultSteps();
 	
 	this.updateTime = (time) => {
 		this.time = time;
