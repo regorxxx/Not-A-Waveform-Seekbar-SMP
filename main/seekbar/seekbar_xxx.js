@@ -123,10 +123,13 @@ function _seekbar({
 	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
-		if (newConfig.analysis) {this.newTrack();}
 		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
-		if (newConfig.ui && newConfig.ui.refreshRate) {throttlePaint = throttle(() => window.Repaint(), this.ui.refreshRate);}
-		throttlePaint();
+		if (newConfig.ui && newConfig.ui.refreshRate) {
+			throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
+			throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+		}
+		if (newConfig.analysis) {this.newTrack();}
+		else {throttlePaint();}
 	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
@@ -209,6 +212,8 @@ function _seekbar({
 		}
 		// Set animation using BPM if possible
 		if (this.preset.bUseBPM) {this.bpmSteps(handle);}
+		// Update time if needed
+		if (fb.IsPlaying) {this.time = fb.PlaybackTime;}
 		// And paint
 		throttlePaint();
 	};
