@@ -133,7 +133,6 @@ function _seekbar({
 		}
 		if (newConfig.analysis) {this.newTrack();}
 		else {throttlePaint();}
-		console.log(this.maxStep);
 	};
 	
 	this.newTrack = (handle = fb.GetNowPlaying()) => {
@@ -222,10 +221,10 @@ function _seekbar({
 		throttlePaint();
 	};
 	
-	this.bpmSteps = (handle = fb.GetNowPlaying()) => { // Don't allow anything faster than 2 steps or slower than 10 and consider all tracks have 100 BPM as default
+	this.bpmSteps = (handle = fb.GetNowPlaying()) => { 
+		// Don't allow anything faster than 2 steps or slower than 10 (scaled to 200 ms refresh rate) and consider all tracks have 100 BPM as default
 		if (!handle) {return this.defaultSteps();}
 		const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
-		// this.maxStep = Math.min(Math.max(Math.round(200 / (BPM ? BPM : 100) * 2), 2), 10);
 		this.maxStep = Math.round(Math.min(Math.max(200 / (BPM ? BPM : 100) * 2, 2), 10) * (200 / this.ui.refreshRate) ** (1/2));
 		return this.maxStep;
 	};
