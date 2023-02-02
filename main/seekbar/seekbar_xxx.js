@@ -6,7 +6,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
 function _seekbar({
 		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%DESCRIPTION%,%COMMENT%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
 		bDebug = true,
-		bProfile = true,
+		bProfile = false,
 		binaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe.exe',
 			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
@@ -25,11 +25,12 @@ function _seekbar({
 			gFont: _gdiFont('Segoe UI', _scale(15)),
 			colors: {bg: colours.Black, main: colours.LimeGreen, alt: colours.LawnGreen, bgFuture: 0xFF1B1B1B, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: colours.White},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
-			refreshRate: 200 // ms when using animations of any type. 100 is smooth enough but the performance hit is high
+			refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
+			bVariableRefreshRate: false // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
 		},
 		analysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
-			resolution: 0, // ms, set to zero to analyze each frame. Fastest is zero, since other values require resampling. Better to set resolution at paint averaging values if desired...
+			resolution: 1, // pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
 			compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
 			bAutoAnalysis: true,
 			bAutoRemove: false // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
@@ -55,11 +56,12 @@ function _seekbar({
 			gFont: _gdiFont('Segoe UI', _scale(15)),
 			colors: {bg: colours.Black, main: colours.LimeGreen, alt: colours.LawnGreen, bgFuture: 0xFF1B1B1B, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: colours.White},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
-			refreshRate: 200
+			refreshRate: 200,
+			bVariableRefreshRate: false
 		};
 		const defAnalysis = {
 			binaryMode: 'audiowaveform',
-			resolution: 0,
+			resolution: 1,
 			compressionMode: 'utf-16',
 			bAutoAnalysis: true,
 			bAutoRemove: false
@@ -110,11 +112,14 @@ function _seekbar({
 	this.step = 0; // 0 - maxStep
 	this.maxStep = 4;
 	this.time = 0;
+	this.ui.refreshRateOpt = this.ui.refreshRate;
 	this.mouseDown = false;
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
 	
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+	
+	const profilerPaint = new FbProfiler('paint');
 	
 	// Check
 	this.checkConfig();
@@ -125,6 +130,7 @@ function _seekbar({
 		this.checkConfig();
 		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
 		if (newConfig.ui && newConfig.ui.hasOwnProperty('refreshRate')) {
+			this.ui.refreshRateOpt = this.ui.refreshRate;
 			throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 			throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
 		}
@@ -268,6 +274,7 @@ function _seekbar({
 	};
 	
 	this.paint = (gr) => {
+		profilerPaint.Reset();
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
 		const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
@@ -384,10 +391,6 @@ function _seekbar({
 						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1));
 						const color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						const altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
-						// // Current position
-						// if (this.preset.bPaintCurrent || this.mouseDown) {
-							// if (x <= currX + barW && x >= currX - barW) {color = altColor = this.ui.colors.currPos;}
-						// }
 						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 						const rand = this.offset[n];
 						const step = Math.max(this.h / 80, 5) + (rand || 1) // Point density
@@ -456,6 +459,10 @@ function _seekbar({
 			const barW = (this.w - this.marginW * 2) / frames;
 			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
 		}
+		if (this.ui.bVariableRefreshRate) {
+			if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
+			else if (profilerPaint.Time < this.ui.refreshRate && profilerPaint.Time >= this.ui.refreshRateOpt) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate - 25}});}
+		}
 	};
 	
 	this.trace = (x, y) => {
@@ -516,13 +523,13 @@ function _seekbar({
 			if (this.bProfile) {profiler = new FbProfiler('audiowaveform');}
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
-				' --pixels-per-second ' + (this.analysis.resolution || 1) + ' -o ' + _q(seekbarFolder + 'data.json');
+				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --bits 8 -o ' + _q(seekbarFolder + 'data.json');
 		} else if (this.analysis.binaryMode === 'ffprobe') {
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.ffprobe) + ' -f lavfi -i amovie=' + _q(handleFileName) +
-				(this.analysis.resolution ? ',aresample=' + (this.analysis.resolution * 100) + ',asetnsamples=' + (this.analysis.resolution / 10)**2  : '') +
+				(this.analysis.resolution > 1 ? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) + ',asetnsamples=' + Math.round((this.analysis.resolution / 10)**2) : '') +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak -print_format json > ' +
 				_q(seekbarFolder + 'data.json');
 		} else if (this.analysis.binaryMode === 'visualizer') {
@@ -598,8 +605,8 @@ function _seekbar({
 	
 	this.visualizerData = (handle, preset = 'classic spectrum analyzer', bVariableLen = false) => {
 		const samples = bVariableLen 
-			? handle.Length / (this.analysis.resolution || 1) 
-			: this.w / _scale(5) / (this.analysis.resolution || 1);
+			? handle.Length * (this.analysis.resolution || 1)
+			: this.w / _scale(5) * (this.analysis.resolution || 1);
 		const data = [];
 		switch (preset) {
 			case 'classic spectrum analyzer': {
