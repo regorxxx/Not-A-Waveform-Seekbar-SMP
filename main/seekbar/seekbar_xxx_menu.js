@@ -92,7 +92,7 @@ function createSeekbarMenu(bClear = true) {
 	{
 		[
 			{name: 'Paint current position', key: 'bPaintCurrent'},
-			{name: 'Animate with BPM', key: 'bUseBPM', 
+			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
 				flags: (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
 			{name: 'Paint ahead?' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPaintFuture', 
 				flags: this.preset.paintMode === 'full' ? MF_GRAYED : MF_STRING}
@@ -116,7 +116,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 	}
 	{
-		const subMenu = menu.newMenu('Refresh rate...', void(0), () => this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		const subMenu = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), void(0), () => this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[1000, 500, 200, 100, 60]
 			.forEach((s) => {
 				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
