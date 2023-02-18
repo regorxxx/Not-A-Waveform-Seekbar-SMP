@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/23
+//18//02/23
 
 // Dummy file to load existing helpers or independent file
 {
@@ -14,5 +14,4 @@
 		include('seekbar_xxx_helper_fallback.js');
 		include(fb.ComponentPath + 'docs\\Codepages.js');  // Only used for UTF-8 codepage
 	}
-	include(fb.ComponentPath + 'docs\\Helpers.js'); // Only used to set the default colours
 }
