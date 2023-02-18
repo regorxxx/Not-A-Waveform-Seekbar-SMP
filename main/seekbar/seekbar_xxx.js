@@ -86,7 +86,7 @@ function _seekbar({
 			throw new Error('Binary mode not recognized or path not set: ' + this.analysis.binaryMode);
 		}
 		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
-			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + this.binaries[this.analysis.binaryMode], window.name);
+			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name);
 		}
 		if (this.preset.futureSecs <= 0) {this.preset.futureSecs = Infinity;}
 	};
@@ -562,6 +562,7 @@ function _seekbar({
 		if (this.bDebug && cmd) {console.log(cmd);}
 		let bDone = cmd ? _runCmd(cmd, false) : true;
 		bDone = bDone && (await new Promise((resolve) => {
+				if (this.isFallback || this.analysis.binaryMode === 'visualizer') {resolve(true);}
 				const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
 				const id = setInterval(() => {
 					if (_isFile(seekbarFolder + 'data.json')) {clearInterval(id); resolve(true);}
