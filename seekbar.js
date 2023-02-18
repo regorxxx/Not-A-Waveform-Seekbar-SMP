@@ -3,7 +3,6 @@
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
-include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_prototypes.js');
 include('helpers\\helpers_xxx_properties.js');
 include('main\\seekbar\\seekbar_xxx.js');
@@ -102,7 +101,6 @@ if (fb.IsPlaying) {window.Repaint(); setTimeout(() => {on_playback_new_track(fb.
 // Helpers
 seekbar.saveProperties = function() {
 	const config = this.exportConfig();
-	console.log(config);
 	for (let key in config) {
 		if (seekbarProperties.hasOwnProperty(key)) {seekbarProperties[key][1] = JSON.stringify(config[key]);}
 	}
