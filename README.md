@@ -1,4 +1,4 @@
-# Not-A-Waveform-Seekbar-SMP [WIP]
+# Not-A-Waveform-Seekbar-SMP
 [![version][version_badge]][changelog]
 [![CodeFactor][codefactor_badge]](https://www.codefactor.io/repository/github/regorxxx/Not-A-Waveform-Seekbar-SMP/overview/main)
 [![CodacyBadge][codacy_badge]](https://www.codacy.com/gh/regorxxx/Not-A-Waveform-Seekbar-SMP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=regorxxx/Not-A-Waveform-Seekbar-SMP&amp;utm_campaign=Badge_Grade)
@@ -17,7 +17,7 @@ A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Pan
 	* Waveform modes
 	* Analysis modes
 	* Animations
-	* Refresh rate
+	* Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
 	
 Waveform (ffprobe):
 ![seek5](https://user-images.githubusercontent.com/83307074/215299705-5705544e-0b78-462c-b0ee-a3220fc72552.gif)
