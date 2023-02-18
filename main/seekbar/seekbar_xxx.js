@@ -117,6 +117,7 @@ function _seekbar({
 	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
 	// Internals
+	this.active = true;
 	this.Tf = fb.TitleFormat(matchPattern);
 	this.TfMaxStep = fb.TitleFormat('[%BPM%]');
 	this.bDebug = bDebug;
@@ -187,7 +188,21 @@ function _seekbar({
 		return config;
 	};
 	
+	this.switch = (bEnable = !this.active) => {
+		const wasActive = this.active;
+		this.active = bEnable;
+		if (fb.IsPlaying) {
+			if (!wasActive && this.active) {
+				window.Repaint(); 
+				setTimeout(() => {seekbar.newTrack(fb.GetNowPlaying()); this.updateTime(fb.PlaybackTime);}, 0);
+			} else if (wasActive && !this.active) {
+				this.stop(-1);
+			}
+		}
+	};
+	
 	this.newTrack = async (handle = fb.GetNowPlaying()) => {
+		if (!this.active) {return;}
 		this.reset();
 		if (handle) {
 			this.checkAllowedFile(handle);
@@ -297,6 +312,7 @@ function _seekbar({
 	this.defaultSteps();
 	
 	this.updateTime = (time) => {
+		if (!this.active) {return;}
 		this.time = time;
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') {return;}
@@ -325,7 +341,8 @@ function _seekbar({
 		this.isFallback = false;
 	};
 	
-	this.stop = (reason) => {
+	this.stop = (reason = -1) => { // -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
+		if (reason !== -1 && !this.active) {return;}
 		this.reset();
 		if (reason !== 2) {throttlePaint();}
 	};
@@ -500,7 +517,7 @@ function _seekbar({
 				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (!this.analysis.bAutoAnalysis) {
 				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
-			} else {
+			} else if (this.active) {
 				gr.GdiDrawText('Analyzing track...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			}
 		}

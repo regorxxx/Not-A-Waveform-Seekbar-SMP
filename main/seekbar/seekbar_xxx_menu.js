@@ -22,15 +22,16 @@ function createSeekbarMenu(bClear = true) {
 			{name: 'Visualizer', key: 'visualizer'}
 		];
 		options.forEach((o) => {
-			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+			const bFound = _isFile(this.binaries[o.key]);
+			menu.newEntry({menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found' : ''), func: () => {
 				this.updateConfig({analysis: {binaryMode: o.key}});
 				this.saveProperties();
-			}});
+			}, flags: bFound ? MF_STRING : MF_GRAYED});
 		});
 		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.analysis.binaryMode);});
 	}
 	{
-		const subMenu = menu.newMenu('Analysis type...');
+		const subMenu = menu.newMenu('Analysis settings...');
 		const options = [
 			{name: 'RMS levels', key: 'rms_level'},
 			{name: 'Peak levels', key: 'peak_level'},
@@ -59,7 +60,7 @@ function createSeekbarMenu(bClear = true) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
-		const subMenu = menu.newMenu('Waveform type...');
+		const subMenu = menu.newMenu('Waveform shape...');
 		const options = [
 			{name: 'Waveform', key: 'waveform'},
 			{name: 'Bars', key: 'bars'},
@@ -91,7 +92,7 @@ function createSeekbarMenu(bClear = true) {
 	menu.newEntry({entryText: 'sep'});
 	{
 		[
-			{name: 'Paint current position', key: 'bPaintCurrent'},
+			{name: 'Show current position', key: 'bPaintCurrent'},
 			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
 				flags: (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
 			{name: 'Paint ahead?' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPaintFuture', 
@@ -139,30 +140,36 @@ function createSeekbarMenu(bClear = true) {
 	menu.newEntry({entryText: 'sep'});
 	{
 		const subMenu = menu.newMenu('Color presets...');
+		const subMenuBg = menu.newMenu('Background...', subMenu);
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		const options = [
-			{name: 'Green', colors: {main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF}},
-			{name: 'Lavender', colors: {main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC}},
-			{name: 'Forest', colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
-			{name: 'Sienna', colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
-			{name: 'Blue', colors: {main: 0xFF003559, alt: 0xFF006DAA,mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
-			{name: 'sep'},
-			{name: 'White Bg', colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFFFFFFF}},
-			{name: 'White Bg (alt)', colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
-			{name: 'Black Bg', colors: {bg: 0xFF000000, bgFuture: 0xFF000000}},
-			{name: 'Black Bg (alt)', colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
-			{name: 'Sienna Bg', colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
-			{name: 'Blue Bg', colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}}
+			{menuName: subMenu, name: 'Green', colors: {main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF}},
+			{menuName: subMenu, name: 'Lavender', colors: {main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC}},
+			{menuName: subMenu, name: 'Forest', colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
+			{menuName: subMenu, name: 'Sienna', colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
+			{menuName: subMenu, name: 'Blue', colors: {main: 0xFF003559, alt: 0xFF006DAA,mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
+			{menuName: subMenuBg, name: 'White Bg', colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFFFFFFF}},
+			{menuName: subMenuBg, name: 'White Bg (alt)', colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
+			{menuName: subMenuBg, name: 'Black Bg', colors: {bg: 0xFF000000, bgFuture: 0xFF000000}},
+			{menuName: subMenuBg, name: 'Black Bg (alt)', colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
+			{menuName: subMenuBg, name: 'Sienna Bg', colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
+			{menuName: subMenuBg, name: 'Blue Bg', colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}}
 		];
-		options.forEach((opt) => {
-			if (opt.name === 'sep') {
-				menu.newEntry({menuName: subMenu, entryText: opt.name});
+		options.forEach((o) => {
+			if (o.name === 'sep') {
+				menu.newEntry({menuName: o.menuName, entryText: o.name});
 			} else {
-				menu.newEntry({menuName: subMenu, entryText: opt.name, func: () => {
-					this.updateConfig({ui: {colors: opt.colors}});
+				menu.newEntry({menuName: o.menuName, entryText: o.name, func: () => {
+					this.updateConfig({ui: {colors: o.colors}});
 					this.saveProperties();
 				}});
 			}
 		});
 	}
+	menu.newEntry({entryText: 'sep'});
+	menu.newEntry({entryText: 'Enable seekbar?', func: () => {
+		this.switch();
+	}});
+	menu.newCheckMenu(void(0), 'Enable seekbar?', void(0), () => {return this.active;});
 	return menu;
 }
