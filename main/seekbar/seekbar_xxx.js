@@ -305,11 +305,11 @@ function _seekbar({
 		if (this.analysis.binaryMode === 'visualizer' || !this.current.length) {throttlePaint();}
 		else if (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
-			const barW = (this.w - this.marginW * 2) / this.current.length;
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
 			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
 		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
-			const barW = (this.w - this.marginW * 2) / this.current.length;
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
 			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
 		}
 	};
@@ -487,10 +487,11 @@ function _seekbar({
 			gr.SetSmoothingMode(0);
 			// Current position
 			if (this.preset.bPaintCurrent || this.mouseDown) {
+				const minBarW = Math.round(Math.max(barW, _scale(1)));
 				if (this.analysis.binaryMode === 'ffprobe') {
-					gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
+					gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, this.ui.colors.currPos);
 				} else if (this.preset.waveMode === 'waveform' || this.preset.waveMode === 'points') {
-					gr.DrawLine(currX, this.y, currX, this.y + this.h, barW, this.ui.colors.currPos);
+					gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, this.ui.colors.currPos);
 				}
 			}
 		} else if (fb.IsPlaying) {
@@ -512,10 +513,10 @@ function _seekbar({
 		// Animate smoothly, Repaint by zone when possible
 		if (bVisualizer) {throttlePaint();}
 		else if (bPaintFuture) {
-			const barW = (this.w - this.marginW * 2) / frames;
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
 			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
 		} else if (this.preset.bPaintCurrent && frames) {
-			const barW = (this.w - this.marginW * 2) / frames;
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
 			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
 		}
 		if (this.ui.bVariableRefreshRate) {
@@ -599,8 +600,14 @@ function _seekbar({
 				if (this.isFallback || this.analysis.binaryMode === 'visualizer') {resolve(true);}
 				const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
 				const id = setInterval(() => {
-					if (_isFile(seekbarFolder + 'data.json')) {clearInterval(id); resolve(true);}
-					else if (Date.now() > timeout) {clearInterval(id); resolve(false);}
+					if (_isFile(seekbarFolder + 'data.json')) {
+						// ffmpeg writes sequentially so wait until it finish...
+						if (this.analysis.binaryMode === 'ffprobe' && _jsonParseFile(seekbarFolder + 'data.json', this.codePage)) {
+							clearInterval(id); resolve(true);
+						} else if (this.analysis.binaryMode !== 'ffprobe') {
+							clearInterval(id); resolve(true);
+						}
+					} else if (Date.now() > timeout) {clearInterval(id); resolve(false);}
 				}, 300);
 			})
 		);
