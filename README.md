@@ -1,33 +1,28 @@
 # Not-A-Waveform-Seekbar-SMP [WIP]
-A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel), [audiowaveform](https://github.com/bbc/audiowaveform) or [ffprobe](https://ffmpeg.org/ffprobe.html).
+[![version][version_badge]][changelog]
+[![CodeFactor][codefactor_badge]](https://www.codefactor.io/repository/github/regorxxx/Not-A-Waveform-Seekbar-SMP/overview/main)
+[![CodacyBadge][codacy_badge]](https://www.codacy.com/gh/regorxxx/Not-A-Waveform-Seekbar-SMP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=regorxxx/Not-A-Waveform-Seekbar-SMP&amp;utm_campaign=Badge_Grade)
+![GitHub](https://img.shields.io/github/license/regorxxx/Not-A-Waveform-Seekbar-SMP) 
 
-It's based on RMS, peak levels, the actual waveform or visualization presets.
+A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel), [audiowaveform](https://github.com/bbc/audiowaveform) or [ffprobe](https://ffmpeg.org/ffprobe.html). It's based on RMS, peak levels, the actual waveform or visualization presets.
 
-1. Download this repository and copy at desired folder within foobar profile folder.
-2. Script uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included), but [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into the scripts folder.
+![visualizer](https://user-images.githubusercontent.com/83307074/215602830-06a48290-99f7-4bf5-99cd-b5766c893498.gif)
 
-3. At seekbar.js, line 11, edit paths and/or architecture as needed :
-```
-	const arch = 'x64'; // No need once path is manually set...
-	binaries: {
-		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
-			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe'
-			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe_32.exe',
-		audiowaveform: arch === 'x64
-			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe''
-			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform_32.exe'',
-	},
-```
-4. Load seekbar.js in a blank panel.
-
-5. R. Click to configure. Configuration lost on restart. (i.e. apply it directly on main file once found your desired settings)
-
-[See discussion for development](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1)
-
+## Features
+* Uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included).
+* [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\ffprobe\'.
+* Visualizer mode to simply show an animation which changes according to BPM (if tag exists).
+* Fully configurable using the R. Click menu:
+	* Colors
+	* Waveform modes
+	* Analysis modes
+	* Animations
+	* Refresh rate
+	
 Waveform (ffprobe):
 ![seek5](https://user-images.githubusercontent.com/83307074/215299705-5705544e-0b78-462c-b0ee-a3220fc72552.gif)
 
-Waveform:
+Waveform (audiowaveform):
 ![seek2](https://user-images.githubusercontent.com/83307074/215299699-ab57c6ec-1f3a-4c56-ad45-fdcf94980d60.gif)
 
 Points:
@@ -42,8 +37,17 @@ Bars:
 Partial:
 ![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
 
-Visualizer mode (semi-random for every track, smooth animation per track's BPM):
-![visualizer](https://user-images.githubusercontent.com/83307074/215602830-06a48290-99f7-4bf5-99cd-b5766c893498.gif)
-
 Alternate colors:
 ![smooth2](https://user-images.githubusercontent.com/83307074/215738478-ea3e9a5e-3d19-49ff-a363-fc4b4be5499c.gif)
+
+### Integrated in
+ 1. [Georgia ReBORN](https://github.com/TT-ReBORN/Georgia-ReBORN): a Clean, Full Dynamic Color Reborn foobar2000 Theme.
+ 
+## Installation
+See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki/Installation).
+Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
+
+[changelog]: CHANGELOG.md
+[version_badge]: https://img.shields.io/github/release/regorxxx/Not-A-Waveform-Seekbar-SMP.svg
+[codacy_badge]: https://api.codacy.com/project/badge/Grade/e04be28637dd40d99fae7bd92f740677
+[codefactor_badge]: https://www.codefactor.io/repository/github/regorxxx/Not-A-Waveform-Seekbar-SMP/badge/main
