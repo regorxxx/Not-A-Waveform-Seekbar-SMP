@@ -1,10 +1,10 @@
 'use strict';
-//02/02/23
+//18/02/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
 function _seekbar({
-		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%DESCRIPTION%,%COMMENT%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
+		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%COMMENT%,%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
 		bDebug = true,
 		bProfile = false,
 		binaries = {
@@ -153,36 +153,36 @@ function _seekbar({
 		else {throttlePaint();}
 	};
 	
-	this.newTrack = (handle = fb.GetNowPlaying()) => {
+	this.newTrack = async (handle = fb.GetNowPlaying()) => {
 		this.reset();
 		if (handle) {
 			this.checkAllowedFile(handle);
 			let bAnalysis = false;
 			const {seekbarFolder, seekbarFile} = this.getPaths(handle);
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
-			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile)) {
-				this.current = _jsonParseFile(seekbarFile, this.codePage) || [];
-			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.lz')) {
-				let str = _open(seekbarFile + '.lz', this.codePage) || '';
+			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.json')) {
+				this.current = _jsonParseFile(seekbarFile + '.ff.json', this.codePage) || [];
+			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.lz')) {
+				let str = _open(seekbarFile + '.ff.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.lz16')) {
-				let str = _open(seekbarFile + '.lz16', this.codePageV2) || '';
+			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.lz16')) {
+				let str = _open(seekbarFile + '.ff.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-			} else if (this.analysis.binaryMode === 'audiowaveform' && _isFile(seekbarFile + '.json')) {
-				this.current = _jsonParseFile(seekbarFile + '.json', this.codePage) || [];
-			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.json.lz')) {
-				let str = _open(seekbarFile + '.json.lz', this.codePage) || '';
+			} else if (this.analysis.binaryMode === 'audiowaveform' && _isFile(seekbarFile + '.aw.json')) {
+				this.current = _jsonParseFile(seekbarFile + '.aw.json', this.codePage) || [];
+			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.aw.lz')) {
+				let str = _open(seekbarFile + '.aw.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.json.lz16')) {
-				let str = _open(seekbarFile + '.json.lz16', this.codePageV2) || '';
+			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.aw.lz16')) {
+				let str = _open(seekbarFile + '.aw.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
 				throttlePaint(true);
-				this.analyze(handle, seekbarFolder, seekbarFile);
+				await this.analyze(handle, seekbarFolder, seekbarFile);
 				bAnalysis  = true;
 			}
 			if (!bAnalysis) {this.isFallback = false;} // Allow reading data from files even if track is not compatible
@@ -533,11 +533,11 @@ function _seekbar({
 		const id = sanitizePath(this.Tf.EvalWithMetadb(handle)); // Ensure paths are valid!
 		const fileName = id.split('\\').pop();
 		const seekbarFolder = this.folder + id.replace(fileName, '');
-		const seekbarFile = this.folder + id + '.txt';
+		const seekbarFile = this.folder + id;
 		return {seekbarFolder, seekbarFile};
 	};
 	
-	this.analyze = (handle, seekbarFolder, seekbarFile) => {
+	this.analyze = async (handle, seekbarFolder, seekbarFile) => {
 		if (!_isFolder(seekbarFolder)) {_createFolder(seekbarFolder);}
 		let profiler, cmd;
 		// Change to track folder since ffprobe has stupid escape rules which are impossible to apply right with amovie input mode
@@ -552,7 +552,7 @@ function _seekbar({
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-				_q(this.binaries.ffprobe) + ' -f lavfi -i amovie=' + _q(handleFileName) +
+				_q(this.binaries.ffprobe) + ' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
 				(this.analysis.resolution > 1 ? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) + ',asetnsamples=' + Math.round((this.analysis.resolution / 10)**2) : '') +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak -print_format json > ' +
 				_q(seekbarFolder + 'data.json');
@@ -560,7 +560,15 @@ function _seekbar({
 			profiler = new FbProfiler('visualizer');
 		}
 		if (this.bDebug && cmd) {console.log(cmd);}
-		const bDone = cmd ? _runCmd(cmd, true) : true;
+		let bDone = cmd ? _runCmd(cmd, false) : true;
+		bDone = bDone && (await new Promise((resolve) => {
+				const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
+				const id = setInterval(() => {
+					if (_isFile(seekbarFolder + 'data.json')) {clearInterval(id); resolve(true);}
+					else if (Date.now() > timeout) {clearInterval(id); resolve(false);}
+				}, 300);
+			})
+		);
 		if (bDone) {
 			const data = cmd ? _jsonParseFile(seekbarFolder + 'data.json', this.codePage) : this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
@@ -586,14 +594,14 @@ function _seekbar({
 						// To save UTF16-LE files, FSO is needed.
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZString.compressToUTF16(str);
-						_saveFSO(seekbarFile + '.lz16', compressed, true);
+						_saveFSO(seekbarFile + '.ff.lz16', compressed, true);
 					} else if (this.analysis.compressionMode === 'utf-8') {
 						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
-						_save(seekbarFile + '.lz', compressed);
+						_save(seekbarFile + '.ff.lz', compressed);
 					} else {
-						_save(seekbarFile, str);
+						_save(seekbarFile + '.ff.json', str);
 					}
 				} else if (!this.isFallback && this.analysis.binaryMode === 'audiowaveform' && data.data && data.data.length) {
 					this.current = data.data;
@@ -602,14 +610,14 @@ function _seekbar({
 						// To save UTF16-LE files, FSO is needed.
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZString.compressToUTF16(str);
-						_saveFSO(seekbarFile + '.json.lz16', compressed, true);
+						_saveFSO(seekbarFile + '.aw.lz16', compressed, true);
 					} else if (this.analysis.compressionMode === 'utf-8') {
 						// Only Base64 strings can be saved on UTF8 files...
 						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 						const compressed = LZUTF8.compress(str, {outputEncoding: 'Base64'});
-						_save(seekbarFile + '.json.lz', compressed);
+						_save(seekbarFile + '.aw.lz', compressed);
 					} else {
-						_save(seekbarFile + '.json', str);
+						_save(seekbarFile + '.aw.json', str);
 					}
 				} else if ((this.isFallback || this.analysis.binaryMode === 'visualizer') && data.length) {
 					this.current = data;
