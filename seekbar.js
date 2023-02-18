@@ -1,37 +1,62 @@
 'use strict';
-//02/02/23
-include('main\\seekbar\\seekbar_xxx_helper.js');
+//18/02/23
+include('helpers\\helpers_xxx.js');
+include('helpers\\helpers_xxx_UI.js');
+include('helpers\\helpers_xxx_file.js');
+include('helpers\\helpers_xxx.js');
+include('helpers\\helpers_xxx_prototypes.js');
+include('helpers\\helpers_xxx_properties.js');
 include('main\\seekbar\\seekbar_xxx.js');
-include('helpers\\callbacks_xxx.js'); // Not needed if event listeners below are implemented as callbacks
+include('helpers\\callbacks_xxx.js');
 
 window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.0'});
 
-const arch = 'x64'; // No need once path is manually set...
+let seekbarProperties = {
+	binaries:	['Binaries paths', 
+		JSON.stringify({
+			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
+			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
+		}), {func: isJSON}],
+	analysis:	['Analysis config', 
+		JSON.stringify({
+			binaryMode: 'audiowaveform',
+			resolution: 1,
+			compressionMode: 'utf-16',
+			bAutoAnalysis: true,
+			bAutoRemove: false,
+			bVisualizerFallback: true
+		}), {func: isJSON}],
+	preset:		['Preset config',
+		JSON.stringify({
+			waveMode: 'waveform',
+			paintMode: 'full',
+			bPaintFuture: false,
+			bPaintCurrent: true
+		}), {func: isJSON}],
+	ui:			['UI config', 
+		JSON.stringify({
+			colors: {
+				bg: 0xFF000000, // Black
+				main: 0xFF90EE90, // LimeGreen
+				alt: 0xFF7CFC00, // LawnGreen
+				bgFuture: 0xFF1B1B1B, 
+				mainFuture: 0xFFB7FFA2, 
+				altFuture: 0xFFF9FF99, 
+				currPos: 0xFFFFFFFF // White
+			},
+			refreshRate: 200,
+			bVariableRefreshRate: true
+		}), {func: isJSON}]
+};
+Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
+setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
+seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
+
 const seekbar = new _seekbar({
-	binaries: {
-		ffprobe: arch === 'x64' // Should be set by user to not hard-code paths
-			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe'
-			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe_32.exe',
-		audiowaveform: arch === 'x64'
-			? fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe'
-			: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform_32.exe'
-	},
-	analysis: {
-		binaryMode: 'audiowaveform',
-		compressionMode: 'utf-16',
-		bAutoRemove: false
-	},
-	preset: {
-		waveMode: 'waveform',
-		paintMode: 'full'
-	},
-	ui: {
-		x: 0,
-		w: window.Width,
-		scaleH: 0.9,
-		refreshRate: 200,
-		bVariableRefreshRate: false
-	}
+	binaries: JSON.parse(seekbarProperties.binaries[1]),
+	analysis: JSON.parse(seekbarProperties.analysis[1]),
+	preset: JSON.parse(seekbarProperties.preset[1]),
+	ui: JSON.parse(seekbarProperties.ui[1])
 });
 
 // Callbacks
@@ -72,12 +97,23 @@ addEventListener('on_script_unload', () => {
 	seekbar.unload();
 });
 
+if (fb.IsPlaying) {window.Repaint(); setTimeout(() => {on_playback_new_track(fb.GetNowPlaying()); seekbar.updateTime(fb.PlaybackTime);}, 0);}
+
+// Helpers
+seekbar.saveProperties = function() {
+	const config = this.exportConfig();
+	console.log(config);
+	for (let key in config) {
+		if (seekbarProperties.hasOwnProperty(key)) {seekbarProperties[key][1] = JSON.stringify(config[key]);}
+	}
+	overwriteProperties(seekbarProperties);
+};
+
 // Menu, requires menu framework
+include('helpers\\menu_xxx.js');
 include('main\\seekbar\\seekbar_xxx_menu.js');
 bindMenu(seekbar);
 addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
 	seekbar.rbtn_up(x, y, mask);
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 });
-
-if (fb.IsPlaying) {window.Repaint(); setTimeout(() => {on_playback_new_track(fb.GetNowPlaying()); seekbar.updateTime(fb.PlaybackTime);}, 0);}

@@ -8,7 +8,7 @@ function _seekbar({
 		bDebug = true,
 		bProfile = false,
 		binaries = {
-			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe.exe',
+			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
 			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
 			visualizer: fb.ProfilePath + 'running', // Just a placeholder
 		},
@@ -23,7 +23,15 @@ function _seekbar({
 		},
 		ui = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
-			colors: {bg: colours.Black, main: colours.LimeGreen, alt: colours.LawnGreen, bgFuture: 0xFF1B1B1B, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: colours.White},
+			colors: {
+				bg: 0xFF000000, // Black
+				main: 0xFF90EE90, // LimeGreen
+				alt: 0xFF7CFC00, // LawnGreen
+				bgFuture: 0xFF1B1B1B, 
+				mainFuture: 0xFFB7FFA2, 
+				altFuture: 0xFFF9FF99, 
+				currPos: 0xFFFFFFFF // White
+			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
 			bVariableRefreshRate: false // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
@@ -40,7 +48,7 @@ function _seekbar({
 		
 	this.defaults = () => {
 		const defBinaries = {
-			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\bin\\win32\\x64\\ffprobe.exe',
+			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
 			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
 			visualizer: fb.ProfilePath + 'running',
 		};
@@ -55,7 +63,15 @@ function _seekbar({
 		};
 		const defUi = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
-			colors: {bg: colours.Black, main: colours.LimeGreen, alt: colours.LawnGreen, bgFuture: 0xFF1B1B1B, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: colours.White},
+			colors: {
+				bg: 0xFF000000, // Black
+				main: 0xFF90EE90, // LimeGreen
+				alt: 0xFF7CFC00, // LawnGreen
+				bgFuture: 0xFF1B1B1B, 
+				mainFuture: 0xFFB7FFA2, 
+				altFuture: 0xFFF9FF99, 
+				currPos: 0xFFFFFFFF // White
+			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200,
 			bVariableRefreshRate: false
@@ -88,7 +104,7 @@ function _seekbar({
 		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name);
 		}
-		if (this.preset.futureSecs <= 0) {this.preset.futureSecs = Infinity;}
+		if (this.preset.futureSecs <= 0 || this.preset.futureSecs === null) {this.preset.futureSecs = Infinity;}
 	};
 	// Add default args
 	this.defaults();
@@ -151,6 +167,24 @@ function _seekbar({
 		}
 		if (newConfig.analysis) {this.newTrack();}
 		else {throttlePaint();}
+	};
+	
+	this.exportConfig = () => {
+		const config = {};
+		let notAllowed;
+		config.binaries = {};
+		notAllowed = new Set(['visualizer']);
+		for (let key in this.binaries) {
+			if (!notAllowed.has(key)) {config.binaries[key] = clone(this.binaries[key]);}
+		}
+		config.ui = {};
+		notAllowed = new Set(['gFont', 'pos']);
+		for (let key in this.ui) {
+			if (!notAllowed.has(key)) {config.ui[key] = clone(this.ui[key]);}
+		}
+		config.preset = clone(this.preset);
+		config.analysis = clone(this.analysis);
+		return config;
 	};
 	
 	this.newTrack = async (handle = fb.GetNowPlaying()) => {
@@ -462,11 +496,11 @@ function _seekbar({
 		} else if (fb.IsPlaying) {
 			const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 			if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
-				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (!this.analysis.bAutoAnalysis) {
-				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else {
-				gr.GdiDrawText('Analyzing track...', this.ui.gFont, colours.White, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Analyzing track...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			}
 		}
 		// Incrementally draw animation on small steps
