@@ -16,73 +16,96 @@ function createSeekbarMenu(bClear = true) {
 	// Menus
 	{
 		const subMenu = menu.newMenu('Binary type...');
-		const options = ['ffprobe', 'audiowaveform', 'visualizer'];
-		options.forEach((s) => {
-			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-				this.updateConfig({analysis: {binaryMode: s}});
+		const options = [
+			{name: 'FFprobe', key: 'ffprobe'},
+			{name: 'Audiowaveform', key: 'audiowaveform'},
+			{name: 'Visualizer', key: 'visualizer'}
+		];
+		options.forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({analysis: {binaryMode: o.key}});
 				this.saveProperties();
 			}});
 		});
-		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.analysis.binaryMode);});
+		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.analysis.binaryMode);});
 	}
 	{
 		const subMenu = menu.newMenu('Analysis type...');
-		const options = ['rms_level', 'peak_level', 'rms_peak'];
-		options.forEach((s) => {
-			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-				this.updateConfig({preset: {analysisMode: s}});
+		const options = [
+			{name: 'RMS levels', key: 'rms_level'},
+			{name: 'Peak levels', key: 'peak_level'},
+			{name: 'RMS peaks', key: 'rms_peak'}
+		];
+		options.forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name + (this.analysis.binaryMode !== 'ffprobe' ? '\t (ffprobe only)' : ''), func: () => {
+				this.updateConfig({preset: {analysisMode: o.key}});
 				this.saveProperties();
 			}, flags: this.analysis.binaryMode === 'ffprobe' ? MF_STRING : MF_GRAYED});
 		});
-		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.preset.analysisMode);});
+		if (this.analysis.binaryMode === 'ffprobe') {
+			menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.analysisMode);});
+		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{
-			['bAutoDelete']
-				.forEach((s) => {
-					menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-						this.updateConfig({analysis: {[s]: !this.analysis[s]}});
+			[{name: 'Auto-delete analysis files?', key: 'bAutoDelete'}]
+				.forEach((o) => {
+					menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+						this.updateConfig({analysis: {[o.key]: !this.analysis[o.key]}});
 						this.saveProperties();
 					}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED});
-					menu.newCheckMenu(subMenu, s, void(0), () => {return this.analysis[s];});
+					menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.analysis[o.key];});
 				});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
 		const subMenu = menu.newMenu('Waveform type...');
-		const options = ['waveform', 'bars', 'points','halfbars'];
-		options.forEach((s) => {
-			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-				this.updateConfig({preset: {waveMode: s}});
+		const options = [
+			{name: 'Waveform', key: 'waveform'},
+			{name: 'Bars', key: 'bars'},
+			{name: 'Points', key: 'points'},
+			{name: 'Half-Bars', key: 'halfbars'}
+		];
+		options.forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({preset: {waveMode: o.key}});
 				this.saveProperties();
 			}});
 		});
-		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.preset.waveMode);});
+		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.waveMode);});
 	}
 	{
 		const subMenu = menu.newMenu('Paint mode...');
-		const options = ['full', 'partial'];
-		options.forEach((s) => {
-			menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-				this.updateConfig({preset: {paintMode: s}});
+		const options = [
+			{name: 'Full', key: 'full'},
+			{name: 'Partial', key: 'partial'}
+		];
+		options.forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({preset: {paintMode: o.key}});
 				this.saveProperties();
 			}});
 		});
-		menu.newCheckMenu(subMenu, options[0], options[options.length - 1], () => {return options.indexOf(this.preset.paintMode);});
+		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.paintMode);});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
-		['bPaintCurrent', 'bPaintFuture', 'bUseBPM']
-			.forEach((s) => {
-				menu.newEntry({entryText: s, func: () => {
-					this.updateConfig({preset: {[s]: !this.preset[s]}});
-					this.saveProperties();
-				}, flags: this.preset.paintMode === 'full' && s === 'bPaintFuture' ? MF_GRAYED : MF_STRING});
-				menu.newCheckMenu(void(0), s, void(0), () => {return this.preset[s];});
-			});
+		[
+			{name: 'Paint current position', key: 'bPaintCurrent'},
+			{name: 'Animate with BPM', key: 'bUseBPM', 
+				flags: (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
+			{name: 'Paint ahead?' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPaintFuture', 
+				flags: this.preset.paintMode === 'full' ? MF_GRAYED : MF_STRING}
+		].forEach((o) => {
+			menu.newEntry({entryText: o.name, func: () => {
+				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
+				this.saveProperties();
+			}, flags: o.flags || MF_STRING});
+			menu.newCheckMenu(void(0), o.name, void(0), () => {return this.preset[o.key];});
+		});
 	}
 	{
-		const subMenu = menu.newMenu('Future paint...');
+		const subMenu = menu.newMenu('Paint ahead seconds...', void(0), () => this.preset.paintMode === 'full' || !this.preset.bPaintFuture ? MF_GRAYED : MF_STRING);
 		[Infinity, 2, 5, 10]
 			.forEach((s) => {
 				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
@@ -91,6 +114,27 @@ function createSeekbarMenu(bClear = true) {
 				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPaintFuture) ? MF_GRAYED : MF_STRING});
 				menu.newCheckMenu(subMenu, s, void(0), () => {return (this.preset.futureSecs === s);});
 			});
+	}
+	{
+		const subMenu = menu.newMenu('Refresh rate...', void(0), () => this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		[1000, 500, 200, 100, 60]
+			.forEach((s) => {
+				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
+					this.updateConfig({ui: {refreshRate: s}});
+					this.saveProperties();
+				}});
+				menu.newCheckMenu(subMenu, s, void(0), () => {return (this.ui.refreshRate === s);});
+			});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		[
+			{name: 'Variable refresh rate', key: 'bVariableRefreshRate'},
+		].forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({ui: {[o.key]: !this.ui[o.key]}});
+				this.saveProperties();
+			}, flags: o.flags || MF_STRING});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.ui[o.key];});
+		});
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
