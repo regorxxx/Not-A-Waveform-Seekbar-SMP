@@ -58,7 +58,7 @@ seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 const seekbar = new _seekbar({
 	binaries: JSON.parse(seekbarProperties.binaries[1]),
 	analysis: JSON.parse(seekbarProperties.analysis[1]),
-	preset: JSON.parse(seekbarProperties.preset[1]),
+	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => {return value === null ? Infinity : value;}),
 	ui: JSON.parse(seekbarProperties.ui[1])
 });
 

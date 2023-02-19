@@ -43,7 +43,7 @@ options.addTab({title: 'Analysis', columns: 2, data: [
 		{subTitle: 'Binaries', values: [
 			{name: 'FFprobe path:', pKey: ['binaries', 'ffprobe'], tt: 'Hola'},
 			{name: 'AudioWaveform path:', pKey: ['binaries', 'audiowaveform'], tt: 'Hola'},
-			{name: 'Binary mode:', pKey: ['analysis', 'binaryMode'], list: ['ffprobe', 'audiowaveform', 'visualizer'], tt: 'Hola'}
+			{name: 'Binary type:', pKey: ['analysis', 'binaryMode'], list: ['ffprobe', 'audiowaveform', 'visualizer'], tt: 'Hola'}
 		]},
 		{subTitle: 'Analysis', values: [
 			{name: 'Data compression:', pKey: ['analysis', 'compressionMode'], list: ['utf-16', 'utf-8', 'none'], tt: 'Hola'},
