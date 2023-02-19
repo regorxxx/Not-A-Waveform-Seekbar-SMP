@@ -36,8 +36,7 @@ const seekbar = new _seekbar({
 
 // Callbacks
 addEventListener('on_size', (width, height) => {
-	seekbar.w = window.Width;
-	seekbar.h = window.Height;
+	seekbar.resize(width, height);
 });
 
 addEventListener('on_playback_new_track', (handle) => {

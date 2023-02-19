@@ -13,7 +13,7 @@ function _seekbar({
 			visualizer: fb.ProfilePath + 'running', // Just a placeholder
 		},
 		preset = {
-			waveMode: 'waveform', // waveform | bars | points
+			waveMode: 'waveform', // waveform | bars | points | halfbars
 			analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
 			paintMode: 'full', // full | partial
 			bPaintFuture: false,
@@ -104,7 +104,7 @@ function _seekbar({
 		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name);
 		}
-		if (this.preset.futureSecs <= 0) {this.preset.futureSecs = Infinity;}
+		if (this.preset.futureSecs <= 0 || this.preset.futureSecs === null) {this.preset.futureSecs = Infinity;}
 	};
 	// Add default args
 	this.defaults();
@@ -551,6 +551,11 @@ function _seekbar({
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}
+	};
+	
+	this.resize = (w, h) => {
+		this.w = w;
+		this.h = h;
 	};
 	
 	this.unload = () => {
