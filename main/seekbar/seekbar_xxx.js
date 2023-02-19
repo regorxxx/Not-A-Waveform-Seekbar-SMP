@@ -13,7 +13,7 @@ function _seekbar({
 			visualizer: fb.ProfilePath + 'running', // Just a placeholder
 		},
 		preset = {
-			waveMode: 'waveform', // waveform | bars | points
+			waveMode: 'waveform', // waveform | bars | points | halfbars
 			analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
 			paintMode: 'full', // full | partial
 			bPaintFuture: false,
@@ -179,9 +179,11 @@ function _seekbar({
 			if (!notAllowed.has(key)) {config.binaries[key] = clone(this.binaries[key]);}
 		}
 		config.ui = {};
-		notAllowed = new Set(['gFont', 'pos']);
+		notAllowed = new Set(['gFont']);
 		for (let key in this.ui) {
-			if (!notAllowed.has(key)) {config.ui[key] = clone(this.ui[key]);}
+			if (key === 'pos') {
+				config.ui.pos = {scaleH: this.ui.pos.scaleH, marginW: this.ui.pos.marginW};
+			} else if (!notAllowed.has(key)) {config.ui[key] = clone(this.ui[key]);}
 		}
 		config.preset = clone(this.preset);
 		config.analysis = clone(this.analysis);
@@ -569,6 +571,11 @@ function _seekbar({
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}
+	};
+	
+	this.resize = (w, h) => {
+		this.w = w;
+		this.h = h;
 	};
 	
 	this.unload = () => {
