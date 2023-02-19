@@ -27,10 +27,13 @@ let seekbarProperties = {
 		}), {func: isJSON}],
 	preset:		['Preset config',
 		JSON.stringify({
+			analysisMode: 'peak_level',
 			waveMode: 'waveform',
 			paintMode: 'full',
 			bPaintFuture: false,
-			bPaintCurrent: true
+			bPaintCurrent: true,
+			bUseBPM: true,
+			futureSecs: Infinity
 		}), {func: isJSON}],
 	ui:			['UI config', 
 		JSON.stringify({
@@ -43,6 +46,7 @@ let seekbarProperties = {
 				altFuture: 0xFFF9FF99, 
 				currPos: 0xFFFFFFFF // White
 			},
+			pos: {scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200,
 			bVariableRefreshRate: true
 		}), {func: isJSON}]
@@ -60,8 +64,7 @@ const seekbar = new _seekbar({
 
 // Callbacks
 addEventListener('on_size', (width, height) => {
-	seekbar.w = window.Width;
-	seekbar.h = window.Height;
+	seekbar.resize(width, height);
 });
 
 addEventListener('on_playback_new_track', (handle) => {
