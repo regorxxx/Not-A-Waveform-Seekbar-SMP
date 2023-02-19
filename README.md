@@ -8,6 +8,8 @@ A seekbar for [foobar2000](https://www.foobar2000.org), using [Spider Monkey Pan
 
 ![visualizer](https://user-images.githubusercontent.com/83307074/215602830-06a48290-99f7-4bf5-99cd-b5766c893498.gif)
 
+## FOR CURRENT DEVELOPMENT DISCUSSION CHECK [THIS](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/discussions/1).
+
 ## Features
 * Uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included).
 * [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\ffprobe\'.
