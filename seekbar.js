@@ -1,5 +1,5 @@
 'use strict';
-//18/02/23
+//22/02/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -59,7 +59,7 @@ const seekbar = new _seekbar({
 	binaries: JSON.parse(seekbarProperties.binaries[1]),
 	analysis: JSON.parse(seekbarProperties.analysis[1]),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => {return value === null ? Infinity : value;}),
-	ui: JSON.parse(seekbarProperties.ui[1])
+	ui: {...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size))}
 });
 
 // Callbacks
