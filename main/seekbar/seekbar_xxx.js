@@ -607,7 +607,8 @@ function _seekbar({
 			const extension = handleFileName.match(/(?:\.)(\w+$)/i)[1];
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
-				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --input-format ' + extension + ' --bits 8 -o ' + _q(seekbarFolder + 'data.json');
+				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --input-format ' + extension + ' --bits 8' +
+				' -o ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isAllowedFile && this.analysis.binaryMode === 'ffprobe') {
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
