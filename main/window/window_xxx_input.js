@@ -69,11 +69,13 @@ function _check({x, y, size = 4, value = false, shape = 'square', color = 0xFF43
 	this.move = (x, y) => {
 		if (this.trackCheck(x, y)) {
 			this.bHovered = true;
+			window.SetCursor(IDC_HAND);
 			window.Repaint(true);
 			// if (!bGroup) {this.repaint();}
 			return true;
 		} else if (this.bHovered) {
 			this.bHovered = false;
+			window.SetCursor(IDC_HAND);
 			window.Repaint(true);
 			// if (!bGroup) {this.repaint();}
 		}
@@ -159,11 +161,13 @@ function _toggleControl({x, y, size = _scale(10) * 1.5, value = false, color = R
 	this.move = (x, y) => {
 		if (this.trackCheck(x, y)) {
 			this.bHovered = true;
+			window.SetCursor(IDC_HAND);
 			window.Repaint(true);
 			// if (!bGroup) {this.repaint();}
 			return true;
 		} else if (this.bHovered) {
 			this.bHovered = false;
+			window.SetCursor(IDC_HAND);
 			window.Repaint(true);
 			// if (!bGroup) {this.repaint();}
 		}
@@ -210,11 +214,13 @@ function _colorPicker({x, y, size = 10, color = 0xFF4354AF, hoverColor = 0xFF435
 	this.move = (x, y) => {
 		if (this.trackCheck(x, y)) {
 			this.bHovered = true;
+			window.SetCursor(IDC_HAND);
 			window.Repaint(true);
 			// if (!bGroup) {this.repaint();}
 			return true;
 		} else if (this.bHovered) {
 			this.bHovered = false;
+			window.SetCursor(IDC_HAND);
 			window.Repaint(true);
 			// if (!bGroup) {this.repaint();}
 		}
@@ -241,6 +247,25 @@ function _dropdownList({x, y, size = 4, value = false, shape = 'square', color =
 	this.value = value;
 	this.fillColor = color; // Blue
 	this.gFont = this.shape === 'square' ? _gdiFont('Segoe UI', _scale(size * 5/6)) : null;
+	
+	this.containXY = function (x, y) {
+		const x_calc = isFunction(this.x) ? this.x() : this.x;
+		const y_calc = isFunction(this.y) ? this.y() : this.y;
+		const w_calc = isFunction(this.w) ? this.w() : this.w;
+		const h_calc = isFunction(this.h) ? this.h() : this.h;
+		return (x_calc <= x) && (x <= x_calc + w_calc) && (y_calc <= y) && (y <= y_calc + h_calc );
+	};
+	
+	this.changeState = function (state, ttArg) {
+		// let old = this.state;
+		// this.state = state;
+		// if (state === buttonStates.hover) {
+			// this.tt = isFunction(this.description) ? this.description(ttArg).toString() : this.description;
+			// window.SetCursor(IDC_HAND);
+		// } else {this.tt = '';}
+		// return old;
+	};
+	
 	this.paint = (gr, x, y) => { // on_paint
 		if (this.w <= 0) {return;}
 		if (this.shape === 'square') {
@@ -324,8 +349,10 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 	this.changeState = function (state, ttArg) {
 		let old = this.state;
 		this.state = state;
-		if (state === buttonStates.hover) {this.tt = isFunction(this.description) ? this.description(ttArg).toString() : this.description;} 
-		else {this.tt = '';}
+		if (state === buttonStates.hover) {
+			this.tt = isFunction(this.description) ? this.description(ttArg).toString() : this.description;
+			window.SetCursor(IDC_HAND);
+		} else {this.tt = '';}
 		return old;
 	};
 

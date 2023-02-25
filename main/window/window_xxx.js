@@ -524,7 +524,7 @@ function _window({width = window.Width , height = window.Height, tabWidth = 'FUL
 				}
 			}
 		}
-		if (!bHovered && !bDataTT) {tooltip.Deactivate();}
+		if (!bHovered && !bDataTT) {tooltip.Deactivate(); window.SetCursor(IDC_ARROW);}
 		return;
 	}
 	
