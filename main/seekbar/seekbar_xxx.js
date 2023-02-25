@@ -1,5 +1,5 @@
 'use strict';
-//18/02/23
+//25/02/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -604,9 +604,10 @@ function _seekbar({
 		const handleFolder = handle.Path.replace(handleFileName, '');
 		if (this.isAllowedFile && this.analysis.binaryMode === 'audiowaveform') {
 			if (this.bProfile) {profiler = new FbProfiler('audiowaveform');}
+			const extension = handleFileName.match(/(?:\.)(\w+$)/i)[1];
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
-				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --bits 8 -o ' + _q(seekbarFolder + 'data.json');
+				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --input-format ' + extension + ' --bits 8 -o ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isAllowedFile && this.analysis.binaryMode === 'ffprobe') {
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
