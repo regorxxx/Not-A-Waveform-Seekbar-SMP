@@ -1,5 +1,5 @@
 'use strict';
-//25/02/23
+//26/02/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -495,12 +495,13 @@ function _seekbar({
 			}
 		} else if (fb.IsPlaying) {
 			const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
+			const textColor = this.ui.colors.main; // Either make it configurable or use a color different than the background
 			if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
-				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (!this.analysis.bAutoAnalysis) {
-				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (this.active) {
-				gr.GdiDrawText('Analyzing track...', this.ui.gFont, 0xFFFFFFFF, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Analyzing track...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			}
 		}
 		// Incrementally draw animation on small steps
