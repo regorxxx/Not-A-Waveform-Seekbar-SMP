@@ -1,5 +1,5 @@
 'use strict';
-//26/02/23
+//06/03/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -16,7 +16,7 @@ function _seekbar({
 			waveMode: 'waveform', // waveform | bars | points | halfbars
 			analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
 			paintMode: 'full', // full | partial
-			bPaintFuture: false,
+			bPrePaint: false,
 			bPaintCurrent: true,
 			bUseBPM: true,
 			futureSecs: Infinity
@@ -56,7 +56,7 @@ function _seekbar({
 			waveMode: 'waveform',
 			analysisMode: 'peak_level',
 			paintMode: 'full',
-			bPaintFuture: false,
+			bPrePaint: false,
 			bPaintCurrent: true,
 			bUseBPM: true,
 			futureSecs: Infinity
@@ -157,7 +157,7 @@ function _seekbar({
 	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
-		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
+		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
 		if (newConfig.ui && newConfig.ui.hasOwnProperty('refreshRate')) {
 			this.ui.refreshRateOpt = this.ui.refreshRate;
 			throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
@@ -321,7 +321,7 @@ function _seekbar({
 		} else {this.cache = this.current;}
 		// Repaint by zone when possible
 		if (this.analysis.binaryMode === 'visualizer' || !this.current.length) {throttlePaint();}
-		else if (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) {
+		else if (this.preset.paintMode === 'partial' && this.preset.bPrePaint) {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
 			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
 			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
@@ -353,9 +353,9 @@ function _seekbar({
 		profilerPaint.Reset();
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
-		const bPaintFuture = this.preset.paintMode === 'partial' && this.preset.bPaintFuture;
+		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
 		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback;
-		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPaintFuture;
+		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
 		// Panel background
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
 		const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
@@ -377,23 +377,23 @@ function _seekbar({
 				current = timeConstant * n;
 				const bIsfuture = current > this.time;
 				const bIsfutureAllowed = (current - this.time) < this.preset.futureSecs;
-				if (this.preset.paintMode === 'partial' && !bPaintFuture && bIsfuture) {break;}
-				else if (bPaintFuture && bIsfuture && !bIsfutureAllowed) {break;}
+				if (this.preset.paintMode === 'partial' && !bPrePaint && bIsfuture) {break;}
+				else if (bPrePaint && bIsfuture && !bIsfutureAllowed) {break;}
 				if (!this.offset[n]) {this.offset.push(0);}
 				const scale = frame;
 				const x = this.x + this.marginW + barW * n;
-				if (bIsfuture && bPaintFuture && !bPaintedBg) {
+				if (bIsfuture && bPrePaint && !bPaintedBg) {
 					gr.FillSolidRect(currX, this.y, this.w, this.h, this.ui.colors.bgFuture);
 					bPaintedBg = true;
 				}
 				if ((x - xPast) > 0) {
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
-						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
 						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
-						const color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						const altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						let z = bVisualizer ? Math.abs(y) : y;
 						if (z > 0) {
 							if (altColor !== color) {
@@ -414,11 +414,11 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'halfbars') {
 						const scaledSize = size / 2 * scale;
-						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
 						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
-						let color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						let altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
@@ -434,11 +434,11 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'bars') {
 						const scaledSize = size / 2 * scale;
-						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
 						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
-						let color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						let altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
 						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
@@ -465,9 +465,9 @@ function _seekbar({
 					} else if (this.preset.waveMode === 'points') {
 						const scaledSize = size / 2 * scale;
 						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1));
-						const color = bPaintFuture && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						const altColor = bPaintFuture && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
-						this.offset[n] += (bPaintFuture && bIsfuture || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
+						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
+						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 						const rand = this.offset[n];
 						const step = Math.max(this.h / 80, 5) + (rand || 1) // Point density
 						const circleSize = Math.max(step / 25, 1);
@@ -532,7 +532,7 @@ function _seekbar({
 		}
 		// Animate smoothly, Repaint by zone when possible
 		if (bVisualizer) {throttlePaint();}
-		else if (bPaintFuture) {
+		else if (bPrePaint && frames) {
 			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
 			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
 		} else if (this.preset.bPaintCurrent && frames) {
