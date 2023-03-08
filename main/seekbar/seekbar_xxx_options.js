@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/01/23
+//06/03/23
 
 include('..\\window\\window_xxx.js');
 
@@ -66,7 +66,7 @@ options.addTab({title: 'Seekbar', columns: 1, data: [
 			{name: 'Show current position.', pKey: ['preset', 'bPaintCurrent'], tt: 'Hola'},
 		]},
 		{subTitle: 'Partial waveform and visualizer', values: [
-			{name: 'Paint ahead.', pKey: ['preset', 'bPaintFuture'], tt: 'Hola'},
+			{name: 'Paint ahead.', pKey: ['preset', 'bPrePaint'], tt: 'Hola'},
 			{name: 'Animate waveform usign BPM.', pKey: ['preset', 'bUseBPM'], tt: 'Hola'},
 			{name: 'Show seconds:', pKey: ['preset', 'futureSecs'], constructor: Number, tt: 'Hola'}
 		]}

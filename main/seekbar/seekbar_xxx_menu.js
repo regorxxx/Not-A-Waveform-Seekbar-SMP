@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/02/23
+//06/03/23
 
 function bindMenu(parent) {
 	return _attachedMenu.call(parent, {rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
@@ -94,8 +94,8 @@ function createSeekbarMenu(bClear = true) {
 		[
 			{name: 'Show current position', key: 'bPaintCurrent'},
 			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
-				flags: (this.preset.paintMode === 'partial' && this.preset.bPaintFuture) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
-			{name: 'Paint ahead?' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPaintFuture', 
+				flags: (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
+			{name: 'Pre-paint?' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPrePaint', 
 				flags: this.preset.paintMode === 'full' ? MF_GRAYED : MF_STRING}
 		].forEach((o) => {
 			menu.newEntry({entryText: o.name, func: () => {
@@ -106,18 +106,18 @@ function createSeekbarMenu(bClear = true) {
 		});
 	}
 	{
-		const subMenu = menu.newMenu('Paint ahead seconds...', void(0), () => this.preset.paintMode === 'full' || !this.preset.bPaintFuture ? MF_GRAYED : MF_STRING);
+		const subMenu = menu.newMenu('Pre-paint seconds...', void(0), () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
 		[Infinity, 2, 5, 10]
 			.forEach((s) => {
 				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
 					this.updateConfig({preset: {futureSecs: s}});
 					this.saveProperties();
-				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPaintFuture) ? MF_GRAYED : MF_STRING});
+				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPrePaint) ? MF_GRAYED : MF_STRING});
 				menu.newCheckMenu(subMenu, s, void(0), () => {return (this.preset.futureSecs === s);});
 			});
 	}
 	{
-		const subMenu = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), void(0), () => this.preset.paintMode === 'partial' && this.preset.bPaintFuture || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		const subMenu = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), void(0), () => this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[1000, 500, 200, 100, 60]
 			.forEach((s) => {
 				menu.newEntry({menuName: subMenu, entryText: s, func: () => {

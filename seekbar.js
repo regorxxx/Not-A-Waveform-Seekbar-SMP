@@ -1,5 +1,5 @@
 'use strict';
-//22/02/23
+//06/03/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -30,7 +30,7 @@ let seekbarProperties = {
 			analysisMode: 'peak_level',
 			waveMode: 'waveform',
 			paintMode: 'full',
-			bPaintFuture: false,
+			bPrePaint: false,
 			bPaintCurrent: true,
 			bUseBPM: true,
 			futureSecs: Infinity
