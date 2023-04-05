@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/02/23
+//05/04/23
 
 /* 
 	Global Variables 
@@ -37,6 +37,21 @@ function _scale(size) {
 	}
 	return scaleDPI[size];
 }
+
+/* 
+	Funcs
+*/
+const debounce = (fn, delay, immediate = false, parent = this) => {
+	let timerId;
+	return (...args) => {
+		const boundFunc = fn.bind(parent, ...args);
+		clearTimeout(timerId);
+		if (immediate && !timerId) {boundFunc();}
+		const calleeFunc = immediate ? () => {timerId = null;} : boundFunc;
+		timerId = setTimeout(calleeFunc, delay);
+		return timerId;
+	};
+};
 
 /* 
 	Tooltip
@@ -132,13 +147,23 @@ function getBlue(col) {
 	return (col & 0xff);
 }
 
-function tintColor(color, percent) {
-	const red = getRed(color);
-	const green = getGreen(color);
-	const blue = getBlue(color);
-
-	return RGBA(lightenColorVal(red, percent), lightenColorVal(green, percent), lightenColorVal(blue, percent), getAlpha(color));
+function lightenColor(color, percent) {
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+	return RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color));
 }
+
+function darkenColor(color, percent) {
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+	return RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));
+}
+
+function tintColor(color, percent) {
+	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+	return isDark(r, g, b) 
+		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
+		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));;
+}
+
 function darkenColorVal(color, percent) {
 	const shift = Math.max(color * percent / 100, percent / 2);
 	const val = Math.round(color - shift);
@@ -147,6 +172,14 @@ function darkenColorVal(color, percent) {
 function lightenColorVal(color, percent) {
 	const val = Math.round(color + ((255-color) * (percent / 100)));
 	return Math.min(val, 255);
+}
+
+function getBrightness(r, g, b) { // https://www.w3.org/TR/AERT/#color-contrast
+	return (r * 0.299 + g * 0.587 + b * 0.114);
+}
+
+function isDark(r, g, b) {
+	return (getBrightness(r,g,b) < 186);
 }
 
 /* 

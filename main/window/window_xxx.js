@@ -250,7 +250,7 @@ function _window({width = window.Width , height = window.Height, tabWidth = 'FUL
 										const xVal = currX + textWidth + 10;
 										const offset = bAlignL ? 1 : xVal / tabulation >> 0;
 										if (!value.hasOwnProperty('valueFunc')) {
-											value.valueFunc = new _inputbox(bAlignL ? xVal : columnWidthDraw - (offset + 1) * tabulation, textHeight + 2, value.value.toString(), '', this.textColor, this.inputBgColor, this.tabColor, this.currTabColor, null, 'window');
+											value.valueFunc = new _inputbox(bAlignL ? xVal : columnWidthDraw - (offset + 1) * tabulation, textHeight + 2, value.value.toString(), '', this.textColor, this.inputBgColor, this.tabColor, this.currTabColor, null, this);
 										}
 										value.valueFunc.x = bAlignL ? xVal : (offset + 1) * tabulation;
 										value.valueFunc.w = Math.min(columnWidth * (i + 1) - value.valueFunc.x - columnOffset, Math.max(window.Width / 2 - value.valueFunc.x - columnOffset, maxW - xVal));

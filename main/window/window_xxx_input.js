@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/22
+//05/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -121,7 +121,7 @@ function _toggleControl({x, y, size = _scale(10) * 1.5, value = false, color = R
 	this.paint = (gr, x, y) => { // on_paint
 		if (this.w <= 0) {return;} 
 		gr.SetSmoothingMode(SmoothingMode.HighQuality);
-		let fillColor = this.value ? tintColor(this.fillColor, 35) : RGB(172, 172, 172);
+		let fillColor = this.value ? lightenColor(this.fillColor, 35) : RGB(172, 172, 172);
 		const fillY = this.y + this.slideH / 2;
 		const fillWidth = this.toggleW - this.h;
 		gr.FillEllipse(this.x + this.slideH * 0.5, fillY, this.slideH, this.slideH, fillColor);
@@ -409,7 +409,7 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 }
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
-function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObjectName) {
+function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.font_italic = _gdiFont('Segoe UI', _scale(10), 2);
@@ -421,14 +421,13 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.backselectioncolor = backselectioncolor;
 	this.default_text = default_text;
 	this.text = default_text;
-	this.prev_text = '01234567890123456789';
 	this.empty_text = empty_text;
 	this.stext = '';
 	this.prev_text = '';
 	this.func = func;
 	var gfunc = func;
 	var gfunc_launch_timer = false;
-	var g_parentObjectName = parentObjectName;
+	var g_parentObject = parentObject;
 	this.autovalidation = false;
 	this.edit = false;
 	this.select = false;
@@ -545,10 +544,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	}
 
 	this.repaint = function () {
-		const parent = eval(g_parentObjectName);
-		if (parent.hasOwnProperty('Repaint')) {parent.Repaint();}
-		else if (parent.hasOwnProperty('repaint')) {parent.repaint();}
-		else {console.log('oInputbox: parent ' + g_parentObjectName + ' has no repaint method.');}
+		if (g_parentObject.hasOwnProperty('Repaint')) {g_parentObject.Repaint();}
+		else if (g_parentObject.hasOwnProperty('repaint')) {g_parentObject.repaint();}
+		else {console.log('oInputbox: parentObject has no repaint method.');}
 	}
 
 	this.CalcText = function () {
@@ -602,16 +600,15 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		}
 		cInputbox.timer_cursor = window.SetInterval(function () {
 				cInputbox.cursor_state = !cInputbox.cursor_state;
-				const parent = eval(g_parentObjectName);
-				if (parent.hasOwnProperty('Repaint')) {parent.Repaint();}
-				else if (parent.hasOwnProperty('repaint')) {parent.repaint();}
-				else {console.log('oInputbox: parent ' + g_parentObjectName + ' has no repaint method.');}
+				if (g_parentObject.hasOwnProperty('Repaint')) {g_parentObject.Repaint();}
+				else if (g_parentObject.hasOwnProperty('repaint')) {g_parentObject.repaint();}
+				else {console.log('oInputbox: g_parentObject has no repaint method.');}
 			}, 500);
 	}
 
 	this.trackCheck = (x,y) => {return (x >= this.x - 2 && x <= (this.x + this.w + 1) && y > this.y && y < (this.y + this.h));}
 
-	this.check = function (callback, x, y) {
+	this.check = function (callback, x, y, bDragDrop = false) {
 		this.hover = this.trackCheck(x,y) ? true : false;
 		switch (callback) {
 		case 'down':
@@ -678,7 +675,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 							}
 						}
 					} else if (tmp > this.SelEnd) {
-						if (tmp_x + this.x > this.x + this.w) {
+						if ((tmp_x + this.x) > (this.x + this.w)) {
 							var len = (this.TWidth > this.w) ? this.TWidth - this.w : 0;
 							if (len > 0) {
 								this.offset++;
@@ -688,7 +685,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 					}
 					this.SelEnd = tmp;
 				} else if (tmp > this.SelBegin) {
-					if (tmp_x + this.x > this.x + this.w) {
+					if ((tmp_x + this.x) > (this.x + this.w)) {
 						var len = (this.TWidth > this.w) ? this.TWidth - this.w : 0;
 						if (len > 0) {
 							this.offset++;
@@ -701,7 +698,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				this.repaint();
 			}
 			// Set Mouse Cursor Style
-			if (this.hover || this.drag) {
+			if ((this.hover || this.drag) && !bDragDrop) {
 				window.SetCursor(IDC_IBEAM);
 			} else if (this.ibeam_set) {
 				window.SetCursor(IDC_ARROW);
@@ -735,7 +732,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.show_context_menu = function (x, y) {
 		var idx;
 		var _menu = window.CreatePopupMenu();
-		cInputbox.clipboard = cInputbox.doc.parentWindow.clipboardData.getData('Text');
+		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Copy');
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
 		_menu.AppendMenuSeparator();
@@ -749,12 +746,12 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		switch (idx) {
 		case 1:
 			if (this.edit && this.select) {
-				cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
+				utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 			}
 			break;
 		case 2:
 			if (this.edit && this.select) {
-				cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
+				utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 				var p1 = this.SelBegin;
 				var p2 = this.SelEnd;
 				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
@@ -817,6 +814,16 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			switch (vkey) {
 			case VK_SHIFT:
 				break;
+			case VK_ESCAPE:
+				if (this.text.length) {
+					this.text = '';
+					this.Cpos = 0;
+					this.SelBegin = 0;
+					this.SelEnd = 0;
+					this.select = false;
+					this.offset = 0;
+					this.text_selected = '';
+				} else {this.check('down', -1, -1);}
 			case VK_BACK:
 				//save text before update
 				this.stext = this.text;
@@ -887,8 +894,8 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				break;
 			case VK_RETURN:
 				if (this.edit && this.text.length >= 0) {
-					eval(this.func);
-				} else {}
+					if (this.func) {this.func();}
+				}
 				break;
 			case VK_ESCAPE:
 				if (this.edit) {
@@ -1084,15 +1091,13 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				};
 				if (vkey == 67) { // CTRL+C
 					if (this.edit && this.select) {
-						cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
+						utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 					}
 				};
 				if (vkey == 88) { // CTRL+X
 					if (this.edit && this.select) {
-						//save text avant MAJ
 						this.stext = this.text;
-						//
-						cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
+						utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 						var p1 = this.SelBegin;
 						var p2 = this.SelEnd;
 						this.select = false;
@@ -1104,18 +1109,16 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						this.repaint();
 					}
 				};
-				if (vkey == 90) { // CTRL+Z (annulation saisie)
+				if (vkey == 90) { // CTRL+Z
 					if (this.edit) {
 						this.text = this.stext;
 						this.repaint();
 					}
 				};
 				if (vkey == 86) { // CTRL+V
-					cInputbox.clipboard = cInputbox.doc.parentWindow.clipboardData.getData('Text');
+					cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
 					if (this.edit && cInputbox.clipboard) {
-						//save text avant MAJ
 						this.stext = this.text;
-						//
 						if (this.select) {
 							var p1 = this.SelBegin;
 							var p2 = this.SelEnd;
@@ -1148,7 +1151,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		}
 
 		// autosearch: has text changed after on_key or on_char ?
-		if (this.autovalidation) {
+		if (this.autovalidation && gfunc) {
 			if (this.text != this.prev_text) {
 				// launch timer to process the search
 				gfunc_launch_timer && window.ClearTimeout(gfunc_launch_timer);
