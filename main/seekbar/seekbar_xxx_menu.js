@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/23
+//18/04/23
 
 function bindMenu(parent) {
 	return _attachedMenu.call(parent, {rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
@@ -48,14 +48,17 @@ function createSeekbarMenu(bClear = true) {
 		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{
-			[{name: 'Auto-delete analysis files?', key: 'bAutoDelete'}]
-				.forEach((o) => {
-					menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
-						this.updateConfig({analysis: {[o.key]: !this.analysis[o.key]}});
-						this.saveProperties();
-					}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED});
-					menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.analysis[o.key];});
-				});
+			[
+				{name: 'Auto-delete analysis files?', key: 'bAutoRemove'},
+				{name: 'Visualizer for incompatible files', key: 'bVisualizerFallback'},
+				{name: 'Visualizer during analysis', key: 'bVisualizerFallbackAnalysis'},
+			].forEach((o) => {
+				menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+					this.updateConfig({analysis: {[o.key]: !this.analysis[o.key]}});
+					this.saveProperties();
+				}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED});
+				menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.analysis[o.key];});
+			});
 		}
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -169,6 +172,8 @@ function createSeekbarMenu(bClear = true) {
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Enable seekbar?', func: () => {
 		this.switch();
+		seekbarProperties.bEnabled[1] = this.active;
+		this.saveProperties();
 	}});
 	menu.newCheckMenu(void(0), 'Enable seekbar?', void(0), () => {return this.active;});
 	return menu;
