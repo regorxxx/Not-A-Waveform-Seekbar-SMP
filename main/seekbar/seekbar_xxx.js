@@ -1,5 +1,5 @@
 'use strict';
-//06/03/23
+//18/04/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -42,7 +42,8 @@ function _seekbar({
 			compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
 			bAutoAnalysis: true,
 			bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
-			bVisualizerFallback: true // Uses visualizer mode when file can not be processed (not compatible format)
+			bVisualizerFallback: true, // Uses visualizer mode when file can not be processed (not compatible format)
+			bVisualizerFallbackAnalysis: true // Uses visualizer mode while analyzing file
 		}
 	} = {}) {
 		
@@ -82,7 +83,8 @@ function _seekbar({
 			compressionMode: 'utf-16',
 			bAutoAnalysis: true,
 			bAutoRemove: false,
-			bVisualizerFallback: true
+			bVisualizerFallback: true,
+			bVisualizerFallbackAnalysis : true
 		};
 		const options = [{from: defBinaries, to: binaries}, {from: defPreset, to: preset}, {from: defUi, to: ui}, {from: defAnalysis, to: analysis}];
 		options.forEach((option) => {
@@ -147,6 +149,7 @@ function _seekbar({
 	
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+	let bFallbackAnalyMode = {paint: false, analysis: false};
 	
 	const profilerPaint = new FbProfiler('paint');
 	
@@ -232,59 +235,26 @@ function _seekbar({
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
+				let id;
+				if (this.analysis.bVisualizerFallbackAnalysis) {
+					bFallbackAnalyMode = {paint: true, analysis: true};
+					await this.analyze(handle, seekbarFolder, seekbarFile);
+					// Calculate waveform on the fly
+					this.normalizePoints();
+					// Set animation using BPM if possible
+					if (this.preset.bUseBPM) {this.bpmSteps(handle);}
+					// Update time if needed
+					if (fb.IsPlaying) {this.time = fb.PlaybackTime;}
+				}
 				throttlePaint(true);
+				if (this.analysis.bVisualizerFallbackAnalysis) {bFallbackAnalyMode.analysis = false;}
 				await this.analyze(handle, seekbarFolder, seekbarFile);
+				bFallbackAnalyMode.analysis = bFallbackAnalyMode.paint = false;
 				bAnalysis  = true;
 			}
 			if (!bAnalysis) {this.isFallback = false;} // Allow reading data from files even if track is not compatible
 			// Calculate waveform on the fly
-			if (this.current.length) {
-				if (!this.isFallback && this.analysis.binaryMode === 'ffprobe') {
-					// Calculate max values
-					let max = 0;
-					const key = modes[this.preset.analysisMode].key; 
-					const pos = modes[this.preset.analysisMode].pos;
-					this.current.forEach((frame) => {
-						// After parsing JSON, restore infinity values
-						if (frame[pos] === null) {frame[pos] = -Infinity;}
-						const val = frame[pos];
-						max = Math.min(max, isFinite(val) ? val : 0);
-					});
-					// Calculate point scale
-					let maxVal = 1;
-					if (this.preset.analysisMode !== 'RMS_level') {
-						this.current.forEach((frame, n) => {
-							if (frame.length === 5) {frame.length = 4;}
-							frame.push(
-								isFinite(frame[pos]) 
-									? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max))) 
-									: 1
-							);
-							if (!isFinite(frame[4])) {frame[4] = 0;}
-							maxVal = Math.min(maxVal, frame[4]);
-						});
-					} else {
-						this.current.forEach((frame) => {
-							frame.push(isFinite(frame[pos]) ? 1 - Math.abs((frame[pos] - max) / max) : 1);
-							maxVal = Math.min(maxVal, frame[4]);
-						});
-					}
-					// Normalize
-					if (maxVal !== 0) {
-						this.current.forEach((frame) => {
-							if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
-						});
-					}
-				} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer' || this.isFallback) {
-					// Calculate max values
-					let max = 0;
-					this.current.forEach((frame) => {
-						max = Math.max(max, Math.abs(frame));
-					});
-					// Calculate point scale
-					this.current = this.current.map((frame) => {return frame / max;});
-				}
-			}
+			this.normalizePoints();
 		}
 		// Set animation using BPM if possible
 		if (this.preset.bUseBPM) {this.bpmSteps(handle);}
@@ -292,6 +262,56 @@ function _seekbar({
 		if (fb.IsPlaying) {this.time = fb.PlaybackTime;}
 		// And paint
 		throttlePaint();
+	};
+	
+	this.normalizePoints = () => {
+		if (this.current.length) {
+			if (!this.isFallback && !bFallbackAnalyMode.paint && this.analysis.binaryMode === 'ffprobe') {
+				// Calculate max values
+				let max = 0;
+				const key = modes[this.preset.analysisMode].key; 
+				const pos = modes[this.preset.analysisMode].pos;
+				this.current.forEach((frame) => {
+					// After parsing JSON, restore infinity values
+					if (frame[pos] === null) {frame[pos] = -Infinity;}
+					const val = frame[pos];
+					max = Math.min(max, isFinite(val) ? val : 0);
+				});
+				// Calculate point scale
+				let maxVal = 1;
+				if (this.preset.analysisMode !== 'RMS_level') {
+					this.current.forEach((frame, n) => {
+						if (frame.length === 5) {frame.length = 4;}
+						frame.push(
+							isFinite(frame[pos]) 
+								? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max))) 
+								: 1
+						);
+						if (!isFinite(frame[4])) {frame[4] = 0;}
+						maxVal = Math.min(maxVal, frame[4]);
+					});
+				} else {
+					this.current.forEach((frame) => {
+						frame.push(isFinite(frame[pos]) ? 1 - Math.abs((frame[pos] - max) / max) : 1);
+						maxVal = Math.min(maxVal, frame[4]);
+					});
+				}
+				// Normalize
+				if (maxVal !== 0) {
+					this.current.forEach((frame) => {
+						if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
+					});
+				}
+			} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackAnalyMode.paint) {
+				// Calculate max values
+				let max = 0;
+				this.current.forEach((frame) => {
+					max = Math.max(max, Math.abs(frame));
+				});
+				// Calculate point scale
+				this.current = this.current.map((frame) => {return frame / max;});
+			}
+		}
 	};
 	
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
@@ -341,6 +361,7 @@ function _seekbar({
 		this.offset = [];
 		this.isAllowedFile = true;
 		this.isFallback = false;
+		bFallbackAnalyMode = {paint: false, analysis: false};
 	};
 	
 	this.stop = (reason = -1) => { // -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
@@ -354,7 +375,7 @@ function _seekbar({
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
 		const frames = this.current.length;
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
-		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback;
+		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackAnalyMode.paint;
 		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
 		// Panel background
 		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
@@ -603,14 +624,14 @@ function _seekbar({
 		// Change to track folder since ffprobe has stupid escape rules which are impossible to apply right with amovie input mode
 		let handleFileName = handle.Path.split('\\').pop();
 		const handleFolder = handle.Path.replace(handleFileName, '');
-		if (this.isAllowedFile && this.analysis.binaryMode === 'audiowaveform') {
+		if (this.isAllowedFile && !bFallbackAnalyMode.analysis && this.analysis.binaryMode === 'audiowaveform') {
 			if (this.bProfile) {profiler = new FbProfiler('audiowaveform');}
 			const extension = handleFileName.match(/(?:\.)(\w+$)/i)[1];
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
 				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) + ' --input-format ' + extension + ' --bits 8' +
 				' -o ' + _q(seekbarFolder + 'data.json');
-		} else if (this.isAllowedFile && this.analysis.binaryMode === 'ffprobe') {
+		} else if (this.isAllowedFile && !bFallbackAnalyMode.analysis && this.analysis.binaryMode === 'ffprobe') {
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
 			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
@@ -618,13 +639,13 @@ function _seekbar({
 				(this.analysis.resolution > 1 ? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) + ',asetnsamples=' + Math.round((this.analysis.resolution / 10)**2) : '') +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak -print_format json > ' +
 				_q(seekbarFolder + 'data.json');
-		} else if (this.isFallback || this.analysis.binaryMode === 'visualizer') {
+		} else if (this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackAnalyMode.analysis) {
 			profiler = new FbProfiler('visualizer');
 		}
 		if (this.bDebug && cmd) {console.log(cmd);}
 		let bDone = cmd ? _runCmd(cmd, false) : true;
 		bDone = bDone && (await new Promise((resolve) => {
-				if (this.isFallback || this.analysis.binaryMode === 'visualizer') {resolve(true);}
+				if (this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackAnalyMode.analysis) {resolve(true);}
 				const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
 				const id = setInterval(() => {
 					if (_isFile(seekbarFolder + 'data.json')) {
@@ -642,7 +663,7 @@ function _seekbar({
 			const data = cmd ? _jsonParseFile(seekbarFolder + 'data.json', this.codePage) : this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
 			if (data) {
-				if (!this.isFallback && this.analysis.binaryMode === 'ffprobe' && data.frames && data.frames.length) {
+				if (!this.isFallback && !bFallbackAnalyMode.analysis && this.analysis.binaryMode === 'ffprobe' && data.frames && data.frames.length) {
 					data.frames.forEach((frame) => {
 						// Save values as array to compress file as much as possible, also round decimals...
 						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf' 
@@ -672,7 +693,7 @@ function _seekbar({
 					} else {
 						_save(seekbarFile + '.ff.json', str);
 					}
-				} else if (!this.isFallback && this.analysis.binaryMode === 'audiowaveform' && data.data && data.data.length) {
+				} else if (!this.isFallback && !bFallbackAnalyMode.analysis && this.analysis.binaryMode === 'audiowaveform' && data.data && data.data.length) {
 					this.current = data.data;
 					const str = JSON.stringify(this.current);
 					if (this.analysis.compressionMode === 'utf-16') {
@@ -688,7 +709,7 @@ function _seekbar({
 					} else {
 						_save(seekbarFile + '.aw.json', str);
 					}
-				} else if ((this.isFallback || this.analysis.binaryMode === 'visualizer') && data.length) {
+				} else if ((this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackAnalyMode.analysis) && data.length) {
 					this.current = data;
 				}
 			}

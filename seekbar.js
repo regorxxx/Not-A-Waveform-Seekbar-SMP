@@ -1,5 +1,5 @@
 'use strict';
-//06/03/23
+//18/04/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -23,7 +23,8 @@ let seekbarProperties = {
 			compressionMode: 'utf-16',
 			bAutoAnalysis: true,
 			bAutoRemove: false,
-			bVisualizerFallback: true
+			bVisualizerFallback: true,
+			bVisualizerFallbackAnalysis: true
 		}), {func: isJSON}],
 	preset:		['Preset config',
 		JSON.stringify({
@@ -49,7 +50,8 @@ let seekbarProperties = {
 			pos: {scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200,
 			bVariableRefreshRate: true
-		}), {func: isJSON}]
+		}), {func: isJSON}],
+	bEnabled: ['Enable panel', true, {func: isBoolean}]
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
@@ -61,6 +63,7 @@ const seekbar = new _seekbar({
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => {return value === null ? Infinity : value;}),
 	ui: {...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size))}
 });
+if (!seekbarProperties.bEnabled[1]) {seekbar.switch();}
 
 // Callbacks
 addEventListener('on_size', (width, height) => {
