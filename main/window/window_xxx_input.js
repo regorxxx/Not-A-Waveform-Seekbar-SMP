@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/04/22
+//18/04/22
 
 include('window_xxx_helpers.js');
 include('..\\..\\helpers\\helpers_xxx_flags.js');
@@ -409,7 +409,8 @@ function _buttonList(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), d
 }
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
-function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject) {
+// Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
+function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, bordercolor, backselectioncolor, func, parentObject, helpFile = null) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.font_italic = _gdiFont('Segoe UI', _scale(10), 2);
@@ -438,7 +439,8 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	this.right_margin = 2;
 	this.drag = false;
 	this.active = false;
-
+	this.helpFile = helpFile;
+	
 	this.setSize = function (w, h, font_size = 10) {
 		this.w = w;
 		this.h = h;
@@ -456,8 +458,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		}
 		// draw bg
 		gr.SetSmoothingMode(0);
-		if (this.bordercolor)
+		if (this.bordercolor) {
 			gr.FillSolidRect(x - 2, y + 0, (this.w + 4), this.h - 0, this.bordercolor);
+		}
 		gr.FillSolidRect(x - 1, y + 1, (this.w + 2), this.h - 2, this.backcolor);
 
 		// adjust offset to always see the cursor
@@ -473,24 +476,24 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		// draw selection
 		if (this.SelBegin != this.SelEnd) {
 			this.select = true;
-			this.CalcText();
+			this.calcText();
 			if (this.SelBegin < this.SelEnd) {
 				if (this.SelBegin < this.offset) {
 					var px1 = this.x;
 				} else {
-					var px1 = this.x + this.GetCx(this.SelBegin);
+					var px1 = this.x + this.getCx(this.SelBegin);
 				}
-				var px1 = this.GetCx(this.SelBegin);
-				var px2 = this.GetCx(this.SelEnd);
+				var px1 = this.getCx(this.SelBegin);
+				var px2 = this.getCx(this.SelEnd);
 				this.text_selected = this.text.substring(this.SelBegin, this.SelEnd);
 			} else {
 				if (this.SelEnd < this.offset) {
 					var px1 = this.x;
 				} else {
-					var px1 = this.x - this.GetCx(this.SelBegin);
+					var px1 = this.x - this.getCx(this.SelBegin);
 				}
-				var px2 = this.GetCx(this.SelBegin);
-				var px1 = this.GetCx(this.SelEnd);
+				var px2 = this.getCx(this.SelBegin);
+				var px1 = this.getCx(this.SelEnd);
 				this.text_selected = this.text.substring(this.SelEnd, this.SelBegin);
 			}
 			if ((this.x + px1 + (px2 - px1)) > this.x + this.w) {
@@ -522,17 +525,18 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				gr.GdiDrawText(this.text.substr(this.offset), this.font, this.edit ? this.textcolor : blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
 			}
 		} else {
-			gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(this.textcolor, (this.backcolor == 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
+			gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(this.textcolor, (this.backcolor === 0 ? 0xff000000 : this.backcolor), 0.35), this.x, this.y, this.w, this.h, DT);
 		}
 		// draw cursor
-		if (this.edit && !this.select)
+		if (this.edit && !this.select) {
 			this.drawcursor(gr);
+		}
 	};
 
 	this.drawcursor = function (gr) {
 		if (cInputbox.cursor_state) {
 			if (this.Cpos >= this.offset) {
-				this.Cx = this.GetCx(this.Cpos);
+				this.Cx = this.getCx(this.Cpos);
 				var x1 = this.x + this.Cx;
 				var x2 = x1;
 				var y1 = this.y + 1;
@@ -549,11 +553,11 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		else {console.log('oInputbox: parentObject has no repaint method.');}
 	}
 
-	this.CalcText = function () {
+	this.calcText = function () {
 		this.TWidth = _gr.CalcTextWidth(this.text.substr(this.offset), this.font);
 	}
 
-	this.GetCx = function (pos) {
+	this.getCx = function (pos) {
 		if (pos >= this.offset) {
 			var x = _gr.CalcTextWidth(this.text.substr(this.offset, pos - this.offset), this.font);
 		} else {
@@ -562,7 +566,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		return x;
 	}
 
-	this.GetCPos = function (x) {
+	this.getCPos = function (x) {
 		var tx = x - this.x;
 		var pos = 0;
 		for (var i = this.offset; i < this.text.length; i++) {
@@ -616,7 +620,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				this.dblclk = false;
 				this.drag = true;
 				this.edit = true;
-				this.Cpos = this.GetCPos(x);
+				this.Cpos = this.getCPos(x);
 				this.anchor = this.Cpos;
 				this.SelBegin = this.Cpos;
 				this.SelEnd = this.Cpos;
@@ -638,7 +642,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		case 'up':
 			this.active = this.hover;
 			if (!this.dblclk && this.drag) {
-				this.SelEnd = this.GetCPos(x);
+				this.SelEnd = this.getCPos(x);
 				if (this.select) {
 					if (this.SelBegin > this.SelEnd) {
 						this.sBeginSel = this.SelBegin;
@@ -663,9 +667,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			break;
 		case 'move':
 			if (this.drag) {
-				this.CalcText();
-				var tmp = this.GetCPos(x);
-				var tmp_x = this.GetCx(tmp);
+				this.calcText();
+				var tmp = this.getCPos(x);
+				var tmp_x = this.getCx(tmp);
 				if (tmp < this.SelBegin) {
 					if (tmp < this.SelEnd) {
 						if (tmp_x < this.x) {
@@ -730,77 +734,94 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 	};
 
 	this.show_context_menu = function (x, y) {
-		var idx;
-		var _menu = window.CreatePopupMenu();
+		const _menu = window.CreatePopupMenu();
 		cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Copy');
-		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
+		_menu.AppendMenuItem(this.stext.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Undo');
 		_menu.AppendMenuSeparator();
-		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Paste');
-		if (getKeyboardMask() === kMask.shift) {
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, 'Copy');
+		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 4, 'Paste');
+		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 5, 'Delete');
+		_menu.AppendMenuSeparator();
+		_menu.AppendMenuItem(this.text.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 6, 'Select All');
+		if (this.helpFile && utils.FileExists(this.helpFile)) {
 			_menu.AppendMenuSeparator();
-			_menu.AppendMenuItem(MF_STRING, 20, 'Properties');
-			_menu.AppendMenuItem(MF_STRING, 21, 'Configure...');
+			_menu.AppendMenuItem(MF_STRING, 7, 'Help...');
 		}
-		idx = _menu.TrackPopupMenu(x, y);
+		const idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
-		case 1:
-			if (this.edit && this.select) {
-				utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-			}
-			break;
-		case 2:
-			if (this.edit && this.select) {
-				utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-				var p1 = this.SelBegin;
-				var p2 = this.SelEnd;
-				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
-				this.select = false;
-				this.text_selected = '';
-				this.Cpos = this.SelBegin;
-				this.SelEnd = this.SelBegin;
-				this.text = this.text.slice(0, p1) + this.text.slice(p2);
-				this.CalcText();
-
-				this.repaint();
-			}
-			break;
-		case 3:
-			if (this.edit && cInputbox.clipboard) {
-				if (this.select) {
+			case 1:
+				if (this.edit && this.stext.length) {
+					this.on_key(90, kMask.ctrl);
+				}
+				break;
+			case 2:
+				if (this.edit && this.select) {
+					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 					var p1 = this.SelBegin;
 					var p2 = this.SelEnd;
+					this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 					this.select = false;
 					this.text_selected = '';
 					this.Cpos = this.SelBegin;
 					this.SelEnd = this.SelBegin;
+					this.text = this.text.slice(0, p1) + this.text.slice(p2);
+					this.calcText();
 
-					if (this.Cpos < this.text.length) {
-						this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
-					} else {
-						this.text = this.text + cInputbox.clipboard;
-					}
-					this.Cpos += cInputbox.clipboard.length;
-					this.CalcText();
-					this.repaint();
-				} else {
-					if (this.Cpos > 0) { // cursor pos > 0
-						this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
-					} else {
-						this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
-					}
-					this.Cpos += cInputbox.clipboard.length;
-					this.CalcText();
 					this.repaint();
 				}
-			};
-			break;
-		case 20:
-			window.ShowProperties();
-			break;
-		case 21:
-			window.ShowConfigure();
-			break;
+				break;
+			case 3:
+				if (this.edit && this.select) {
+					utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
+				}
+				break;
+			case 4:
+				if (this.edit && cInputbox.clipboard) {
+					if (this.select) {
+						var p1 = this.SelBegin;
+						var p2 = this.SelEnd;
+						this.select = false;
+						this.text_selected = '';
+						this.Cpos = this.SelBegin;
+						this.SelEnd = this.SelBegin;
+
+						if (this.Cpos < this.text.length) {
+							this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
+						} else {
+							this.text = this.text + cInputbox.clipboard;
+						}
+						this.Cpos += cInputbox.clipboard.length;
+						this.calcText();
+						this.repaint();
+					} else {
+						if (this.Cpos > 0) { // cursor pos > 0
+							this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+						} else {
+							this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+						}
+						this.Cpos += cInputbox.clipboard.length;
+						this.calcText();
+						this.repaint();
+					}
+				};
+				break;
+			case 5:
+				if (this.edit && this.select) {
+					this.on_key(VK_DELETE, kMask.none);
+				}
+				break;
+			case 6:
+				if (this.edit && this.text.length) {
+					this.check('dblclk', x, y);
+				}
+				break;
+			case 7:
+				if (this.helpFile && utils.FileExists(this.helpFile)) {
+					const readme = utils.ReadTextFile(this.helpFile, 65001);
+					readme && readme.length && fb.ShowPopupMessage(readme, 'Input box');
+				}
+				break;
 		}
 	}
 
@@ -816,6 +837,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				break;
 			case VK_ESCAPE:
 				if (this.text.length) {
+					this.stext = this.text;
 					this.text = '';
 					this.Cpos = 0;
 					this.SelBegin = 0;
@@ -823,7 +845,9 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 					this.select = false;
 					this.offset = 0;
 					this.text_selected = '';
+					this.repaint();
 				} else {this.check('down', -1, -1);}
+				break;
 			case VK_BACK:
 				//save text before update
 				this.stext = this.text;
@@ -852,7 +876,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						}
 					}
 				}
-				this.CalcText();
+				this.calcText();
 				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 				this.text_selected = '';
 				this.SelBegin = this.Cpos;
@@ -884,7 +908,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 						}
 					}
 				}
-				this.CalcText();
+				this.calcText();
 				this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
 				this.text_selected = '';
 				this.SelBegin = this.Cpos;
@@ -895,14 +919,6 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			case VK_RETURN:
 				if (this.edit && this.text.length >= 0) {
 					if (this.func) {this.func();}
-				}
-				break;
-			case VK_ESCAPE:
-				if (this.edit) {
-					this.edit = false;
-					this.text_selected = '';
-					this.select = false;
-					this.repaint();
 				}
 				break;
 			case VK_END:
@@ -958,195 +974,383 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 				this.repaint();
 		} else {
 			switch (mask) {
-			case kMask.shift:
-				if (vkey == VK_HOME) { // SHIFT + HOME
-					if (this.edit) {
-						if (!this.select) {
-							this.anchor = this.Cpos;
-							this.select = true;
-							if (this.Cpos > 0) {
-								this.SelEnd = this.Cpos;
-								this.SelBegin = 0;
+				case kMask.shift: {
+					if (vkey == VK_HOME) { // SHIFT + HOME
+						if (this.edit) {
+							if (!this.select) {
+								this.anchor = this.Cpos;
 								this.select = true;
-								this.Cpos = 0;
-							}
-						} else {
-							if (this.Cpos > 0) {
-								if (this.anchor < this.Cpos) {
+								if (this.Cpos > 0) {
+									this.SelEnd = this.Cpos;
 									this.SelBegin = 0;
-									this.SelEnd = this.anchor;
-								} else if (this.anchor > this.Cpos) {
-									this.SelBegin = 0;
+									this.select = true;
+									this.Cpos = 0;
 								}
-								this.Cpos = 0;
-							}
-						}
-						if (this.offset > 0) {
-							this.offset = 0;
-						}
-						this.repaint();
-					}
-				};
-				if (vkey == VK_END) { // SHIFT + END
-					if (this.edit) {
-						if (!this.select) {
-							this.anchor = this.Cpos;
-							if (this.Cpos < this.text.length) {
-								this.SelBegin = this.Cpos;
-								this.SelEnd = this.text.length;
-								this.Cpos = this.text.length;
-								this.select = true;
-							}
-						} else {
-							if (this.Cpos < this.text.length) {
-								if (this.anchor < this.Cpos) {
-									this.SelEnd = this.text.length;
-								} else if (this.anchor > this.Cpos) {
-									this.SelBegin = this.anchor;
-									this.SelEnd = this.text.length;
+							} else {
+								if (this.Cpos > 0) {
+									if (this.anchor < this.Cpos) {
+										this.SelBegin = 0;
+										this.SelEnd = this.anchor;
+									} else if (this.anchor > this.Cpos) {
+										this.SelBegin = 0;
+									}
+									this.Cpos = 0;
 								}
-								this.Cpos = this.text.length;
 							}
+							if (this.offset > 0) {
+								this.offset = 0;
+							}
+							this.repaint();
 						}
-
-						this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
-						while (this.Cx >= this.w - this.right_margin) {
-							this.offset++;
+					};
+					if (vkey == VK_END) { // SHIFT + END
+						if (this.edit) {
+							if (!this.select) {
+								this.anchor = this.Cpos;
+								if (this.Cpos < this.text.length) {
+									this.SelBegin = this.Cpos;
+									this.SelEnd = this.text.length;
+									this.Cpos = this.text.length;
+									this.select = true;
+								}
+							} else {
+								if (this.Cpos < this.text.length) {
+									if (this.anchor < this.Cpos) {
+										this.SelEnd = this.text.length;
+									} else if (this.anchor > this.Cpos) {
+										this.SelBegin = this.anchor;
+										this.SelEnd = this.text.length;
+									}
+									this.Cpos = this.text.length;
+								}
+							}
 							this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
+							while (this.Cx >= this.w - this.right_margin) {
+								this.offset++;
+								this.Cx = _gr.CalcTextWidth(this.text.substr(this.offset, this.Cpos - this.offset), this.font);
+							}
+							this.repaint();
 						}
+					};
+					if (vkey == VK_LEFT) { // SHIFT + KEY LEFT
+						if (this.edit) {
+							if (!this.select) {
+								this.anchor = this.Cpos;
+								this.select = true;
+								if (this.Cpos > 0) {
+									this.SelEnd = this.Cpos;
+									this.SelBegin = this.Cpos - 1;
+									this.select = true;
+									this.Cpos--;
+								}
+							} else {
+								if (this.Cpos > 0) {
+									if (this.anchor < this.Cpos) {
+										this.SelEnd--;
+									} else if (this.anchor > this.Cpos) {
+										this.SelBegin--;
+									}
+									this.Cpos--;
+								}
+							}
+							if (this.offset > 0) {
+								var tmp = this.Cpos;
+								var tmp_x = this.getCx(tmp);
+								if (tmp < this.offset) {
+									this.offset--;
+								}
+							}
+							this.repaint();
+						}
+					};
+					if (vkey == VK_RIGHT) { // SHIFT + KEY RIGHT
+						if (this.edit) {
+							if (!this.select) {
+								this.anchor = this.Cpos;
+								if (this.Cpos < this.text.length) {
+									this.SelBegin = this.Cpos;
+									this.Cpos++;
+									this.SelEnd = this.Cpos;
+									this.select = true;
+								}
+							} else {
+								if (this.Cpos < this.text.length) {
+									if (this.anchor < this.Cpos) {
+										this.SelEnd++;
+									} else if (this.anchor > this.Cpos) {
+										this.SelBegin++;
+									}
+									this.Cpos++;
+								}
+							}
 
-						this.repaint();
-					}
+							// handle scroll text on cursor selection
+							var tmp_x = this.getCx(this.Cpos);
+							if (tmp_x > (this.w - this.right_margin)) {
+								this.offset++;
+							}
+							this.repaint();
+						}
+					};
+					break;
 				};
-				if (vkey == VK_LEFT) { // SHIFT + KEY LEFT
-					if (this.edit) {
-						if (!this.select) {
-							this.anchor = this.Cpos;
+				case kMask.ctrl: {
+					if (vkey == 65) { // CTRL + A
+						if (this.edit && this.text.length > 0) {
+							this.SelBegin = 0;
+							this.SelEnd = this.text.length;
+							this.text_selected = this.text;
 							this.select = true;
-							if (this.Cpos > 0) {
-								this.SelEnd = this.Cpos;
-								this.SelBegin = this.Cpos - 1;
-								this.select = true;
-								this.Cpos--;
-							}
-						} else {
-							if (this.Cpos > 0) {
-								if (this.anchor < this.Cpos) {
-									this.SelEnd--;
-								} else if (this.anchor > this.Cpos) {
-									this.SelBegin--;
-								}
-								this.Cpos--;
-							}
+							this.repaint();
 						}
-						if (this.offset > 0) {
-							var tmp = this.Cpos;
-							var tmp_x = this.GetCx(tmp);
-							if (tmp < this.offset) {
-								this.offset--;
-							}
+					}
+					if (vkey == 67) { // CTRL + C
+						if (this.edit && this.select) {
+							utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 						}
-						this.repaint();
 					}
-				};
-				if (vkey == VK_RIGHT) { // SHIFT + KEY RIGHT
-					if (this.edit) {
-						if (!this.select) {
-							this.anchor = this.Cpos;
-							if (this.Cpos < this.text.length) {
-								this.SelBegin = this.Cpos;
-								this.Cpos++;
-								this.SelEnd = this.Cpos;
-								this.select = true;
-							}
-						} else {
-							if (this.Cpos < this.text.length) {
-								if (this.anchor < this.Cpos) {
-									this.SelEnd++;
-								} else if (this.anchor > this.Cpos) {
-									this.SelBegin++;
-								}
-								this.Cpos++;
-							}
-						}
-
-						// handle scroll text on cursor selection
-						var tmp_x = this.GetCx(this.Cpos);
-						if (tmp_x > (this.w - this.right_margin)) {
-							this.offset++;
-						}
-						this.repaint();
-					}
-				};
-				break;
-			case kMask.ctrl:
-				if (vkey == 65) { // CTRL+A
-					if (this.edit && this.text.length > 0) {
-						this.SelBegin = 0;
-						this.SelEnd = this.text.length;
-						this.text_selected = this.text;
-						this.select = true;
-						this.repaint();
-					}
-				};
-				if (vkey == 67) { // CTRL+C
-					if (this.edit && this.select) {
-						utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-					}
-				};
-				if (vkey == 88) { // CTRL+X
-					if (this.edit && this.select) {
-						this.stext = this.text;
-						utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
-						var p1 = this.SelBegin;
-						var p2 = this.SelEnd;
-						this.select = false;
-						this.text_selected = '';
-						this.Cpos = this.SelBegin;
-						this.SelEnd = this.SelBegin;
-						this.text = this.text.slice(0, p1) + this.text.slice(p2);
-						this.CalcText();
-						this.repaint();
-					}
-				};
-				if (vkey == 90) { // CTRL+Z
-					if (this.edit) {
-						this.text = this.stext;
-						this.repaint();
-					}
-				};
-				if (vkey == 86) { // CTRL+V
-					cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
-					if (this.edit && cInputbox.clipboard) {
-						this.stext = this.text;
-						if (this.select) {
+					if (vkey == 88) { // CTRL + X
+						if (this.edit && this.select) {
+							this.stext = this.text;
+							utils.SetClipboardText ? utils.SetClipboardText(this.text_selected.toString()) : cInputbox.doc.parentWindow.clipboardData.setData('Text', this.text_selected);
 							var p1 = this.SelBegin;
 							var p2 = this.SelEnd;
 							this.select = false;
 							this.text_selected = '';
 							this.Cpos = this.SelBegin;
 							this.SelEnd = this.SelBegin;
-							if (this.Cpos < this.text.length) {
-								this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
-							} else {
-								this.text = this.text + cInputbox.clipboard;
-							}
-							this.Cpos += cInputbox.clipboard.length;
-							this.CalcText();
-							this.repaint();
-						} else {
-							if (this.Cpos > 0) { // cursor pos > 0
-								this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
-							} else {
-								this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
-							}
-							this.Cpos += cInputbox.clipboard.length;
-							this.CalcText();
+							this.text = this.text.slice(0, p1) + this.text.slice(p2);
+							this.calcText();
 							this.repaint();
 						}
-					};
+					}
+					if (vkey == 90) { // CTRL + Z
+						if (this.edit) {
+							this.text = this.stext;
+							this.repaint();
+						}
+					}
+					if (vkey == 86) { // CTRL + V
+						cInputbox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputbox.doc.parentWindow.clipboardData.getData('Text');
+						if (this.edit && cInputbox.clipboard) {
+							this.stext = this.text;
+							if (this.select) {
+								var p1 = this.SelBegin;
+								var p2 = this.SelEnd;
+								this.select = false;
+								this.text_selected = '';
+								this.Cpos = this.SelBegin;
+								this.SelEnd = this.SelBegin;
+								if (this.Cpos < this.text.length) {
+									this.text = this.text.slice(0, p1) + cInputbox.clipboard + this.text.slice(p2);
+								} else {
+									this.text = this.text + cInputbox.clipboard;
+								}
+								this.Cpos += cInputbox.clipboard.length;
+								this.calcText();
+								this.repaint();
+							} else {
+								if (this.Cpos > 0) { // cursor pos > 0
+									this.text = this.text.substring(0, this.Cpos) + cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+								} else {
+									this.text = cInputbox.clipboard + this.text.substring(this.Cpos, this.text.length);
+								}
+								this.Cpos += cInputbox.clipboard.length;
+								this.calcText();
+								this.repaint();
+							}
+						}
+					}
+					if (vkey == VK_HOME) { // CTRL + HOME
+						this.on_key(VK_HOME, kMask.none);
+					}
+					if (vkey == VK_END) { // CTRL + END
+						this.on_key(VK_END, kMask.none);
+					}
+					if (vkey == VK_BACK) { // CTRL + BACK
+						//save text before update
+						this.stext = this.text;
+						if (this.edit) {
+							if (this.select) {
+								if (this.text_selected.length == this.text.length) {
+									this.text = '';
+									this.Cpos = 0;
+								} else {
+									if (this.SelBegin > 0) {
+										this.text = this.text.substring(0, this.SelBegin) + this.text.substring(this.SelEnd, this.text.length);
+										this.Cpos = this.SelBegin;
+									} else {
+										this.text = this.text.substring(this.SelEnd, this.text.length);
+										this.Cpos = this.SelBegin;
+									}
+								}
+							} else {
+								if (this.Cpos <= this.text.length) {
+									const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
+									const idx = leftTrim.search(/\b /);
+									this.text = idx !== -1 
+										? this.text.substr(0, this.Cpos - idx) + this.text.substring(this.Cpos)
+										: '';
+									this.Cpos = idx !== -1 ? this.Cpos - idx : 0;
+									this.repaint();
+								}
+							}
+						}
+						this.calcText();
+						this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+						this.text_selected = '';
+						this.SelBegin = this.Cpos;
+						this.SelEnd = this.SelBegin;
+						this.select = false;
+						this.repaint();
+					}
+					if (vkey === VK_DELETE) { // CTRL + SUPR
+						//save text before update
+						this.stext = this.text;
+						if (this.edit) {
+							if (this.select) {
+								if (this.text_selected.length == this.text.length) {
+									this.text = '';
+									this.Cpos = 0;
+								} else {
+									if (this.SelBegin > 0) {
+										this.text = this.text.substring(0, this.SelBegin) + this.text.substring(this.SelEnd, this.text.length);
+										this.Cpos = this.SelBegin;
+									} else {
+										this.text = this.text.substring(this.SelEnd, this.text.length);
+										this.Cpos = this.SelBegin;
+									}
+								}
+							} else {
+								if (this.Cpos < this.text.length) {
+									const right = this.text.substring(this.Cpos);
+									const rightTrim = right.trimStart();
+									let idx = rightTrim.search(/ \b/);
+									if (idx !== -1) {
+										const offset = right.length - rightTrim.length;
+										const old = idx - 1;
+										if (this.Cpos === 0 && offset) {idx = offset;}
+										else {idx += offset;}
+										while (right[old] === ' ' && right[idx] === ' ') {idx++;}
+									}
+									this.text = idx !== -1 
+										? this.text.substr(0, this.Cpos) + this.text.substr(this.Cpos + idx, this.text.length) 
+										: this.text.substr(0, this.Cpos);
+									this.repaint();
+								}
+							}
+						}
+						this.calcText();
+						this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+						this.text_selected = '';
+						this.SelBegin = this.Cpos;
+						this.SelEnd = this.SelBegin;
+						this.select = false;
+						this.repaint();
+					}
+					if (vkey === VK_LEFT) { // CTRL + KEY LEFT
+						if (this.edit && this.Cpos > 0) {
+							let newSelIdx = 0;
+							if (this.Cpos <= this.text.length) {
+								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
+								const idx = leftTrim.search(/\b /);
+								newSelIdx = idx !== -1 
+									? newSelIdx = this.Cpos - idx
+									: 0;
+							}
+							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
+							this.select = false;
+							this.calcText();
+							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+							this.repaint();
+						}
+					}
+					if (vkey === VK_RIGHT) { // CTRL + KEY RIGHT
+						if (this.edit && this.Cpos < this.text.length) {
+							let newSelIdx = this.text.length;
+							if (this.Cpos >= 0) {
+								const right = this.text.substring(this.Cpos);
+								const rightTrim = right.trimStart();
+								let idx = rightTrim.search(/ \b/);
+								if (idx !== -1) {
+									const offset = right.length - rightTrim.length;
+									if (this.Cpos === 0 && offset) {idx = offset;}
+									else {idx += offset;}
+									while (right[idx] === ' ') {idx++;}
+								}
+								newSelIdx = idx !== -1 
+									? this.Cpos + idx 
+									: this.text.length;
+							}
+							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
+							this.select = false;
+							this.calcText();
+							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+							this.repaint();
+						}
+					}
+					break;
 				};
-				break;
+				case kMask.ctrlShift: {
+					if (vkey == VK_HOME) { // CTRL + SHIFT + HOME
+						this.on_key(VK_HOME, kMask.shift);
+					}
+					if (vkey == VK_END) { // CTRL + SHIFT + END
+						this.on_key(VK_END, kMask.shift);
+					}
+					if (vkey === VK_LEFT) { // CTRL + SHIFT + KEY LEFT
+						if (this.edit && this.Cpos > 0) {
+							let newSelIdx = 0;
+							if (this.Cpos <= this.text.length) {
+								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
+								const idx = leftTrim.search(/\b /);
+								newSelIdx = idx !== -1 
+									? newSelIdx = this.Cpos - idx
+									: 0;
+							}
+							if (!this.select) {
+								this.anchor = this.SelEnd = this.Cpos;
+								this.Cpos = this.SelBegin = newSelIdx;
+								this.select = true;
+							} else {
+								this.anchor = this.Cpos = this.SelBegin = newSelIdx;
+							}
+							this.calcText();
+							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+							this.repaint();
+						}
+					}
+					if (vkey === VK_RIGHT) { // CTRL + SHIFT + KEY RIGHT
+						if (this.edit && this.Cpos < this.text.length) {
+							let newSelIdx = this.text.length;
+							if (this.Cpos >= 0) {
+								const right = this.text.substring(this.Cpos);
+								const rightTrim = right.trimStart();
+								let idx = rightTrim.search(/ \b/);
+								if (idx !== -1) {
+									const offset = right.length - rightTrim.length;
+									if (this.Cpos === 0 && offset) {idx = offset;}
+									else {idx += offset;}
+									while (right[idx] === ' ') {idx++;}
+								}
+								newSelIdx = idx !== -1 
+									? this.Cpos + idx 
+									: this.text.length;
+							}
+							if (!this.select) {
+								this.anchor = this.SelBegin = this.Cpos;
+								this.SelEnd = this.Cpos = newSelIdx;
+								this.select = true;
+							} else {
+								this.anchor = this.Cpos = this.SelEnd = newSelIdx;
+							}
+							this.calcText();
+							this.offset = this.offset >= this.text_selected.length ? this.offset - this.text_selected.length : 0;
+							this.repaint();
+						}
+					}
+					break;
+				}
 			}
 		}
 
@@ -1165,13 +1369,8 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 		}
 	}
 
-	this.on_char = function (code, mask) {
-		if (code == 1 && this.edit && mask == kMask.ctrl) {
-			this.Spos = 0;
-			this.Cpos = this.text.length;
-			this.select = true;
-			this.repaint();
-		}
+	this.on_char = function (code, mask = getKeyboardMask()) { // callback doesn't provide mask
+		if (code === 127 && mask === kMask.ctrl) {return;} // CTRL+BACK
 		if (code > 31 && this.edit) {
 			//save text before update
 			this.stext = this.text;
@@ -1192,7 +1391,7 @@ function _inputbox(w, h, default_text, empty_text, textcolor, backcolor, borderc
 			}
 			this.Cpos++;
 			if (this.select) {
-				this.CalcText();
+				this.calcText();
 				if (this.TWidth <= (this.w)) {
 					this.offset = 0;
 				} else {
