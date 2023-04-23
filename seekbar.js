@@ -1,5 +1,5 @@
 'use strict';
-//19/04/23
+//23/04/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -51,13 +51,15 @@ let seekbarProperties = {
 			refreshRate: 200,
 			bVariableRefreshRate: true
 		}), {func: isJSON}],
-	bEnabled: ['Enable panel', true, {func: isBoolean}]
+	bEnabled: ['Enable panel', true, {func: isBoolean}],
+	matchPattern: ['File name TF format', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', {func: isString}]
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 
 const seekbar = new _seekbar({
+	matchPattern: seekbarProperties.matchPattern[1],
 	binaries: JSON.parse(seekbarProperties.binaries[1]),
 	analysis: JSON.parse(seekbarProperties.analysis[1]),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => {return value === null ? Infinity : value;}),

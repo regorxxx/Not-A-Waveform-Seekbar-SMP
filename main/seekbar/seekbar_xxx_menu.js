@@ -1,5 +1,7 @@
 ﻿'use strict';
-//18/04/23
+//23/04/23
+include('..\\..\\helpers\\helpers_xxx_input.js')
+
 
 function bindMenu(parent) {
 	return _attachedMenu.call(parent, {rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
@@ -60,6 +62,16 @@ function createSeekbarMenu(bClear = true) {
 				menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.analysis[o.key];});
 			});
 		}
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		{
+		menu.newEntry({menuName: subMenu, entryText: 'File name format...', func: () => {
+			const tf = Input.string('string', this.Tf.Expression || '', 'File name format:\n(TF expression)', window.Name, '$lower([$replace(%ALBUM ARTIST%,\,)]\\[$replace(%ALBUM%,\,)][ {$if2($replace(%COMMENT%,\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\,))');
+			if (tf === null) {return;}
+			this.Tf = fb.TitleFormat(tf);
+			seekbarProperties.matchPattern[1] = tf;
+			this.saveProperties();
+		}});
+	}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
@@ -176,5 +188,12 @@ function createSeekbarMenu(bClear = true) {
 		this.saveProperties();
 	}});
 	menu.newCheckMenu(void(0), 'Enable seekbar?', void(0), () => {return this.active;});
+	menu.newEntry({entryText: 'sep'});
+	menu.newEntry({entryText: 'Open data file', func: () => {
+		if (fb.IsPlaying) {
+			const {seekbarFolder} = this.getPaths(fb.GetNowPlaying());
+			if (_isFolder(seekbarFolder)) {_explorer(seekbarFolder);}
+		}
+	}, flags: fb.IsPlaying && this.active ? MF_STRING : MF_GRAYED});
 	return menu;
 }

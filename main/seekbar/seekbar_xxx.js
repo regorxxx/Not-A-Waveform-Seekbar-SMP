@@ -1,10 +1,10 @@
 'use strict';
-//20/04/23
+//23/04/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
 function _seekbar({
-		matchPattern = '$lower([%ALBUM ARTIST%]\\[%ALBUM%][ {$if2(%COMMENT%,%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - %TITLE%)', // Used to create folder path
+		matchPattern = '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', // Used to create folder path
 		bDebug = true,
 		bProfile = false,
 		binaries = {

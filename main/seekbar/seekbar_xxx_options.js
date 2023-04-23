@@ -33,7 +33,9 @@ options.save = () => {
 options.load = () => {
 	const properties = getPropertiesPairs(seekbarProperties, '', 0);
 	for (let key in properties) {
-		options.properties[key] = JSON.parse(properties[key][1], (key, value) => {return value === null ? Infinity : value;});
+		options.properties[key] = properties[key][3] === isJSON 
+			? JSON.parse(properties[key][1], (key, value) => {return value === null ? Infinity : value;})
+			: properties[key][1];
 	}
 }
 
