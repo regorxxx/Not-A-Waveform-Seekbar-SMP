@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/23
+//23/04/23
 
 include('..\\window\\window_xxx.js');
 
