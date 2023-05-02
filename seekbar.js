@@ -1,5 +1,5 @@
 'use strict';
-//23/04/23
+//02/05/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -13,8 +13,8 @@ if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-S
 let seekbarProperties = {
 	binaries:	['Binaries paths', 
 		JSON.stringify({
-			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
-			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
+			ffprobe: folders.xxx + '\\helpers-external\\ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
+			audiowaveform: folders.xxx + '\\helpers-external\\audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
 		}), {func: isJSON}],
 	analysis:	['Analysis config', 
 		JSON.stringify({
@@ -57,6 +57,24 @@ let seekbarProperties = {
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
+
+// Rename paths according to package folder (for portable installs)
+if (folders.JsPackageDirs) {
+	const binaries = JSON.parse(seekbarProperties.binaries[1]);
+	const defBinaries = JSON.parse(seekbarProperties.binaries[3]);
+	let bDone = false;
+	for (let key in binaries) {
+		if (!_isFile(binaries[key]) && _isFile(defBinaries[key])) {
+			binaries[key] = defBinaries[key]; 
+			bDone = true;
+		}
+	}
+	if (bDone) {
+		seekbarProperties.binaries[1] = JSON.stringify(binaries);
+		overwriteProperties(seekbarProperties);
+		console.log('hey');
+	}
+}
 
 const seekbar = new _seekbar({
 	matchPattern: seekbarProperties.matchPattern[1],
