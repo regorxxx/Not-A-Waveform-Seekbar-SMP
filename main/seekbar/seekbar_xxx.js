@@ -1,5 +1,5 @@
 'use strict';
-//23/04/23
+//03/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -105,7 +105,8 @@ function _seekbar({
 		}
 		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name);
-		}
+			this.bBinaryFound = false;
+		} else {this.bBinaryFound = true;}
 		if (this.preset.futureSecs <= 0 || this.preset.futureSecs === null) {this.preset.futureSecs = Infinity;}
 	};
 	// Add default args
@@ -119,6 +120,7 @@ function _seekbar({
 	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
 	// Internals
+	this.bBinaryFound = true;
 	this.active = true;
 	this.Tf = fb.TitleFormat(matchPattern);
 	this.TfMaxStep = fb.TitleFormat('[%BPM%]');
@@ -537,9 +539,11 @@ function _seekbar({
 			const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 			const textColor = invert(this.ui.colors.bg, true);
 			if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
-				gr.GdiDrawText('Not compatible file format...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Not compatible file format', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (!this.analysis.bAutoAnalysis) {
-				gr.GdiDrawText('Seekbar file not found...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+				gr.GdiDrawText('Seekbar file not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			} else if (!this.bBinaryFound) {
+				gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (this.active) {
 				gr.GdiDrawText('Analyzing track...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			}
