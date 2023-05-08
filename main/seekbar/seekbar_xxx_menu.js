@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/23
+//08/05/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
 
 
@@ -15,6 +15,15 @@ function createSeekbarMenu(bClear = true) {
 	// helper
 	menu.newEntry({entryText: 'Configure the seekbar:', flags: MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
+	{
+		menu.newEntry({entryText: 'Enable seekbar', func: () => {
+			this.switch();
+			seekbarProperties.bEnabled[1] = this.active;
+			this.saveProperties();
+		}});
+		menu.newCheckMenu(void(0), 'Enable seekbar?', void(0), () => {return this.active;});
+		menu.newEntry({entryText: 'sep'});
+	}
 	// Menus
 	{
 		const subMenu = menu.newMenu('Binary type...');
@@ -181,13 +190,6 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 	}
-	menu.newEntry({entryText: 'sep'});
-	menu.newEntry({entryText: 'Enable seekbar?', func: () => {
-		this.switch();
-		seekbarProperties.bEnabled[1] = this.active;
-		this.saveProperties();
-	}});
-	menu.newCheckMenu(void(0), 'Enable seekbar?', void(0), () => {return this.active;});
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Open data file', func: () => {
 		if (fb.IsPlaying) {
