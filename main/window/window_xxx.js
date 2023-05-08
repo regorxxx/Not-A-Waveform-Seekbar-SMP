@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/22
+//08/05/23
 
 /* 
 	Window panel helper (+built-in options) v 0.1
@@ -91,6 +91,10 @@ function _window({width = window.Width , height = window.Height, tabWidth = 'FUL
 	this.bAutoSave = bAutoSave;
 	
 	// Paint
+	this.repaint = () => {
+		window.Repaint();
+	}
+	
 	this.paintBg = (gr, x, y) => {
 		gr.FillSolidRect(x, y, this.width, this.height, this.panelColor);
 	}
@@ -188,6 +192,7 @@ function _window({width = window.Width , height = window.Height, tabWidth = 'FUL
 									let currOffsetX = 0;
 									let currOffsetY = 0;
 									this.loadData(value);
+									if (typeof value.value === 'undefined') {throw new Error('value.value is undefined\n' + JSON.stringify(value));}
 									// These 3 modes may be enabled by value type only if no mode is specified
 									// Checkboxes -> Booleans
 									if (value.mode === 'check' || !value.hasOwnProperty('mode') && typeof value.value === 'boolean') {
