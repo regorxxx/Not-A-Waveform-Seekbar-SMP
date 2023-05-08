@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/23
+//08/05/23
 
 include('..\\window\\window_xxx.js');
 
@@ -17,7 +17,6 @@ _createFolder(folders.data);
 const options = new _window({width: window.Width, height: window.Height, tabWidth: propertiesOptions.tabWidth[1], UI: propertiesOptions.UI[1], properties: {...propertiesOptions}, bFitData: true, bAutoSave: true});
 // Set save and load methods to call them easily later (they would be used too if setting autosave to true)
 options.save = () => {
-	console.log('Seekbar: Saving options.');
 	const seekbarOptions = {};
 	for (let key in options.properties) {
 		if (propertiesOptions.hasOwnProperty(key)) {
@@ -33,7 +32,7 @@ options.save = () => {
 options.load = () => {
 	const properties = getPropertiesPairs(seekbarProperties, '', 0);
 	for (let key in properties) {
-		options.properties[key] = properties[key][3] === isJSON 
+		options.properties[key] = properties[key][2].func === isJSON 
 			? JSON.parse(properties[key][1], (key, value) => {return value === null ? Infinity : value;})
 			: properties[key][1];
 	}
@@ -108,4 +107,4 @@ options.addTab({title: 'Other UI', columns: 3, data: [
 // Using .loadAll() or .saveAll() instead of .load() / .save() will also apply for any embedded object
 var menu = new _menu();
 menu.newEntry({entryText: 'Show Options', func: () => {options.loadAll(); options.properties.bOptions[1] = true; options.saveAll(); window.Repaint(true);}});
-menu.newEntry({entryText: 'Show Main', func: () => {options.properties.bOptions[1] = false; options.saveAll(); window.Repaint(true);}});
+menu.newEntry({entryText: 'Show Main', func: () => {options.properties.bOptions[1] = false; options.saveAll(); window.Repaint(true); console.log('Seekbar: Saving options.');}});
