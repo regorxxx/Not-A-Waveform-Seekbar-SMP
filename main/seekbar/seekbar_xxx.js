@@ -1,11 +1,11 @@
 'use strict';
-//03/05/23
+//09/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
 function _seekbar({
 		matchPattern = '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', // Used to create folder path
-		bDebug = true,
+		bDebug = false,
 		bProfile = false,
 		binaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
@@ -139,6 +139,7 @@ function _seekbar({
 	this.mouseDown = false;
 	this.isAllowedFile = true; // Set at checkAllowedFile()
 	this.isFallback = false; // For bVisualizerFallback, set at checkAllowedFile()
+	this.isError = false; // Set at verifyData() after retrying analysis
 	const bFallbackMode = {paint: false, analysis: false}; // For bVisualizerFallbackAnalysis
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
 	const compatibleFiles = {
@@ -208,7 +209,7 @@ function _seekbar({
 		}
 	};
 	
-	this.newTrack = async (handle = fb.GetNowPlaying()) => {
+	this.newTrack = async (handle = fb.GetNowPlaying(), bIsRetry = false) => {
 		if (!this.active) {return;}
 		this.reset();
 		if (handle) {
@@ -218,24 +219,30 @@ function _seekbar({
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.json')) {
 				this.current = _jsonParseFile(seekbarFile + '.ff.json', this.codePage) || [];
+				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) {return;};
 			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.lz')) {
 				let str = _open(seekbarFile + '.ff.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
+				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) {return;};
 			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.lz16')) {
 				let str = _open(seekbarFile + '.ff.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
+				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) {return;};
 			} else if (this.analysis.binaryMode === 'audiowaveform' && _isFile(seekbarFile + '.aw.json')) {
 				this.current = _jsonParseFile(seekbarFile + '.aw.json', this.codePage) || [];
+				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) {return;};
 			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.aw.lz')) {
 				let str = _open(seekbarFile + '.aw.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
+				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) {return;};
 			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.aw.lz16')) {
 				let str = _open(seekbarFile + '.aw.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
+				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) {return;};
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
 				if (this.analysis.bVisualizerFallbackAnalysis) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
@@ -250,6 +257,7 @@ function _seekbar({
 				throttlePaint(true);
 				if (this.analysis.bVisualizerFallbackAnalysis) {bFallbackMode.analysis = false;}
 				await this.analyze(handle, seekbarFolder, seekbarFile);
+				if (!this.verifyData(handle, void(0), bIsRetry)) {return;};
 				bFallbackMode.analysis = bFallbackMode.paint = false;
 				bAnalysis  = true;
 			}
@@ -315,6 +323,31 @@ function _seekbar({
 		}
 	};
 	
+	this.isDataValid = () => {
+		return this.current.length && this.current.every((frame) => {
+			const len = frame.hasOwnProperty('length') ? frame.length : null;
+			return len === 4 || len === 5;
+		});
+	};
+	
+	this.verifyData = (handle, file, bIsRetry = false) => {
+		if (!this.isDataValid()) {
+			if (bIsRetry) {
+				console.log('File was not sucessfully analyzed after retrying.');
+				file && _deleteFile(file);
+				this.isAllowedFile = false;
+				this.isFallback = this.analysis.bVisualizerFallback;
+				this.isError = true;
+			}  else {
+				console.log('Seekbar file not valid. Creating new one' + (file ? ': ' + file : '.'));
+				file && _deleteFile(file);
+				this.newTrack(handle, true);
+			}
+			return false;
+		}
+		return true;
+	};
+	
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
 		this.isAllowedFile = this.analysis.binaryMode !== 'visualizer' && handle.SubSong === 0 && compatibleFiles[this.analysis.binaryMode].test(handle.Path);
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
@@ -362,6 +395,7 @@ function _seekbar({
 		this.offset = [];
 		this.isAllowedFile = true;
 		this.isFallback = false;
+		this.isError = false;
 		bFallbackMode.paint = bFallbackMode.analysis = false;
 	};
 	
@@ -544,6 +578,8 @@ function _seekbar({
 				gr.GdiDrawText('Seekbar file not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (!this.bBinaryFound) {
 				gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			} else if (this.isError) {
+				gr.GdiDrawText('File can not be analyzed', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (this.active) {
 				gr.GdiDrawText('Analyzing track...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			}
@@ -667,6 +703,7 @@ function _seekbar({
 			_deleteFile(seekbarFolder + 'data.json');
 			if (data) {
 				if (!this.isFallback && !bFallbackMode.analysis && this.analysis.binaryMode === 'ffprobe' && data.frames && data.frames.length) {
+					const processedData = [];
 					data.frames.forEach((frame) => {
 						// Save values as array to compress file as much as possible, also round decimals...
 						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf' 
@@ -679,8 +716,9 @@ function _seekbar({
 							? round(Number(frame.tags['lavfi.astats.Overall.Peak_level']), 1)
 							: -Infinity;
 						const time = round(Number(frame.pkt_pts_time), 2);
-						this.current.push([time, rms, rmsPeak, peak]);
+						processedData.push([time, rms, rmsPeak, peak]);
 					});
+					this.current = processedData;
 					// Save data and optionally compress it
 					const str = JSON.stringify(this.current);
 					if (this.analysis.compressionMode === 'utf-16') {
