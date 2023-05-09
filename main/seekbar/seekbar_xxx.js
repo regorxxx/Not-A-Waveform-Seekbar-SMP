@@ -1,5 +1,5 @@
 'use strict';
-//09/05/23
+//10/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -176,7 +176,7 @@ function _seekbar({
 		else {throttlePaint();}
 	};
 	
-	this.exportConfig = () => {
+	this.exportConfig = (bSkipPanelDependent = false) => {
 		const config = {};
 		let notAllowed;
 		config.binaries = {};
@@ -188,6 +188,7 @@ function _seekbar({
 		notAllowed = new Set(['gFont']);
 		for (let key in this.ui) {
 			if (key === 'pos') {
+				if (bSkipPanelDependent) {continue;}
 				config.ui.pos = {scaleH: this.ui.pos.scaleH, marginW: this.ui.pos.marginW};
 			} else if (!notAllowed.has(key)) {config.ui[key] = clone(this.ui[key]);}
 		}
@@ -324,10 +325,16 @@ function _seekbar({
 	};
 	
 	this.isDataValid = () => {
-		return this.current.length && this.current.every((frame) => {
-			const len = frame.hasOwnProperty('length') ? frame.length : null;
-			return len === 4 || len === 5;
-		});
+		if (this.analysis.binaryMode === 'ffprobe') {
+			return this.current.length && this.current.every((frame) => {
+				const len = frame.hasOwnProperty('length') ? frame.length : null;
+				return (len === 4 || len === 5);
+			});
+		} else {
+			return this.current.length && this.current.every((frame) => {
+				return (frame >= -128 && frame <= 127);
+			});
+		}
 	};
 	
 	this.verifyData = (handle, file, bIsRetry = false) => {
@@ -338,6 +345,7 @@ function _seekbar({
 				this.isAllowedFile = false;
 				this.isFallback = this.analysis.bVisualizerFallback;
 				this.isError = true;
+				this.current = []; 
 			}  else {
 				console.log('Seekbar file not valid. Creating new one' + (file ? ': ' + file : '.'));
 				file && _deleteFile(file);
@@ -447,7 +455,7 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
+						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
 						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						let z = bVisualizer ? Math.abs(y) : y;
@@ -472,7 +480,7 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
+						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
 						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
@@ -492,7 +500,7 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = (scaledSize > 0 ? Math.max(scaledSize + rand, 1) : Math.min(scaledSize + rand, -1));
+						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
 						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;

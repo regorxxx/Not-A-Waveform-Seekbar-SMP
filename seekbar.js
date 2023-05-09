@@ -1,5 +1,5 @@
 'use strict';
-//02/05/23
+//10/05/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx_properties.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js');
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.0'});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.0-beta.2'});}
 
 let seekbarProperties = {
 	binaries:	['Binaries paths', 
@@ -47,7 +47,6 @@ let seekbarProperties = {
 				altFuture: 0xFFF9FF99, 
 				currPos: 0xFFFFFFFF // White
 			},
-			pos: {scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200,
 			bVariableRefreshRate: true
 		}), {func: isJSON}],
@@ -57,6 +56,16 @@ let seekbarProperties = {
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
+
+{	// Delete pos property bug size
+	const ui = JSON.parse(seekbarProperties.ui[1]);
+	if (ui.hasOwnProperty('pos')) {
+		console.log('Seekbar: Deleting "pos" property');
+		delete ui.pos;
+		seekbarProperties.ui[1] = JSON.stringify(ui);
+		overwriteProperties(seekbarProperties);
+	}
+}
 
 // Rename paths according to package folder (for portable installs)
 if (folders.JsPackageDirs) {
@@ -72,7 +81,6 @@ if (folders.JsPackageDirs) {
 	if (bDone) {
 		seekbarProperties.binaries[1] = JSON.stringify(binaries);
 		overwriteProperties(seekbarProperties);
-		console.log('hey');
 	}
 }
 
@@ -81,7 +89,7 @@ const seekbar = new _seekbar({
 	binaries: JSON.parse(seekbarProperties.binaries[1]),
 	analysis: JSON.parse(seekbarProperties.analysis[1]),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => {return value === null ? Infinity : value;}),
-	ui: {...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size))}
+	ui: {...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: {scaleH: 0.9, marginW: window.Width / 30}}
 });
 if (!seekbarProperties.bEnabled[1]) {seekbar.switch();}
 
@@ -126,9 +134,11 @@ if (fb.IsPlaying) {window.Repaint(); setTimeout(() => {on_playback_new_track(fb.
 
 // Helpers
 seekbar.saveProperties = function() {
-	const config = this.exportConfig();
+	const config = this.exportConfig(true);
 	for (let key in config) {
-		if (seekbarProperties.hasOwnProperty(key)) {seekbarProperties[key][1] = JSON.stringify(config[key]);}
+		if (seekbarProperties.hasOwnProperty(key)) {
+			seekbarProperties[key][1] = JSON.stringify(config[key]);
+		}
 	}
 	overwriteProperties(seekbarProperties);
 };
