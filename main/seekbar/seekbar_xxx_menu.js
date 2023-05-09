@@ -21,7 +21,7 @@ function createSeekbarMenu(bClear = true) {
 			seekbarProperties.bEnabled[1] = this.active;
 			this.saveProperties();
 		}});
-		menu.newCheckMenu(void(0), 'Enable seekbar?', void(0), () => {return this.active;});
+		menu.newCheckMenu(void(0), 'Enable seekbar', void(0), () => {return this.active;});
 		menu.newEntry({entryText: 'sep'});
 	}
 	// Menus
