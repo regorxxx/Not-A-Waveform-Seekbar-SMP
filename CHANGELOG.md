@@ -10,7 +10,7 @@
 ### Removed
 ### Fixed
 
-## [1.0.0-beta.1] - 2023-05-08
+## [1.0.0-beta.1] - 2023-05-09
 ### Added
 - First beta release.
 ### Changed
