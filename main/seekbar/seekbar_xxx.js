@@ -176,7 +176,7 @@ function _seekbar({
 		else {throttlePaint();}
 	};
 	
-	this.exportConfig = (bSkipPanelDependent = false) => {
+	this.exportConfig = (bSkipPanelDependent = true) => {
 		const config = {};
 		let notAllowed;
 		config.binaries = {};
