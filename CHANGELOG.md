@@ -8,6 +8,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Portable: expanded binaries path verification to standard script installation.
 ### Removed
 ### Fixed
 

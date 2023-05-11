@@ -68,7 +68,7 @@ seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 }
 
 // Rename paths according to package folder (for portable installs)
-if (folders.JsPackageDirs) {
+if (folders.JsPackageDirs || _isFile(fb.FoobarPath + 'portable_mode_enabled')) {
 	const binaries = JSON.parse(seekbarProperties.binaries[1]);
 	const defBinaries = JSON.parse(seekbarProperties.binaries[3]);
 	let bDone = false;
