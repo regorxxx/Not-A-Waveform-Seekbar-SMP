@@ -2,7 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [1.0.0-beta.3](#100-beta2---2023-05-16)
+- [1.0.0-beta.3](#100-beta3---2023-05-16)
 - [1.0.0-beta.2](#100-beta2---2023-05-10)
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
