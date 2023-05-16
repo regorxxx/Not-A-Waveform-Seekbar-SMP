@@ -1,5 +1,5 @@
 'use strict';
-//10/05/23
+//16/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -598,18 +598,20 @@ function _seekbar({
 			if (this.step === 0) {this.offset = [];}
 			this.step++;
 		}
-		// Animate smoothly, Repaint by zone when possible
-		if (bVisualizer) {throttlePaint();}
-		else if (bPrePaint && frames) {
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
-		} else if (this.preset.bPaintCurrent && frames) {
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
-		}
-		if (this.ui.bVariableRefreshRate) {
-			if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
-			else if (profilerPaint.Time < this.ui.refreshRate && profilerPaint.Time >= this.ui.refreshRateOpt) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate - 25}});}
+		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
+		if (fb.IsPlaying && !fb.IsPaused) {
+			if (bVisualizer) {throttlePaint();}
+			else if (bPrePaint && frames) {
+				const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+				throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
+			} else if (this.preset.bPaintCurrent && frames) {
+				const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+				throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
+			}
+			if (this.ui.bVariableRefreshRate) {
+				if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
+				else if (profilerPaint.Time < this.ui.refreshRate && profilerPaint.Time >= this.ui.refreshRateOpt) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate - 25}});}
+			}
 		}
 	};
 	
