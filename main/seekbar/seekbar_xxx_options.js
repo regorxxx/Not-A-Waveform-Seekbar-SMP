@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/05/23
+//17/05/23
 
 include('..\\window\\window_xxx.js');
 
@@ -39,65 +39,72 @@ options.load = () => {
 }
 
 // Add tabs with its data
-options.addTab({title: 'Analysis', columns: 2, data: [
+options.addTab({title: 'Analysis', columns: 3, data: [
 	[
 		{subTitle: 'Binaries', values: [
-			{name: 'FFprobe path:', pKey: ['binaries', 'ffprobe'], tt: 'Hola'},
-			{name: 'AudioWaveform path:', pKey: ['binaries', 'audiowaveform'], tt: 'Hola'},
-			{name: 'Binary type:', pKey: ['analysis', 'binaryMode'], list: ['ffprobe', 'audiowaveform', 'visualizer'], tt: 'Hola'}
-		]},
-		{subTitle: 'Analysis', values: [
-			{name: 'Data compression:', pKey: ['analysis', 'compressionMode'], list: ['utf-16', 'utf-8', 'none'], tt: 'Hola'},
-			{name: 'FFprobe mode:', pKey: ['preset', 'analysisMode'], list: ['peak_level', 'rms_level', 'rms_peak'], tt: 'Hola'}
+			{name: 'FFprobe path:', pKey: ['binaries', 'ffprobe'], tt: 'Path to ffprobe.exe'},
+			{name: 'AudioWaveform path:', pKey: ['binaries', 'audiowaveform'], tt: 'Path to audiowaveform.exe'},
+			{name: 'Mode:', pKey: ['analysis', 'binaryMode'], list: ['ffprobe', 'audiowaveform', 'visualizer'], tt: 'Choose the binary mode used'}
 		]}
 	],
 	[
 		{subTitle: 'Analysis', values: [
-			{name: 'Auto-analysis of files.', pKey: ['analysis', 'bAutoAnalysis'], tt: 'Hola'},
-			{name: 'Delete data files on every session.', pKey: ['analysis', 'bAutoRemove'], tt: 'Hola'},
-			{name: 'Use the visualizer as fallback.', pKey: ['analysis', 'bVisualizerFallback'], tt: 'Hola'},
+			{name: 'Data compression:', pKey: ['analysis', 'compressionMode'], list: ['utf-16', 'utf-8', 'none'], tt: 'Analysis data files may be compressed to save disk space'},
+			{name: 'FFprobe mode:', pKey: ['preset', 'analysisMode'], list: ['peak_level', 'rms_level', 'rms_peak'], tt: 'Only available when using ffprobe'}
+		]}
+	],
+	[
+		{subTitle: 'Analysis', values: [
+			{name: 'Auto-analysis of files.', pKey: ['analysis', 'bAutoAnalysis'], tt: 'Automatically analyze new tracks on playback'},
+			{name: 'Delete data files on every session.', pKey: ['analysis', 'bAutoRemove'], tt: 'Don\'t save analysis data files for future usage'},
+			{name: 'Use the visualizer as fallback.', pKey: ['analysis', 'bVisualizerFallback'], tt: 'Show an animation while analyzing new files'},
 		]}
 	]
-], description: 'This tab modifies data saved on properties panel'});
+], description: 'Analysis and binary mode settings'});
 
-options.addTab({title: 'Seekbar', columns: 1, data: [
+options.addTab({title: 'Display', columns: 3, data: [
 	[
 		{subTitle: 'Waveform', values: [
-			{name: 'Waveform shape:', pKey: ['preset', 'waveMode'], list: ['waveform', 'bars', 'points', 'halfbars'], tt: 'Hola'},
-			{name: 'Show current position.', pKey: ['preset', 'bPaintCurrent'], tt: 'Hola'},
+			{name: 'Waveform style:', pKey: ['preset', 'waveMode'], list: ['waveform', 'bars', 'points', 'halfbars'], tt: 'Set the waveform style'},
+			{name: 'Show current position.', pKey: ['preset', 'bPaintCurrent'], tt: 'Show current position indicator'},
 		]},
+	],
+	[
 		{subTitle: 'Partial waveform and visualizer', values: [
-			{name: 'Paint ahead.', pKey: ['preset', 'bPrePaint'], tt: 'Hola'},
-			{name: 'Animate waveform usign BPM.', pKey: ['preset', 'bUseBPM'], tt: 'Hola'},
-			{name: 'Show seconds:', pKey: ['preset', 'futureSecs'], constructor: Number, tt: 'Hola'}
+			{name: 'Paint after current position.', pKey: ['preset', 'bPrePaint'], tt: 'Paint waveform after current position\n(only on partial mode)'},
+			{name: 'Show seconds:', pKey: ['preset', 'futureSecs'], constructor: Number, tt: 'Set the seconds shown after the current position\nInfinity equals to the full track'},
+		]},
+		{subTitle: 'Animation', values: [
+			{name: 'Animate waveform.', pKey: ['preset', 'bAnimate'], tt: 'Animate waveform after current position'},
+			{name: 'Animate using BPM.', pKey: ['preset', 'bUseBPM'], tt: 'Animate it using BPM tag from track (if possible)'},
+		]}
+	],
+	[
+		{subTitle: 'Refresh rate', values: [
+			{name: 'Refresh (ms):', pKey: ['ui', 'refreshRate'], constructor: Number, tt: 'Set the refresh rate for the animation'},
+			{name: 'Variable refresh rate', pKey: ['ui', 'bVariableRefreshRate'], tt: 'Refresh rate will be adjusted automatically to current processor capabilities'},
 		]}
 	]
-], description: 'This tab modifies data saved on properties panel'});
+], description: 'Analysis and binary mode settings'});
 
 options.addTab({title: 'Other UI', columns: 3, data: [
 	[
 		{subTitle: 'Full mode', values: [
-			{name: 'Background', pKey: ['ui', 'colors', 'bg'], mode: 'colorPicker', tt: 'Hola'},
-			{name: 'Main waveform', pKey: ['ui', 'colors', 'main'], mode: 'colorPicker', tt: 'Hola'},
-			{name: 'Secondary waveform', pKey: ['ui', 'colors', 'alt'], mode: 'colorPicker', tt: 'Hola'},
+			{name: 'Background', pKey: ['ui', 'colors', 'bg'], mode: 'colorPicker', tt: 'Set color'},
+			{name: 'Main waveform', pKey: ['ui', 'colors', 'main'], mode: 'colorPicker', tt: 'Set color'},
+			{name: 'Secondary waveform', pKey: ['ui', 'colors', 'alt'], mode: 'colorPicker', tt: 'Set color'},
 		]}
 	],
 	[
 		{subTitle: 'Partial mode', values: [
-			{name: 'Background (ahead)', pKey: ['ui', 'colors', 'bgFuture'], mode: 'colorPicker', tt: 'Hola'},
-			{name: 'Main waveform (ahead)', pKey: ['ui', 'colors', 'mainFuture'], mode: 'colorPicker', tt: 'Hola'},
-			{name: 'Secondary waveform (ahead)', pKey: ['ui', 'colors', 'altFuture'], mode: 'colorPicker', tt: 'Hola'},
+			{name: 'Background (ahead)', pKey: ['ui', 'colors', 'bgFuture'], mode: 'colorPicker', tt: 'Set color'},
+			{name: 'Main waveform (ahead)', pKey: ['ui', 'colors', 'mainFuture'], mode: 'colorPicker', tt: 'Set color'},
+			{name: 'Secondary waveform (ahead)', pKey: ['ui', 'colors', 'altFuture'], mode: 'colorPicker', tt: 'Set color'},
 		]}
 	],
 	[
-		{subTitle: 'Current',values: [
-			{name: 'Current position', pKey: ['ui', 'colors', 'currPos'], mode: 'colorPicker', tt: 'Hola'},
-		]},
-		{subTitle: 'Others', values: [
-			{name: 'Scale (%)', pKey: ['ui', 'pos', 'scaleH'], constructor: Number, tt: 'Hola'},
-			{name: 'Margins (px):', pKey: ['ui', 'pos', 'marginW'], constructor: Number, tt: 'Hola'},
-			{name: 'Refresh (ms):', pKey: ['ui', 'refreshRate'], constructor: Number, tt: 'Hola'},
-			{name: 'Variable refresh rate', pKey: ['ui', 'bVariableRefreshRate'], tt: 'Hola'},
+		{subTitle: 'Others',values: [
+			{name: 'Current position', pKey: ['ui', 'colors', 'currPos'], mode: 'colorPicker', tt: 'Set color'},
 		]}
 	]
 ], description: 'This tab modifies data saved on properties panel'});
