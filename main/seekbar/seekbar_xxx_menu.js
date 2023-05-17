@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/05/23
+//17/05/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
 
 
@@ -26,7 +26,7 @@ function createSeekbarMenu(bClear = true) {
 	}
 	// Menus
 	{
-		const subMenu = menu.newMenu('Binary type...');
+		const subMenu = menu.newMenu('Mode');
 		const options = [
 			{name: 'FFprobe', key: 'ffprobe'},
 			{name: 'Audiowaveform', key: 'audiowaveform'},
@@ -42,7 +42,7 @@ function createSeekbarMenu(bClear = true) {
 		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.analysis.binaryMode);});
 	}
 	{
-		const subMenu = menu.newMenu('Analysis settings...');
+		const subMenu = menu.newMenu('Analysis');
 		const options = [
 			{name: 'RMS levels', key: 'rms_level'},
 			{name: 'Peak levels', key: 'peak_level'},
@@ -60,10 +60,12 @@ function createSeekbarMenu(bClear = true) {
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{
 			[
-				{name: 'Auto-delete analysis files?', key: 'bAutoRemove'},
+				{name: 'Auto-delete analysis files', key: 'bAutoRemove'},
+				{name: 'sep'},
 				{name: 'Visualizer for incompatible files', key: 'bVisualizerFallback'},
 				{name: 'Visualizer during analysis', key: 'bVisualizerFallbackAnalysis'},
 			].forEach((o) => {
+				if (o.name === 'sep') {menu.newEntry({menuName: subMenu, entryText: o.name}); return;}
 				menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
 					this.updateConfig({analysis: {[o.key]: !this.analysis[o.key]}});
 					this.saveProperties();
@@ -84,7 +86,7 @@ function createSeekbarMenu(bClear = true) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
-		const subMenu = menu.newMenu('Waveform shape...');
+		const subMenu = menu.newMenu('Style');
 		const options = [
 			{name: 'Waveform', key: 'waveform'},
 			{name: 'Bars', key: 'bars'},
@@ -100,7 +102,7 @@ function createSeekbarMenu(bClear = true) {
 		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.waveMode);});
 	}
 	{
-		const subMenu = menu.newMenu('Paint mode...');
+		const subMenu = menu.newMenu('Display');
 		const options = [
 			{name: 'Full', key: 'full'},
 			{name: 'Partial', key: 'partial'}
@@ -112,53 +114,71 @@ function createSeekbarMenu(bClear = true) {
 			}});
 		});
 		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.paintMode);});
-	}
-	menu.newEntry({entryText: 'sep'});
-	{
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		[
-			{name: 'Show current position', key: 'bPaintCurrent'},
-			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
-				flags: (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
-			{name: 'Pre-paint?' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPrePaint', 
+			{name: 'Paint after current' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPrePaint', 
 				flags: this.preset.paintMode === 'full' ? MF_GRAYED : MF_STRING}
 		].forEach((o) => {
-			menu.newEntry({entryText: o.name, func: () => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
 				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(void(0), o.name, void(0), () => {return this.preset[o.key];});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
 		});
-	}
-	{
-		const subMenu = menu.newMenu('Pre-paint seconds...', void(0), () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
+		const subMenuTwo = menu.newMenu('Seconds...', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
 		[Infinity, 2, 5, 10]
 			.forEach((s) => {
-				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
+				const entryText = (isFinite(s) ? s : 'Full');
+				menu.newEntry({menuName: subMenuTwo, entryText , func: () => {
 					this.updateConfig({preset: {futureSecs: s}});
 					this.saveProperties();
 				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPrePaint) ? MF_GRAYED : MF_STRING});
-				menu.newCheckMenu(subMenu, s, void(0), () => {return (this.preset.futureSecs === s);});
-			});
-	}
-	{
-		const subMenu = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), void(0), () => this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
-		[1000, 500, 200, 100, 60]
-			.forEach((s) => {
-				menu.newEntry({menuName: subMenu, entryText: s, func: () => {
-					this.updateConfig({ui: {refreshRate: s}});
-					this.saveProperties();
-				}});
-				menu.newCheckMenu(subMenu, s, void(0), () => {return (this.ui.refreshRate === s);});
+				menu.newCheckMenu(subMenuTwo, entryText, void(0), () => {return (this.preset.futureSecs === s);});
 			});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		[
-			{name: 'Variable refresh rate', key: 'bVariableRefreshRate'},
+			{name: 'Show current position', key: 'bPaintCurrent'}
 		].forEach((o) => {
 			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
+				this.saveProperties();
+			}, flags: o.flags || MF_STRING});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
+		});
+	}
+	{
+		const subMenu = menu.newMenu('Animation', void(0), (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		[
+			{name: 'Enable animation', key: 'bAnimate'},
+			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
+				flags: (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
+		].forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
+				this.saveProperties();
+			}, flags: o.flags || MF_STRING});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
+		});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		const subMenuTwo = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), subMenu, () => (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		[1000, 500, 200, 100, 80, 60, 30]
+			.forEach((s) => {
+				const entryText = s + ' ms';
+				menu.newEntry({menuName: subMenuTwo, entryText: s, func: () => {
+					this.updateConfig({ui: {refreshRate: s}});
+					this.saveProperties();
+				}});
+				menu.newCheckMenu(subMenuTwo, s, void(0), () => {return (this.ui.refreshRate === s);});
+			});
+		menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+		[
+			{name: 'Variable refresh rate', key: 'bVariableRefreshRate'},
+		].forEach((o) => {
+			menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
 				this.updateConfig({ui: {[o.key]: !this.ui[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.ui[o.key];});
+			menu.newCheckMenu(subMenuTwo, o.name, void(0), () => {return this.ui[o.key];});
 		});
 	}
 	menu.newEntry({entryText: 'sep'});
