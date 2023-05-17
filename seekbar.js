@@ -1,5 +1,5 @@
 'use strict';
-//10/05/23
+//17/05/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -33,6 +33,7 @@ let seekbarProperties = {
 			paintMode: 'full',
 			bPrePaint: false,
 			bPaintCurrent: true,
+			bAnimate: true,
 			bUseBPM: true,
 			futureSecs: Infinity
 		}), {func: isJSON}],
