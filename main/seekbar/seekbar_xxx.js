@@ -268,6 +268,7 @@ function _seekbar({
 			// Calculate waveform on the fly
 			this.normalizePoints();
 		}
+		this.resetAnimation();
 		// Set animation using BPM if possible
 		if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps(handle);}
 		// Update time if needed
@@ -400,13 +401,17 @@ function _seekbar({
 		this.current = [];
 		this.cache = null;
 		this.time = 0;
-		this.step = 0;
-		this.maxStep = 6;
-		this.offset = [];
 		this.isAllowedFile = true;
 		this.isFallback = false;
 		this.isError = false;
 		bFallbackMode.paint = bFallbackMode.analysis = false;
+		this.resetAnimation();
+	};
+	
+	this.resetAnimation = () => {
+		this.step = 0; 
+		this.offset = [];
+		this.defaultSteps();
 	};
 	
 	this.stop = (reason = -1) => { // -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
@@ -455,7 +460,7 @@ function _seekbar({
 				if ((x - xPast) > 0) {
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
-						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
 						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
 						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
@@ -480,7 +485,7 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'halfbars') {
 						const scaledSize = size / 2 * scale;
-						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
 						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
 						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
@@ -500,7 +505,7 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'bars') {
 						const scaledSize = size / 2 * scale;
-						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
 						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
 						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
@@ -533,7 +538,7 @@ function _seekbar({
 						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1));
 						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
-						this.offset[n] += (bPrePaint && bIsfuture || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
+						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 						const rand = this.offset[n];
 						const step = Math.max(this.h / 80, 5) + (rand || 1) // Point density
 						const circleSize = Math.max(step / 25, 1);
@@ -595,7 +600,7 @@ function _seekbar({
 			}
 		}
 		// Incrementally draw animation on small steps
-		if (bPrePaint && this.preset.bAnimate || bVisualizer) {
+		if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
 			if (this.step >= this.maxStep) {this.step = - this.step;}
 			else {
 				if (this.step === 0) {this.offset = [];}
