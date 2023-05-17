@@ -1,5 +1,5 @@
 'use strict';
-//16/05/23
+//17/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -18,6 +18,7 @@ function _seekbar({
 			paintMode: 'full', // full | partial
 			bPrePaint: false,
 			bPaintCurrent: true,
+			bAnimate: true,
 			bUseBPM: true,
 			futureSecs: Infinity
 		},
@@ -59,6 +60,7 @@ function _seekbar({
 			paintMode: 'full',
 			bPrePaint: false,
 			bPaintCurrent: true,
+			bAnimate: true,
 			bUseBPM: true,
 			futureSecs: Infinity
 		};
@@ -169,8 +171,8 @@ function _seekbar({
 			throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 			throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
 		}
-		if (newConfig.preset && newConfig.preset.hasOwnProperty('bUseBPM')) {
-			if (newConfig.preset.bUseBPM) {this.bpmSteps();} else {this.defaultSteps();}
+		if (newConfig.preset && (newConfig.preset.hasOwnProperty('bUseBPM') || newConfig.preset.hasOwnProperty('bAnimate'))) {
+			if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps();} else {this.defaultSteps();}
 		}
 		if (newConfig.analysis) {this.newTrack();}
 		else {throttlePaint();}
@@ -251,7 +253,7 @@ function _seekbar({
 					// Calculate waveform on the fly
 					this.normalizePoints();
 					// Set animation using BPM if possible
-					if (this.preset.bUseBPM) {this.bpmSteps(handle);}
+					if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps(handle);}
 					// Update time if needed
 					if (fb.IsPlaying) {this.time = fb.PlaybackTime;}
 				}
@@ -267,7 +269,7 @@ function _seekbar({
 			this.normalizePoints();
 		}
 		// Set animation using BPM if possible
-		if (this.preset.bUseBPM) {this.bpmSteps(handle);}
+		if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps(handle);}
 		// Update time if needed
 		if (fb.IsPlaying) {this.time = fb.PlaybackTime;}
 		// And paint
@@ -593,15 +595,17 @@ function _seekbar({
 			}
 		}
 		// Incrementally draw animation on small steps
-		if (this.step >= this.maxStep) {this.step = - this.step;}
-		else {
-			if (this.step === 0) {this.offset = [];}
-			this.step++;
+		if (bPrePaint && this.preset.bAnimate || bVisualizer) {
+			if (this.step >= this.maxStep) {this.step = - this.step;}
+			else {
+				if (this.step === 0) {this.offset = [];}
+				this.step++;
+			}
 		}
 		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 		if (fb.IsPlaying && !fb.IsPaused) {
 			if (bVisualizer) {throttlePaint();}
-			else if (bPrePaint && frames) {
+			else if (bPrePaint && this.preset.bAnimate && frames) {
 				const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
 				throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
 			} else if (this.preset.bPaintCurrent && frames) {
@@ -765,7 +769,7 @@ function _seekbar({
 				}
 			}
 			// Set animation using BPM if possible
-			if (this.preset.bUseBPM) {this.bpmSteps(handle);}
+			if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps(handle);}
 			// Console and paint
 			if (this.bProfile) {
 				if (cmd) {profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.');}
