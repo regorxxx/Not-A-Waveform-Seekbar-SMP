@@ -1,5 +1,5 @@
 'use strict';
-//17/05/23
+//18/05/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx_properties.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js');
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.0-beta.2'});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.0-beta.5'});}
 
 let seekbarProperties = {
 	binaries:	['Binaries paths', 
@@ -35,7 +35,8 @@ let seekbarProperties = {
 			bPaintCurrent: true,
 			bAnimate: true,
 			bUseBPM: true,
-			futureSecs: Infinity
+			futureSecs: Infinity,
+			bHalfBarsShowNeg: true
 		}), {func: isJSON}],
 	ui:			['UI config', 
 		JSON.stringify({
@@ -49,7 +50,9 @@ let seekbarProperties = {
 				currPos: 0xFFFFFFFF // White
 			},
 			refreshRate: 200,
-			bVariableRefreshRate: true
+			bVariableRefreshRate: true,
+			bNormalizeWidth: false,
+			normalizeWidth: _scale(4)
 		}), {func: isJSON}],
 	bEnabled: ['Enable panel', true, {func: isBoolean}],
 	matchPattern: ['File name TF format', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', {func: isString}]

@@ -1,5 +1,5 @@
 'use strict';
-//17/05/23
+//18/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -20,7 +20,8 @@ function _seekbar({
 			bPaintCurrent: true,
 			bAnimate: true,
 			bUseBPM: true,
-			futureSecs: Infinity
+			futureSecs: Infinity,
+			bHalfBarsShowNeg: true
 		},
 		ui = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
@@ -35,7 +36,9 @@ function _seekbar({
 			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
-			bVariableRefreshRate: false // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
+			bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
+			bNormalizeWidth: false,
+			normalizeWidth: _scale(4)
 		},
 		analysis = {
 			binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
@@ -62,7 +65,8 @@ function _seekbar({
 			bPaintCurrent: true,
 			bAnimate: true,
 			bUseBPM: true,
-			futureSecs: Infinity
+			futureSecs: Infinity,
+			bHalfBarsShowNeg: true
 		};
 		const defUi = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
@@ -77,7 +81,9 @@ function _seekbar({
 			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200,
-			bVariableRefreshRate: false
+			bVariableRefreshRate: false,
+			bNormalizeWidth: false,
+			normalizeWidth: _scale(4)
 		};
 		const defAnalysis = {
 			binaryMode: 'audiowaveform',
@@ -165,16 +171,32 @@ function _seekbar({
 	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
-		if (newConfig.preset && (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer')) {this.offset = []; this.step = 0;}
-		if (newConfig.ui && newConfig.ui.hasOwnProperty('refreshRate')) {
-			this.ui.refreshRateOpt = this.ui.refreshRate;
-			throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
-			throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+		let bRecalculate = false;
+		if (newConfig.preset) {
+			if (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer') {
+				this.offset = []; 
+				this.step = 0;
+			}
+			if (newConfig.preset.hasOwnProperty('bUseBPM') || newConfig.preset.hasOwnProperty('bAnimate')) {
+				if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps();} 
+				else {this.defaultSteps();}
+			}
 		}
-		if (newConfig.preset && (newConfig.preset.hasOwnProperty('bUseBPM') || newConfig.preset.hasOwnProperty('bAnimate'))) {
-			if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps();} else {this.defaultSteps();}
+		if (newConfig.ui) {
+			if (newConfig.ui.hasOwnProperty('refreshRate')) {
+				this.ui.refreshRateOpt = this.ui.refreshRate;
+				throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
+				throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+			}
+			if (newConfig.ui.hasOwnProperty('bNormalizeWidth') ||  newConfig.ui.hasOwnProperty('normalizeWidth')) {
+				bRecalculate = true;
+			}
 		}
-		if (newConfig.analysis) {this.newTrack();}
+		if (newConfig.analysis) {
+			bRecalculate = true;
+		}
+		// Recalculate data points or repaint
+		if (bRecalculate) {this.newTrack();}
 		else {throttlePaint();}
 	};
 	
@@ -266,7 +288,7 @@ function _seekbar({
 			}
 			if (!bAnalysis) {this.isFallback = false;} // Allow reading data from files even if track is not compatible
 			// Calculate waveform on the fly
-			this.normalizePoints();
+			this.normalizePoints(this.analysis.binaryMode !== 'visualizer' && this.ui.bNormalizeWidth);
 		}
 		this.resetAnimation();
 		// Set animation using BPM if possible
@@ -277,7 +299,7 @@ function _seekbar({
 		throttlePaint();
 	};
 	
-	this.normalizePoints = () => {
+	this.normalizePoints = (bNormalizeWidth = false) => {
 		if (this.current.length) {
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				// Calculate max values
@@ -323,6 +345,50 @@ function _seekbar({
 				});
 				// Calculate point scale
 				this.current = this.current.map((frame) => {return frame / max;});
+			}
+			// Adjust num of frames to window size
+			// TODO:	some combinations of bar widths and number of points may affect the bias to the upper or lower part of the waveform
+			//			Lower or upper side could be normalized to the max value of the other side to account for this
+			if (bNormalizeWidth) {
+				const barW = this.ui.normalizeWidth;
+				const frames = this.current.length;
+				const newFrames = Math.floor((this.w - this.marginW * 2) / barW);
+				if (newFrames < frames) {
+					const scale = frames / newFrames;
+					const data = Array(newFrames).fill(null).map((_) => {return {val: 0, count: 0};});
+					let j = 0, h = 0, frame;
+					for (let i = 0; i < frames; i++) {
+						frame = this.current[i];
+						if (h >= scale) {
+							const w = (h - scale);
+							if (i % 2 === 0) {
+								data[j + 1].val += frame * w;
+								data[j + 1].count += w;
+							} else {
+								data[j].val += frame * w;
+								data[j].count += w;
+							}
+							j += 2;
+							h = 0;
+							data[j].val += frame * (1 - w);
+							data[j].count += (1 - w);
+						} else {
+							if (i % 2 === 0) {
+								data[j + 1].val += frame;
+								data[j + 1].count++;
+							} else {
+								data[j].val += frame;
+								data[j].count++;
+								h++;
+							}
+						}
+					}
+					// Filter non valid values
+					let len = data.length;
+					while (data[len - 1].count === 0) {data.pop(); len--;}
+					// Normalize
+					this.current = data.map((el) => el.val / el.count);
+				}
 			}
 		}
 	};
@@ -462,7 +528,9 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
+						const y = scaledSize > 0 
+							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
+							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						let z = bVisualizer ? Math.abs(y) : y;
@@ -487,7 +555,10 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
+						let y = scaledSize > 0 
+							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
+							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
+						if (this.preset.bHalfBarsShowNeg) {y = Math.abs(y);}
 						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
@@ -507,7 +578,9 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = (scaledSize > 0 ? Math.min(Math.max(scaledSize + rand, 1), size / 2) : Math.max(Math.min(scaledSize + rand, -1), - size / 2));
+						const y = scaledSize > 0 
+							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
+							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						const x = this.x + this.marginW + barW * n;
@@ -535,7 +608,9 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'points') {
 						const scaledSize = size / 2 * scale;
-						const y = (scaledSize > 0 ? Math.max(scaledSize, 1) : Math.min(scaledSize, -1));
+						const y = scaledSize > 0 
+							? Math.max(scaledSize, 1) 
+							: Math.min(scaledSize, -1);
 						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
 						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future

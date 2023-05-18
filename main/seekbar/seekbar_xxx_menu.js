@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/05/23
+//18/05/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
 
 
@@ -91,7 +91,7 @@ function createSeekbarMenu(bClear = true) {
 			{name: 'Waveform', key: 'waveform'},
 			{name: 'Bars', key: 'bars'},
 			{name: 'Points', key: 'points'},
-			{name: 'Half-Bars', key: 'halfbars'}
+			{name: 'Half-Bars', key: 'halfbars'},
 		];
 		options.forEach((o) => {
 			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
@@ -100,6 +100,14 @@ function createSeekbarMenu(bClear = true) {
 			}});
 		});
 		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.waveMode);});
+		if (this.preset.waveMode === 'halfbars') {
+			menu.newEntry({menuName: subMenu, entryText: 'sep'});
+			menu.newEntry({menuName: subMenu, entryText: 'Show negative values (inverted)', func: () => {
+				this.updateConfig({preset: {bHalfBarsShowNeg: !this.preset.bHalfBarsShowNeg}});
+				this.saveProperties();
+			}});
+			menu.newCheckMenu(subMenu, 'Show negative values (inverted)', void(0), () => this.preset.bHalfBarsShowNeg);
+		}
 	}
 	{
 		const subMenu = menu.newMenu('Display');
@@ -137,7 +145,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		[
-			{name: 'Show current position', key: 'bPaintCurrent'}
+			{name: 'Show current position', key: 'bPaintCurrent'},
 		].forEach((o) => {
 			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
 				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
@@ -145,6 +153,25 @@ function createSeekbarMenu(bClear = true) {
 			}, flags: o.flags || MF_STRING});
 			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
 		});
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		[
+			{name: 'Normalize width', key: 'bNormalizeWidth', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING}
+		].forEach((o) => {
+			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
+				this.updateConfig({ui: {[o.key]: !this.ui[o.key]}});
+				this.saveProperties();
+			}, flags: o.flags || MF_STRING});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.ui[o.key];});
+		});
+		const subMenuThree = menu.newMenu('Width...', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
+		[20, 10, 8, 6, 4, 2]
+			.forEach((s) => {
+				menu.newEntry({menuName: subMenuThree, entryText: s , func: () => {
+					this.updateConfig({ui: {normalizeWidth: _scale(s)}});
+					this.saveProperties();
+				}, flags: (this.analysis.binaryMode === 'visualizer' || !this.ui.bNormalizeWidth) ? MF_GRAYED : MF_STRING});
+				menu.newCheckMenu(subMenuThree, s, void(0), () => {return (this.ui.normalizeWidth === _scale(s));});
+			});
 	}
 	{
 		const subMenu = menu.newMenu('Animation', void(0), (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
