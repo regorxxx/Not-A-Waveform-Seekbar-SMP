@@ -9,7 +9,9 @@
 
 ## [Unreleased][]
 ### Added
+- UI: new option to normalize waveform points width, independent of the track length, instead of having smaller points for longer tracks and bigger points for shorter ones. Desired width is configurable.
 ### Changed
+- UI: half-bars style did not paint negative points (ommited them instead of painting them inverted). It looked fine on previous usage cases (since bars were too small), but with the new 'normalize width' option there were cases with visible blank spaces. A new option has been added to revert back to the old behavior with negative values being ommited, which may look better in some settings (only available for half-bars style).
 ### Removed
 ### Fixed
 
