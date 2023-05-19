@@ -1,5 +1,5 @@
 'use strict';
-//18/05/23
+//19/05/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -103,7 +103,7 @@ addEventListener('on_size', (width, height) => {
 });
 
 addEventListener('on_playback_new_track', (handle) => {
-	seekbar.newTrack(handle);
+	seekbar.newTrackQueue(handle)
 });
 
 addEventListener('on_playback_time', (time) => {
