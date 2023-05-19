@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/03/23
+//19/05/23
 
 /* 
 	Global tags, queries, RegExp
