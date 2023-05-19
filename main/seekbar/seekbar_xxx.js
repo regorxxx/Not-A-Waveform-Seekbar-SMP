@@ -1,5 +1,5 @@
 'use strict';
-//18/05/23
+//19/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -128,6 +128,8 @@ function _seekbar({
 	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
 	// Internals
+	this.queueId = null;
+	this.queueMs = 1000;
 	this.bBinaryFound = true;
 	this.active = true;
 	this.Tf = fb.TitleFormat(matchPattern);
@@ -232,6 +234,11 @@ function _seekbar({
 				this.stop(-1);
 			}
 		}
+	};
+	
+	this.newTrackQueue = function () {
+		if (this.queueId) {clearTimeout(this.queueId);}
+		this.queueId = setTimeout(() => {this.newTrack(...arguments)}, this.queueMs); // Arguments points to the first non arrow func
 	};
 	
 	this.newTrack = async (handle = fb.GetNowPlaying(), bIsRetry = false) => {
@@ -394,13 +401,15 @@ function _seekbar({
 	};
 	
 	this.isDataValid = () => {
+		// When iterating too many tracks in a short ammount of time weird things may happen without this check
+		if (!Array.isArray(this.current) || !this.current.length) {return false;}
 		if (this.analysis.binaryMode === 'ffprobe') {
-			return this.current.length && this.current.every((frame) => {
+			return this.current.every((frame) => {
 				const len = frame.hasOwnProperty('length') ? frame.length : null;
 				return (len === 4 || len === 5);
 			});
 		} else {
-			return this.current.length && this.current.every((frame) => {
+			return this.current.every((frame) => {
 				return (frame >= -128 && frame <= 127);
 			});
 		}
@@ -472,6 +481,7 @@ function _seekbar({
 		this.isError = false;
 		bFallbackMode.paint = bFallbackMode.analysis = false;
 		this.resetAnimation();
+		if (this.queueId) {clearTimeout(this.queueId);}
 	};
 	
 	this.resetAnimation = () => {
