@@ -79,7 +79,8 @@ const globTags = {
 	acoustidFP: 'ACOUSTID_FINGERPRINT_RAW',
 	fooidFP: 'FINGERPRINT_FOOID',
 	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%)',
-	folksonomy: 'FOLKSONOMY'
+	folksonomy: 'FOLKSONOMY',
+	feedback: 'FEEDBACK',
 };
 
 // Queries: user replaceable with a presets file at folders.data
