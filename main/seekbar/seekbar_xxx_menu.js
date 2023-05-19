@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/05/23
+//19/05/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
 
 
@@ -164,7 +164,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.ui[o.key];});
 		});
 		const subMenuThree = menu.newMenu('Width...', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
-		[20, 10, 8, 6, 4, 2]
+		[20, 10, 8, 6, 4, 2, 1]
 			.forEach((s) => {
 				menu.newEntry({menuName: subMenuThree, entryText: s , func: () => {
 					this.updateConfig({ui: {normalizeWidth: _scale(s)}});
