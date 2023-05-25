@@ -103,7 +103,7 @@ addEventListener('on_size', (width, height) => {
 });
 
 addEventListener('on_playback_new_track', (handle) => {
-	seekbar.newTrackQueue(handle)
+	seekbar.newTrackQueue(handle);
 });
 
 addEventListener('on_playback_time', (time) => {
