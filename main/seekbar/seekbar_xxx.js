@@ -1,5 +1,5 @@
 'use strict';
-//19/05/23
+//25/05/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -508,8 +508,9 @@ function _seekbar({
 		const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
-			const barW = (this.w - this.marginW * 2) / frames;
+			const barW =(this.w - this.marginW * 2) / frames;
 			const barBgW = (this.w - this.marginW * 2) / 100;
+			const minPointDiff = Math.min(Math.max(barW * 1.9, 0.25), 1); // 0.25 < x < 1 in px
 			if (this.analysis.binaryMode === 'ffprobe') {
 				if (Array.isArray(this.current[0])) {this.current = this.current.map((x, i) => {return Math.sign((0.5 - i % 2)) * (1 - x[4]);});}
 			}
@@ -533,7 +534,7 @@ function _seekbar({
 					gr.FillSolidRect(currX, this.y, this.w, this.h, this.ui.colors.bgFuture);
 					bPaintedBg = true;
 				}
-				if ((x - xPast) > 0) {
+				if ((x - xPast) > minPointDiff) { // Ensure points don't overlap too much without normalization
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -578,7 +579,7 @@ function _seekbar({
 						}
 						if (y > 0) {
 							if (altColor !== color) {
-								gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y  , barW, y, 1, color);
+								gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y , barW, y, 1, color);
 								gr.DrawRect(x, this.h / 2 + size / 2 - y  , barW, y, 1, altColor);
 							} else {
 								gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y  , barW, 2 * y, 1, color);
