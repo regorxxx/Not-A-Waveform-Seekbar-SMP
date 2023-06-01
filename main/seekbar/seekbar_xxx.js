@@ -344,6 +344,8 @@ function _seekbar({
 						if (frame[4] !== 1) {frame[4] = frame[4] - maxVal;}
 					});
 				}
+				// Flat data
+				this.current = this.current.map((x, i) => {return Math.sign((0.5 - i % 2)) * (1 - x[4]);});
 			} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint) {
 				// Calculate max values
 				let max = 0;
@@ -511,9 +513,6 @@ function _seekbar({
 			const barW =(this.w - this.marginW * 2) / frames;
 			const barBgW = (this.w - this.marginW * 2) / 100;
 			const minPointDiff = Math.min(Math.max(barW * 1.9, 0.25), 1); // 0.25 < x < 1 in px
-			if (this.analysis.binaryMode === 'ffprobe') {
-				if (Array.isArray(this.current[0])) {this.current = this.current.map((x, i) => {return Math.sign((0.5 - i % 2)) * (1 - x[4]);});}
-			}
 			let n = 0, nFull = 0;
 			// Paint waveform layer
 			const top = this.h / 2 - size / 2;
