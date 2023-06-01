@@ -1,5 +1,5 @@
 'use strict';
-//25/05/23
+//01/06/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -519,7 +519,7 @@ function _seekbar({
 			const top = this.h / 2 - size / 2;
 			const bottom = this.h / 2 + size / 2;
 			const timeConstant = fb.PlaybackLength / frames;
-			let current, xPast = this.x;
+			let current, xPast = this.x, yPast;
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
 			for (let frame of this.current) { // [peak]
 				current = timeConstant * n;
@@ -534,7 +534,7 @@ function _seekbar({
 					gr.FillSolidRect(currX, this.y, this.w, this.h, this.ui.colors.bgFuture);
 					bPaintedBg = true;
 				}
-				if ((x - xPast) > minPointDiff) { // Ensure points don't overlap too much without normalization
+				if ((x - xPast) >= minPointDiff || (yPast !== Math.sign(scale) && this.preset.waveMode !== 'halfbars')) { // Ensure points don't overlap too much without normalization
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -657,6 +657,7 @@ function _seekbar({
 						}
 					}
 					xPast = x;
+					yPast = Math.sign(scale);
 				}
 				n++;
 			}
@@ -777,7 +778,7 @@ function _seekbar({
 				' -o ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isAllowedFile && !bFallbackMode.analysis && this.analysis.binaryMode === 'ffprobe') {
 			if (this.bProfile) {profiler = new FbProfiler('ffprobe');}
-			handleFileName = handleFileName.replace(/[,:%]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
+			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&').replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.ffprobe) + ' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
 				(this.analysis.resolution > 1 ? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) + ',asetnsamples=' + Math.round((this.analysis.resolution / 10)**2) : '') +
