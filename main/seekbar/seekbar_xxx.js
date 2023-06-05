@@ -1,5 +1,5 @@
 'use strict';
-//01/06/23
+//05/06/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -308,11 +308,13 @@ function _seekbar({
 	
 	this.normalizePoints = (bNormalizeWidth = false) => {
 		if (this.current.length) {
+			let upper = 0;
+			let lower = 0;
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				// Calculate max values
-				let max = 0;
 				const key = modes[this.preset.analysisMode].key; 
 				const pos = modes[this.preset.analysisMode].pos;
+				let max = 0;
 				this.current.forEach((frame) => {
 					// After parsing JSON, restore infinity values
 					if (frame[pos] === null) {frame[pos] = -Infinity;}
@@ -346,18 +348,24 @@ function _seekbar({
 				}
 				// Flat data
 				this.current = this.current.map((x, i) => {return Math.sign((0.5 - i % 2)) * (1 - x[4]);});
+				// Calculate max values
+				this.current.forEach((frame) => {
+					upper = Math.max(upper, frame);
+					lower = Math.min(lower, frame);
+				});
+				max = Math.max(Math.abs(upper), Math.abs(lower));
 			} else if (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint) {
 				// Calculate max values
 				let max = 0;
 				this.current.forEach((frame) => {
-					max = Math.max(max, Math.abs(frame));
+					upper = Math.max(upper, frame);
+					lower = Math.min(lower, frame);
 				});
+				max = Math.max(Math.abs(upper), Math.abs(lower));
 				// Calculate point scale
 				this.current = this.current.map((frame) => {return frame / max;});
 			}
 			// Adjust num of frames to window size
-			// TODO:	some combinations of bar widths and number of points may affect the bias to the upper or lower part of the waveform
-			//			Lower or upper side could be normalized to the max value of the other side to account for this
 			if (bNormalizeWidth) {
 				const barW = this.ui.normalizeWidth;
 				const frames = this.current.length;
@@ -371,6 +379,7 @@ function _seekbar({
 						if (h >= scale) {
 							const w = (h - scale);
 							if (i % 2 === 0) {
+								if ((j + 1) >= newFrames) {break;}
 								data[j + 1].val += frame * w;
 								data[j + 1].count += w;
 							} else {
@@ -383,6 +392,7 @@ function _seekbar({
 							data[j].count += (1 - w);
 						} else {
 							if (i % 2 === 0) {
+								if ((j + 1) >= newFrames) {break;}
 								data[j + 1].val += frame;
 								data[j + 1].count++;
 							} else {
@@ -397,6 +407,23 @@ function _seekbar({
 					while (data[len - 1].count === 0) {data.pop(); len--;}
 					// Normalize
 					this.current = data.map((el) => el.val / el.count);
+					// Some combinations of bar widths and number of points may affect the bias to the upper or lower part of the waveform
+					// Lower or upper side can be normalized to the max value of the other side to account for this
+					const bias = Math.abs(upper / lower);
+					upper = lower = 0;
+					this.current.forEach((frame) => {
+						upper = Math.max(upper, frame);
+						lower = Math.min(lower, frame);
+					});
+					const newBias = Math.abs(upper / lower);
+					const diff = bias - newBias;
+					if (diff > 0.1) {
+						const distort = bias/newBias;
+						const sign = Math.sign(diff);
+						this.current = this.current.map((frame) => {
+							return sign === 1 && frame > 0 || sign !== 1 && frame < 0 ? frame * distort : frame;
+						});
+					}
 				}
 			}
 		}
