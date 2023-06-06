@@ -1,5 +1,5 @@
 'use strict';
-//05/06/23
+//06/06/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -370,36 +370,55 @@ function _seekbar({
 				const barW = this.ui.normalizeWidth;
 				const frames = this.current.length;
 				const newFrames = Math.floor((this.w - this.marginW * 2) / barW);
-				if (newFrames < frames) {
-					const scale = frames / newFrames;
-					const data = Array(newFrames).fill(null).map((_) => {return {val: 0, count: 0};});
-					let j = 0, h = 0, frame;
-					for (let i = 0; i < frames; i++) {
-						frame = this.current[i];
-						if (h >= scale) {
-							const w = (h - scale);
-							if (i % 2 === 0) {
-								if ((j + 1) >= newFrames) {break;}
-								data[j + 1].val += frame * w;
-								data[j + 1].count += w;
+				let data;
+				if (newFrames !== frames) {
+					if (newFrames < frames) {
+						const scale = frames / newFrames;
+						data = Array(newFrames).fill(null).map((_) => {return {val: 0, count: 0};});
+						let j = 0, h = 0, frame;
+						for (let i = 0; i < frames; i++) {
+							frame = this.current[i];
+							if (h >= scale) {
+								const w = (h - scale);
+								if (i % 2 === 0) {
+									if ((j + 1) >= newFrames) {break;}
+									data[j + 1].val += frame * w;
+									data[j + 1].count += w;
+								} else {
+									data[j].val += frame * w;
+									data[j].count += w;
+								}
+								j += 2;
+								h = 0;
+								data[j].val += frame * (1 - w);
+								data[j].count += (1 - w);
 							} else {
-								data[j].val += frame * w;
-								data[j].count += w;
+								if (i % 2 === 0) {
+									if ((j + 1) >= newFrames) {break;}
+									data[j + 1].val += frame;
+									data[j + 1].count++;
+								} else {
+									data[j].val += frame;
+									data[j].count++;
+									h++;
+								}
 							}
-							j += 2;
-							h = 0;
-							data[j].val += frame * (1 - w);
-							data[j].count += (1 - w);
-						} else {
-							if (i % 2 === 0) {
-								if ((j + 1) >= newFrames) {break;}
-								data[j + 1].val += frame;
-								data[j + 1].count++;
-							} else {
+						}
+					} else {
+						const scale = newFrames / frames;
+						data = Array(newFrames).fill(null).map((_) => {return {val: 0, count: 0};});
+						let j = 0, h = 0, frame;
+						for (let i = 0; i < frames; i++) {
+							frame = this.current[i];
+							while (h < scale) {
 								data[j].val += frame;
 								data[j].count++;
 								h++;
+								j++;
+								if (j >= newFrames) {break;}
 							}
+							h = (h - scale);
+							if (j >= newFrames) {break;}
 						}
 					}
 					// Filter non valid values
@@ -539,13 +558,13 @@ function _seekbar({
 			const size = (this.h - this.y) * this.scaleH;
 			const barW =(this.w - this.marginW * 2) / frames;
 			const barBgW = (this.w - this.marginW * 2) / 100;
-			const minPointDiff = Math.min(Math.max(barW * 1.9, 0.25), 1); // 0.25 < x < 1 in px
+			const minPointDiff = 0.5; // in px
 			let n = 0, nFull = 0;
 			// Paint waveform layer
 			const top = this.h / 2 - size / 2;
 			const bottom = this.h / 2 + size / 2;
 			const timeConstant = fb.PlaybackLength / frames;
-			let current, xPast = this.x, yPast;
+			let current, past = [{x: 0, y: 1}, {x: 0, y: -1}];
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
 			for (let frame of this.current) { // [peak]
 				current = timeConstant * n;
@@ -560,7 +579,8 @@ function _seekbar({
 					gr.FillSolidRect(currX, this.y, this.w, this.h, this.ui.colors.bgFuture);
 					bPaintedBg = true;
 				}
-				if ((x - xPast) >= minPointDiff || (yPast !== Math.sign(scale) && this.preset.waveMode !== 'halfbars')) { // Ensure points don't overlap too much without normalization
+				// Ensure points don't overlap too much without normalization
+				if (past.every((p) => (p.y !== Math.sign(scale) && this.preset.waveMode !== 'halfbars') || (p.y === Math.sign(scale) || this.preset.waveMode === 'halfbars') && (x - p.x) >= minPointDiff)) {
 					if (this.preset.waveMode === 'waveform') {
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -682,8 +702,8 @@ function _seekbar({
 							}
 						}
 					}
-					xPast = x;
-					yPast = Math.sign(scale);
+					past.shift();
+					past.push({x , y: Math.sign(scale)});
 				}
 				n++;
 			}
@@ -724,11 +744,11 @@ function _seekbar({
 		if (fb.IsPlaying && !fb.IsPaused) {
 			if (bVisualizer) {throttlePaint();}
 			else if (bPrePaint && this.preset.bAnimate && frames) {
-				const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
+				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+				throttlePaintRect(currX - 4 * barW, 0, this.w, this.h);
 			} else if (this.preset.bPaintCurrent && frames) {
-				const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
+				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+				throttlePaintRect(currX - 4 * barW, 0, 4 * barW, this.h);
 			}
 			if (this.ui.bVariableRefreshRate) {
 				if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
