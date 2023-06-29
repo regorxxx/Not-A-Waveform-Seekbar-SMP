@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.1](#101---2023-06-29)
 - [1.0.0](#100---2023-06-27)
 - [1.0.0-beta.4](#100-beta4---2023-05-17)
 - [1.0.0-beta.3](#100-beta3---2023-05-16)
@@ -13,6 +14,13 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [1.0.1] - 2023-06-29
+### Added
+### Changed
+### Removed
+### Fixed
+- Helpers: fixed incorrect warning about missing font.
 
 ## [1.0.0] - 2023-06-27
 ### Added
@@ -59,7 +67,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.0-beta.4...v1.0.0
 [1.0.0-beta.4]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.0-beta.3...v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.0-beta.2...v1.0.0-beta.3
