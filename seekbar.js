@@ -1,5 +1,5 @@
 'use strict';
-//28/07/23
+//29/07/23
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx_properties.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js');
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.2'});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'XXX', version: '1.0.3'});}
 
 let seekbarProperties = {
 	binaries:	['Binaries paths', 
