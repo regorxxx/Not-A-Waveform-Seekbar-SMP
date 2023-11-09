@@ -237,6 +237,25 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 	}
+	{
+		menu.newEntry({entryText: 'sep'});
+		const subMenu = menu.newMenu('Other settings...');
+		menu.newEntry({menuName: subMenu, entryText: 'Automatically check for updates', func: () => {
+			seekbarProperties.bAutoUpdateCheck[1] = !seekbarProperties.bAutoUpdateCheck[1];
+			this.saveProperties();
+			if (seekbarProperties.bAutoUpdateCheck[1]) {
+				if (typeof checkUpdate === 'undefined') {include('helpers\\helpers_xxx_web_update.js');}
+				setTimeout(checkUpdate, 1000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false});
+			}
+		}});
+		menu.newCheckMenu(subMenu, 'Automatically check for updates', void(0),  () => seekbarProperties.bAutoUpdateCheck[1]);
+	}
+	menu.newEntry({entryText: 'sep'});
+	menu.newEntry({entryText: 'Check for updates...',  func: () => {
+		if (typeof checkUpdate === 'undefined') {include('helpers\\helpers_xxx_web_update.js');}
+		checkUpdate({bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false})
+			.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name));
+	}});
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Open data file', func: () => {
 		if (fb.IsPlaying) {

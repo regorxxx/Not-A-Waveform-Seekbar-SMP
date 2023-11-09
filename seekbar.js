@@ -1,5 +1,5 @@
 'use strict';
-//25/09/23
+//09/11/23
 
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
@@ -9,7 +9,7 @@ include('helpers\\helpers_xxx_properties.js');
 include('main\\seekbar\\seekbar_xxx.js');
 include('helpers\\callbacks_xxx.js');
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '1.0.6'});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '1.2.0'});}
 
 let seekbarProperties = {
 	binaries:	['Binaries paths', 
@@ -56,7 +56,8 @@ let seekbarProperties = {
 			normalizeWidth: _scale(4)
 		}), {func: isJSON}],
 	bEnabled: ['Enable panel', true, {func: isBoolean}],
-	matchPattern: ['File name TF format', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', {func: isString}]
+	matchPattern: ['File name TF format', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', {func: isString}],
+	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, {func: isBoolean}],
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
@@ -97,6 +98,12 @@ const seekbar = new _seekbar({
 	ui: {...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: {scaleH: 0.9, marginW: window.Width / 30}}
 });
 if (!seekbarProperties.bEnabled[1]) {seekbar.switch();}
+
+// Update check
+if (seekbarProperties.bAutoUpdateCheck[1]) {
+	include('helpers\\helpers_xxx_web_update.js');
+	setTimeout(checkUpdate, 120000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb});
+}
 
 // Callbacks
 addEventListener('on_size', (width, height) => {
