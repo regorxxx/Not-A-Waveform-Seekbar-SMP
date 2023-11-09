@@ -173,6 +173,7 @@ CALL :check_folder main\filter_and_query
 CALL :copy_file main\filter_and_query\remove_duplicates.js
 CALL :copy_folder main\playlist_manager
 CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_button.js
 CALL :copy_file main\window\window_xxx_helpers.js
 CALL :copy_file main\window\window_xxx_input.js
 CALL :copy_file main\window\window_xxx_scrollbar.js
@@ -348,6 +349,11 @@ CALL :copy_folder main\timeline
 CALL :copy_folder main\statistics
 CALL :check_folder main\filter_and_query
 CALL :copy_file main\filter_and_query\remove_duplicates.js
+CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_button.js
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
+CALL :copy_file main\window\window_xxx_helpers.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
@@ -379,12 +385,6 @@ CALL :copy_folder helpers-external\bitmasksorterjs
 CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\chroma.js
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
-REM helpers external
-CALL :check_folder main\window
-CALL :copy_file main\window\window_xxx_button.js
-CALL :copy_file main\window\window_xxx_background.js
-CALL :copy_file main\window\window_xxx_background_menu.js
-CALL :copy_file main\window\window_xxx_helpers.js
 REM package info, zip and report
 CALL :create_package_info
 CALL :compress %name% %version%
