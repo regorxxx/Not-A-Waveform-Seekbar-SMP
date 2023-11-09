@@ -77,6 +77,9 @@ CALL :copy_folder main\world_map
 CALL :check_folder main\statistics
 CALL :copy_file main\statistics\statistics_xxx.js
 CALL :copy_file main\statistics\statistics_xxx_helper.js
+CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_button.js
+CALL :copy_file main\window\window_xxx_helpers.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
@@ -119,6 +122,7 @@ CALL :delete_file helpers-external\countries-mercator\"_N. Cyprus.png"
 CALL :delete_file helpers-external\countries-mercator\_Somaliland.png
 CALL :delete_file helpers-external\countries-mercator\worldmap_natural.png
 CALL :delete_file helpers-external\countries-mercator\worldmap_shapes.png
+CALL :copy_folder helpers-external\natsort
 REM others
 CALL :check_folder _images
 CALL :copy_file _images\_Installation_v1.5_v1.4.JPG
@@ -239,6 +243,7 @@ CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\fuse
 CALL :copy_folder helpers-external\keycode-2.2.0
+CALL :copy_folder helpers-external\natsort
 CALL :copy_folder helpers-external\SimpleCrypto-js
 CALL :copy_folder helpers-external\xspf-to-jspf-parser
 CALL :copy_folder helpers-external\xsp-to-jsp-parser
