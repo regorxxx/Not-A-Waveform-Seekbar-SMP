@@ -17,7 +17,9 @@
 
 ## [Unreleased][]
 ### Added
+- Auto-update: added -optional- automatic checks for updates on script load; enabled by default. Compares version of current file against GitHub repository. Manual checking can also be found at the settings menu. Setting may also be globally switched at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bAutoUpdateCheck'. It will apply by default to any new installed script (previous scripts will still need to be manually configured to change them).
 ### Changed
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
