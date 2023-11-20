@@ -19,6 +19,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Console: reduced max log file size to 1 MB.
 ### Removed
 ### Fixed
 
