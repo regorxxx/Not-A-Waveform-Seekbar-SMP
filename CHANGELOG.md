@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.2.1](#121---2023-11-24)
 - [1.2.0](#120---2023-11-15)
 - [1.1.0](#110---2023-10-05)
 - [1.0.6](#106---2023-09-25)
@@ -19,7 +20,14 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [1.2.1] - 2023-11-24
+### Added
 - Console: reduced max log file size to 1 MB.
+### Changed
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
@@ -129,7 +137,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.6...v1.1.0
 [1.0.6]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.5...v1.0.6
