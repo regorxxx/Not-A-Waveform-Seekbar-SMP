@@ -25,8 +25,8 @@
 
 ## [1.2.1] - 2023-11-24
 ### Added
-- Console: reduced max log file size to 1 MB.
 ### Changed
+- Console: reduced max log file size to 1 MB.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
