@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.3.0](#130---2023-11-28)
 - [1.2.1](#121---2023-11-24)
 - [1.2.0](#120---2023-11-15)
 - [1.1.0](#110---2023-10-05)
@@ -19,8 +20,16 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.3.0] - 2023-11-28
+### Added
 - UI: added setting to disable tooltip on all scripts. Found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json', by changing 'bTooltip'. By default tooltip is always shown. This setting will never be exposed within foobar, only at this file.
 ### Changed
+- Helpers: updated helpers.
+- Improved error messages about features not working related to OS checks (at startup) with tips and warnings.
 ### Removed
 ### Fixed
 
@@ -138,7 +147,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.0.6...v1.1.0
