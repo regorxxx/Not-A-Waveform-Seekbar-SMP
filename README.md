@@ -47,6 +47,9 @@ Alternate colors:
 See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
+## Nightly releases
+Automatic package [built from GitHub](https://nightly.link/regorxxx/Not-A-Waveform-Seekbar-SMP/workflows/build/main/file.zip) (using the latest commit).
+
 [changelog]: CHANGELOG.md
 [version_badge]: https://img.shields.io/github/release/regorxxx/Not-A-Waveform-Seekbar-SMP.svg
 [codacy_badge]: https://api.codacy.com/project/badge/Grade/e04be28637dd40d99fae7bd92f740677
