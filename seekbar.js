@@ -127,7 +127,9 @@ addEventListener('on_playback_stop', (reason) => {
 });
 
 addEventListener('on_paint', (gr) => {
+	// extendGR(gr, {Repaint: true}); // helpers_xxx_prototypes_smp.js
 	seekbar.paint(gr);
+	if (window.debugPainting) {window.drawDebugRectAreas(gr);}
 });
 
 addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
