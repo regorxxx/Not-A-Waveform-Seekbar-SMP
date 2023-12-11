@@ -237,9 +237,21 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 	}
+	menu.newEntry({entryText: 'sep'});
 	{
-		menu.newEntry({entryText: 'sep'});
 		const subMenu = menu.newMenu('Other settings...');
+		menu.newEntry({menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
+			const input = Input.number('int', this.ui.refreshRate, 'Enter integer number:\n(ms)', window.Name, 200, [(n) => n >= 50]);
+			if (input === null) {return;}
+			this.updateConfig({ui: {refreshRate: input}});
+			this.saveProperties();
+		}, flags: this.ui.bVariableRefreshRate ? MF_GRAYED : MF_STRING});
+		menu.newEntry({menuName: subMenu, entryText: 'Variable refresh rate', func: () => {
+			this.updateConfig({ui: {bVariableRefreshRate: !this.ui.bVariableRefreshRate}});
+			this.saveProperties();
+		}});
+		menu.newCheckMenuLast(() => this.ui.bVariableRefreshRate);
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		menu.newEntry({menuName: subMenu, entryText: 'Automatically check for updates', func: () => {
 			seekbarProperties.bAutoUpdateCheck[1] = !seekbarProperties.bAutoUpdateCheck[1];
 			this.saveProperties();
@@ -248,7 +260,7 @@ function createSeekbarMenu(bClear = true) {
 				setTimeout(checkUpdate, 1000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false});
 			}
 		}});
-		menu.newCheckMenu(subMenu, 'Automatically check for updates', void(0),  () => seekbarProperties.bAutoUpdateCheck[1]);
+		menu.newCheckMenuLast(() => seekbarProperties.bAutoUpdateCheck[1]);
 	}
 	menu.newEntry({entryText: 'sep'});
 	menu.newEntry({entryText: 'Check for updates...',  func: () => {
