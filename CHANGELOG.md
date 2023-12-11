@@ -21,10 +21,11 @@
 
 ## [Unreleased][]
 ### Added
+- UI: added settings to tweak the desired refresh rate.
 ### Changed
-- Helpers: updated helpers.
 ### Removed
 ### Fixed
+- UI: long time bug in some cases where the current position was not properly painted (in width).
 
 ## [1.3.1] - 2023-12-08
 ### Added
