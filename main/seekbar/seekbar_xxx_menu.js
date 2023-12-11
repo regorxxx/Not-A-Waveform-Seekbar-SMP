@@ -1,7 +1,8 @@
 ﻿'use strict';
 //11/12/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
-
+include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
+const Chroma = require('..\\helpers-external\\chroma.js\\chroma-ultra-light.min'); // Relative to helpers folder
 
 function bindMenu(parent) {
 	return _attachedMenu.call(parent, {rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
@@ -13,6 +14,7 @@ function createSeekbarMenu(bClear = true) {
 	const menu = this.menu;
 	if (bClear) {menu.clear(true);} // Reset on every call
 	// helper
+	const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');} // From statistics
 	menu.newEntry({entryText: 'Configure the seekbar:', flags: MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
 	{
@@ -211,40 +213,91 @@ function createSeekbarMenu(bClear = true) {
 	menu.newEntry({entryText: 'sep'});
 	{
 		const subMenu = menu.newMenu('Color presets...');
-		const subMenuBg = menu.newMenu('Background...', subMenu);
-		menu.newEntry({menuName: subMenu, entryText: 'sep'});
-		const options = [
-			{menuName: subMenu, name: 'Green', colors: {main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF}},
-			{menuName: subMenu, name: 'Lavender', colors: {main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC}},
-			{menuName: subMenu, name: 'Forest', colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
-			{menuName: subMenu, name: 'Sienna', colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
-			{menuName: subMenu, name: 'Blue', colors: {main: 0xFF003559, alt: 0xFF006DAA,mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
-			{menuName: subMenuBg, name: 'Full panel:'},
-			{menuName: subMenuBg, name: 'sep'},
-			{menuName: subMenuBg, name: 'White Bg',			bPrepaint: false,	colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFFFFFFF}},
-			{menuName: subMenuBg, name: 'Black Bg',			bPrepaint: false,	colors: {bg: 0xFF000000, bgFuture: 0xFF000000}},
-			{menuName: subMenuBg, name: 'Sienna Bg',		bPrepaint: false,	colors: {bg: 0xFF450920, bgFuture: 0xFF450920}},
-			{menuName: subMenuBg, name: 'Blue Bg',			bPrepaint: false,	colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFB9D6F2}},
-			{menuName: subMenuBg, name: 'sep'},
-			{menuName: subMenuBg, name: 'With "paint after current":'},
-			{menuName: subMenuBg, name: 'sep'},
-			{menuName: subMenuBg, name: 'White Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
-			{menuName: subMenuBg, name: 'Black Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
-			{menuName: subMenuBg, name: 'Sienna Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
-			{menuName: subMenuBg, name: 'Blue Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}},
-		];
-		options.forEach((o) => {
-			if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
-				menu.newEntry({menuName: o.menuName, entryText: o.name, flags: MF_GRAYED});
-			} else {
-				const bEnabled = !o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint;
-				menu.newEntry({menuName: o.menuName, entryText: o.name, func: () => {
-					this.updateConfig({ui: {colors: o.colors}});
-					this.saveProperties();
-				}, flags: bEnabled ? MF_STRING : MF_GRAYED});
-				menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
+		{
+			const subMenuTwo = menu.newMenu('Background...', subMenu);
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Set panel background:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			[
+				{name: 'White',		bPrepaint: false,	colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
+				{name: 'Black',		bPrepaint: false,	colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
+				{name: 'Sienna',		bPrepaint: false,	colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
+				{name: 'Blue',		bPrepaint: false,	colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}},
+			].forEach((o) => {
+				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
+				} else {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
+						this.updateConfig({ui: {colors: o.colors}});
+						this.saveProperties();
+					}});
+					menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
+				}
+			});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			{
+				const subMenuCustom = menu.newMenu('Custom...', subMenuTwo);
+				[
+					{name: 'Full panel',		bPrepaint: false,	key: 'bg'},
+					{name: 'After current pos.',bPrepaint: true,	key: 'bgFuture'},
+				].forEach((o) => {
+					if (o.name === 'sep' || !o.hasOwnProperty('key')) {
+						menu.newEntry({menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED});
+					} else {
+						const bEnabled = !o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint;
+						menu.newEntry({menuName: subMenuCustom, entryText: o.name + '\t' + _b(getColorName(this.ui.colors[o.key])), func: () => {
+								this.updateConfig({ui: {colors: {
+									[o.key]: utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
+								}}});
+							this.saveProperties();
+						}, flags: bEnabled ? MF_STRING : MF_GRAYED});
+					}
+				});
 			}
-		});
+		}
+		{
+			const subMenuTwo = menu.newMenu('Waveform...', subMenu);
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Set waveform colors:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			[
+				{name: 'Green', colors: {main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF}},
+				{name: 'Lavender', colors: {main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC}},
+				{name: 'Forest', colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
+				{name: 'Sienna', colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
+				{name: 'Blue', colors: {main: 0xFF003559, alt: 0xFF006DAA,mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
+			].forEach((o) => {
+				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
+				} else {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
+						this.updateConfig({ui: {colors: o.colors}});
+						this.saveProperties();
+					}});
+					menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
+				}
+			});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			{
+				const subMenuCustom = menu.newMenu('Custom...', subMenuTwo);
+				[
+					{name: 'Exterior',					bPrepaint: false,	key: 'main'},
+					{name: 'Interior',					bPrepaint: false,	key: 'alt'},
+					{name: 'Exterior (after current)',	bPrepaint: true,	key: 'mainFuture'},
+					{name: 'Interior (after current)',	bPrepaint: true,	key: 'altFuture',},
+				].forEach((o) => {
+					if (o.name === 'sep' || !o.hasOwnProperty('key')) {
+						menu.newEntry({menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED});
+					} else {
+						const bEnabled = !o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint;
+						menu.newEntry({menuName: subMenuCustom, entryText: o.name + '\t' + _b(getColorName(this.ui.colors[o.key])), func: () => {
+								this.updateConfig({ui: {colors: {
+									[o.key]: utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
+								}}});
+							this.saveProperties();
+						}, flags: bEnabled ? MF_STRING : MF_GRAYED});
+					}
+				});
+			}
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{

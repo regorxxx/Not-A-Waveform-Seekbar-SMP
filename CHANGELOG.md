@@ -22,6 +22,7 @@
 ## [Unreleased][]
 ### Added
 - UI: added settings to tweak the desired refresh rate.
+- UI: added entries to set custom colors at the color presets menu.
 ### Changed
 - UI: improved color presets menu.
 ### Removed
