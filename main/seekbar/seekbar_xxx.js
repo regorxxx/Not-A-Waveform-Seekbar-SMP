@@ -510,13 +510,16 @@ function _seekbar({
 		// Repaint by zone when possible
 		if (this.analysis.binaryMode === 'visualizer' || !this.current.length) {throttlePaint();}
 		else if (this.preset.paintMode === 'partial' && this.preset.bPrePaint) {
+			const frames = this.current.length;
+			const timeConstant = fb.PlaybackLength / this.current.length;;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
-			throttlePaintRect(currX - barW, 0, this.w, this.h);
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+			const futureOffset = this.preset.futureSecs === Infinity ? this.w : currX + this.preset.futureSecs * timeConstant * barW;
+			throttlePaintRect(currX - barW, 0, futureOffset - currX - this.marginW + barW/2, this.h);
 		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
-			throttlePaintRect(currX - barW, 0, currX + 2 * barW, this.h);
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+			throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
 		}
 	};
 	
@@ -744,11 +747,13 @@ function _seekbar({
 		if (fb.IsPlaying && !fb.IsPaused) {
 			if (bVisualizer) {throttlePaint();}
 			else if (bPrePaint && this.preset.bAnimate && frames) {
+				const timeConstant = fb.PlaybackLength / frames;
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				throttlePaintRect(currX - barW, 0, this.w, this.h);
+				const futureOffset = this.preset.futureSecs === Infinity ? this.w : currX + this.preset.futureSecs * timeConstant * barW;
+				throttlePaintRect(currX - barW, 0, futureOffset - currX - this.marginW + barW/2, this.h);
 			} else if (this.preset.bPaintCurrent && frames) {
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				throttlePaintRect(currX - barW, 0, currX + barW, this.h);
+				throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
 			}
 			if (this.ui.bVariableRefreshRate) {
 				if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
