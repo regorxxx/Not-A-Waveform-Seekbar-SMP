@@ -1,5 +1,5 @@
 'use strict';
-//06/06/23
+//11/12/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -510,13 +510,13 @@ function _seekbar({
 		// Repaint by zone when possible
 		if (this.analysis.binaryMode === 'visualizer' || !this.current.length) {throttlePaint();}
 		else if (this.preset.paintMode === 'partial' && this.preset.bPrePaint) {
-			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
+			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
 			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
-			throttlePaintRect(currX - 2 * barW, 0, this.w, this.h);
+			throttlePaintRect(currX - barW, 0, this.w, this.h);
 		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
-			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * fb.PlaybackTime / fb.PlaybackLength;
+			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
 			const barW = Math.round(Math.max((this.w - this.marginW * 2) / this.current.length, _scale(2)));
-			throttlePaintRect(currX - 2 * barW, 0, 4 * barW, this.h);
+			throttlePaintRect(currX - barW, 0, currX + 2 * barW, this.h);
 		}
 	};
 	
@@ -745,10 +745,10 @@ function _seekbar({
 			if (bVisualizer) {throttlePaint();}
 			else if (bPrePaint && this.preset.bAnimate && frames) {
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				throttlePaintRect(currX - 4 * barW, 0, this.w, this.h);
+				throttlePaintRect(currX - barW, 0, this.w, this.h);
 			} else if (this.preset.bPaintCurrent && frames) {
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				throttlePaintRect(currX - 4 * barW, 0, 4 * barW, this.h);
+				throttlePaintRect(currX - barW, 0, currX + barW, this.h);
 			}
 			if (this.ui.bVariableRefreshRate) {
 				if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
