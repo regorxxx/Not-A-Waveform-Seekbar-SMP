@@ -23,6 +23,7 @@
 ### Added
 - UI: added settings to tweak the desired refresh rate.
 ### Changed
+- UI: improved color presets menu.
 ### Removed
 ### Fixed
 - UI: long time bug in some cases where the current position was not properly painted (in width).

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/11/23
+//11/12/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
 
 
@@ -219,21 +219,30 @@ function createSeekbarMenu(bClear = true) {
 			{menuName: subMenu, name: 'Forest', colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
 			{menuName: subMenu, name: 'Sienna', colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
 			{menuName: subMenu, name: 'Blue', colors: {main: 0xFF003559, alt: 0xFF006DAA,mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
-			{menuName: subMenuBg, name: 'White Bg', colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFFFFFFF}},
-			{menuName: subMenuBg, name: 'White Bg (alt)', colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
-			{menuName: subMenuBg, name: 'Black Bg', colors: {bg: 0xFF000000, bgFuture: 0xFF000000}},
-			{menuName: subMenuBg, name: 'Black Bg (alt)', colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
-			{menuName: subMenuBg, name: 'Sienna Bg', colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
-			{menuName: subMenuBg, name: 'Blue Bg', colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}}
+			{menuName: subMenuBg, name: 'Full panel:'},
+			{menuName: subMenuBg, name: 'sep'},
+			{menuName: subMenuBg, name: 'White Bg',			bPrepaint: false,	colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFFFFFFF}},
+			{menuName: subMenuBg, name: 'Black Bg',			bPrepaint: false,	colors: {bg: 0xFF000000, bgFuture: 0xFF000000}},
+			{menuName: subMenuBg, name: 'Sienna Bg',		bPrepaint: false,	colors: {bg: 0xFF450920, bgFuture: 0xFF450920}},
+			{menuName: subMenuBg, name: 'Blue Bg',			bPrepaint: false,	colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFB9D6F2}},
+			{menuName: subMenuBg, name: 'sep'},
+			{menuName: subMenuBg, name: 'With "paint after current":'},
+			{menuName: subMenuBg, name: 'sep'},
+			{menuName: subMenuBg, name: 'White Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
+			{menuName: subMenuBg, name: 'Black Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
+			{menuName: subMenuBg, name: 'Sienna Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
+			{menuName: subMenuBg, name: 'Blue Bg (alt)',	bPrepaint: true,	colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}},
 		];
 		options.forEach((o) => {
-			if (o.name === 'sep') {
-				menu.newEntry({menuName: o.menuName, entryText: o.name});
+			if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+				menu.newEntry({menuName: o.menuName, entryText: o.name, flags: MF_GRAYED});
 			} else {
+				const bEnabled = !o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint;
 				menu.newEntry({menuName: o.menuName, entryText: o.name, func: () => {
 					this.updateConfig({ui: {colors: o.colors}});
 					this.saveProperties();
-				}});
+				}, flags: bEnabled ? MF_STRING : MF_GRAYED});
+				menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
 			}
 		});
 	}
