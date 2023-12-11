@@ -129,8 +129,17 @@ function extendGR(gr , options = {DrawRoundRect: true, FillRoundRect: true, Repa
 			return that;
 		}
 	}
-	if (options.Repaint) {
+	if (options.Repaint && !window.debugPainting) {
 		window.debugPainting = true;
+		const old = window.RepaintRect.bind(window);
+		window.RepaintRect = (function() {
+			if (this.debugPainting) {
+				this.debugPaintingRects.push([...arguments].slice(0, 4));
+				this.Repaint();
+			} else {
+				old(...arguments);
+			}
+		}).bind(window);
 	}
 }
 
@@ -294,14 +303,3 @@ Object.defineProperty(window, 'drawDebugRectAreas', {
 		} catch (e) {}
 	}).bind(window)
 });
-{
-	const old = window.RepaintRect.bind(window);
-	window.RepaintRect = (function() {
-		if (this.debugPainting) {
-			this.debugPaintingRects.push([...arguments].slice(0, 4));
-			this.Repaint();
-		} else {
-			old(...arguments);
-		}
-	}).bind(window);
-}

@@ -140,6 +140,8 @@ function _seekbar({
 	this.codePage = convertCharsetToCodepage('UTF-8');
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	this.current = [];
+	this.frames = 0;
+	this.timeConstant = 0;
 	this.cache = null;
 	this.offset = [];
 	this.step = 0; // 0 - maxStep
@@ -296,6 +298,7 @@ function _seekbar({
 			if (!bAnalysis) {this.isFallback = false;} // Allow reading data from files even if track is not compatible
 			// Calculate waveform on the fly
 			this.normalizePoints(this.analysis.binaryMode !== 'visualizer' && this.ui.bNormalizeWidth);
+			this.timeConstant = handle.Length / this.frames;
 		}
 		this.resetAnimation();
 		// Set animation using BPM if possible
@@ -307,7 +310,8 @@ function _seekbar({
 	};
 	
 	this.normalizePoints = (bNormalizeWidth = false) => {
-		if (this.current.length) {
+		this.frames = this.current.length;
+		if (this.frames) {
 			let upper = 0;
 			let lower = 0;
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
@@ -368,7 +372,7 @@ function _seekbar({
 			// Adjust num of frames to window size
 			if (bNormalizeWidth) {
 				const barW = this.ui.normalizeWidth;
-				const frames = this.current.length;
+				const frames = this.frames;
 				const newFrames = Math.floor((this.w - this.marginW * 2) / barW);
 				let data;
 				if (newFrames !== frames) {
@@ -443,6 +447,7 @@ function _seekbar({
 							return sign === 1 && frame > 0 || sign !== 1 && frame < 0 ? frame * distort : frame;
 						});
 					}
+					this.frames = this.current.length;
 				}
 			}
 		}
@@ -472,6 +477,8 @@ function _seekbar({
 				this.isFallback = this.analysis.bVisualizerFallback;
 				this.isError = true;
 				this.current = []; 
+				this.frames = 0;
+				this.timeConstant = 0;
 			}  else {
 				console.log('Seekbar file not valid. Creating new one' + (file ? ': ' + file : '.'));
 				file && _deleteFile(file);
@@ -508,14 +515,15 @@ function _seekbar({
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') {return;}
 		} else {this.cache = this.current;}
 		// Repaint by zone when possible
-		if (this.analysis.binaryMode === 'visualizer' || !this.current.length) {throttlePaint();}
+		const frames = this.frames;
+		if (this.analysis.binaryMode === 'visualizer' || !frames) {throttlePaint();}
 		else if (this.preset.paintMode === 'partial' && this.preset.bPrePaint) {
-			const frames = this.current.length;
-			const timeConstant = fb.PlaybackLength / this.current.length;;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
 			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-			const futureOffset = this.preset.futureSecs === Infinity ? this.w : currX + this.preset.futureSecs * timeConstant * barW;
-			throttlePaintRect(currX - barW, 0, futureOffset - currX - this.marginW + barW/2, this.h);
+			const futureOffset = this.preset.futureSecs === Infinity 
+				? this.w - currX - this.marginW + barW/2
+				: this.preset.futureSecs / this.timeConstant * barW + barW;
+			throttlePaintRect(currX - barW, 0, futureOffset, this.h);
 		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
 			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
@@ -525,6 +533,8 @@ function _seekbar({
 	
 	this.reset = () => {
 		this.current = [];
+		this.frames = 0;
+		this.timeConstant = 0;
 		this.cache = null;
 		this.time = 0;
 		this.isAllowedFile = true;
@@ -550,7 +560,7 @@ function _seekbar({
 	this.paint = (gr) => {
 		profilerPaint.Reset();
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
-		const frames = this.current.length;
+		const frames = this.frames;
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
 		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
 		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
@@ -566,7 +576,7 @@ function _seekbar({
 			// Paint waveform layer
 			const top = this.h / 2 - size / 2;
 			const bottom = this.h / 2 + size / 2;
-			const timeConstant = fb.PlaybackLength / frames;
+			const timeConstant = this.timeConstant;
 			let current, past = [{x: 0, y: 1}, {x: 0, y: -1}];
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
 			for (let frame of this.current) { // [peak]
@@ -747,10 +757,11 @@ function _seekbar({
 		if (fb.IsPlaying && !fb.IsPaused) {
 			if (bVisualizer) {throttlePaint();}
 			else if (bPrePaint && this.preset.bAnimate && frames) {
-				const timeConstant = fb.PlaybackLength / frames;
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
-				const futureOffset = this.preset.futureSecs === Infinity ? this.w : currX + this.preset.futureSecs * timeConstant * barW;
-				throttlePaintRect(currX - barW, 0, futureOffset - currX - this.marginW + barW/2, this.h);
+				const futureOffset = this.preset.futureSecs === Infinity 
+					? this.w - currX - this.marginW + barW/2
+					: this.preset.futureSecs / this.timeConstant * barW + barW;
+				throttlePaintRect(currX - barW, 0, futureOffset, this.h);
 			} else if (this.preset.bPaintCurrent && frames) {
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
 				throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
@@ -771,7 +782,7 @@ function _seekbar({
 		if (!this.trace(x,y)) {return false;}
 		const handle = fb.GetSelection();
 		if (handle && fb.IsPlaying) { // Seek
-			const frames = this.current.length;
+			const frames = this.frames;
 			if (frames !== 0) {
 				const barW = (this.w - this.marginW * 2) / frames;
 				let time = Math.round(fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW);
