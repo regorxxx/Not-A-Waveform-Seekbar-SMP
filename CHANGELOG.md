@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.4.0](#140---2023-12-11)
 - [1.3.1](#131---2023-12-08)
 - [1.3.0](#130---2023-11-28)
 - [1.2.1](#121---2023-11-24)
@@ -20,6 +21,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.4.0] - 2023-12-11
 ### Added
 - UI: added settings to tweak the desired refresh rate.
 - UI: added entries to set custom colors at the color presets menu.
@@ -159,7 +166,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.2.0...v1.2.1
