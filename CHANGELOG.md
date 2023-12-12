@@ -22,8 +22,14 @@
 
 ## [Unreleased][]
 ### Added
+- UI: color settings for the current position indicator.
+- UI: transparency settings for all UI elements.
+- UI: new implementation of background settings, equal to the one found at [Timeline-SMP](https://github.com/regorxxx/Timeline-SMP), which allows to use covers, colors, gradients, etc. This is in addition to the background for the waveform, which is painted on top (so they can be mixed).
 ### Changed
+- UI: changed defaults settings on new installations for a more modern look.
+- UI: on partial mode, the background after current position is now displayed too (without needing to use 'paint after current'). To hide it (previous behavior) set color to none or transparency to 0
 - UI: optimized repainting to use less resources.
+- UI: performance improvements when some elements are disabled due to color set to none or transparency set to 0.
 ### Removed
 ### Fixed
 
