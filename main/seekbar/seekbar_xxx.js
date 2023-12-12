@@ -1,5 +1,5 @@
 'use strict';
-//11/12/23
+//12/12/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -34,6 +34,15 @@ function _seekbar({
 				altFuture: 0xFFF9FF99, 
 				currPos: 0xFFFFFFFF // White
 			},
+			transparency: {
+				bg: 100,
+				main: 100,
+				alt: 100,
+				bgFuture: 100, 
+				mainFuture: 100, 
+				altFuture: 100, 
+				currPos: 100
+			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
 			bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
@@ -48,8 +57,11 @@ function _seekbar({
 			bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
 			bVisualizerFallback: true, // Uses visualizer mode when file can not be processed (not compatible format)
 			bVisualizerFallbackAnalysis: true // Uses visualizer mode while analyzing file
+		},
+		callbacks = {
+			backgroundColor: null, // Used to set the fallback color for text when there is no background color set for the waveform, otherwise will be white
 		}
-	} = {}) {
+} = {}) {
 		
 	this.defaults = () => {
 		const defBinaries = {
@@ -79,6 +91,15 @@ function _seekbar({
 				altFuture: 0xFFF9FF99, 
 				currPos: 0xFFFFFFFF // White
 			},
+			transparency: {
+				bg: 100,
+				main: 100,
+				alt: 100,
+				bgFuture: 100, 
+				mainFuture: 100, 
+				altFuture: 100, 
+				currPos: 100
+			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
 			refreshRate: 200,
 			bVariableRefreshRate: false,
@@ -94,7 +115,10 @@ function _seekbar({
 			bVisualizerFallback: true,
 			bVisualizerFallbackAnalysis : true
 		};
-		const options = [{from: defBinaries, to: binaries}, {from: defPreset, to: preset}, {from: defUi, to: ui}, {from: defAnalysis, to: analysis}];
+		const defCallbacks = {
+			backgroundColor: null,
+		};
+		const options = [{from: defBinaries, to: binaries}, {from: defPreset, to: preset}, {from: defUi, to: ui}, {from: defAnalysis, to: analysis}, {from: defCallbacks, to: callbacks}];
 		options.forEach((option) => {
 			for (let key in option.from){
 				const subOption = option.from[key];
@@ -124,6 +148,7 @@ function _seekbar({
 	this.ui = ui;
 	this.preset = preset;
 	this.analysis = analysis;
+	this.callbacks = callbacks;
 	// Easy access
 	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
 	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
@@ -516,17 +541,18 @@ function _seekbar({
 		} else {this.cache = this.current;}
 		// Repaint by zone when possible
 		const frames = this.frames;
+		const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 		if (this.analysis.binaryMode === 'visualizer' || !frames) {throttlePaint();}
 		else if (this.preset.paintMode === 'partial' && this.preset.bPrePaint) {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const futureOffset = this.preset.futureSecs === Infinity 
-				? this.w - currX - this.marginW + barW/2
+				? this.w - currX - this.marginW + barW
 				: this.preset.futureSecs / this.timeConstant * barW + barW;
 			throttlePaintRect(currX - barW, 0, futureOffset, this.h);
 		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
 		}
 	};
@@ -564,8 +590,18 @@ function _seekbar({
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
 		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
 		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
+		const colors = Object.fromEntries(
+			Object.keys(this.ui.transparency).map((key) => {
+				return [
+					key, 
+					this.ui.colors[key] !== -1 && this.ui.transparency[key] !== 0 
+						? Math.round(this.ui.transparency[key]) === 100 ? this.ui.colors[key] : this.applyAlpaha(this.ui.colors[key], this.ui.transparency[key]) 
+						: -1
+				];
+			})
+		);
 		// Panel background
-		gr.FillSolidRect(this.x, this.y, this.w, this.h, this.ui.colors.bg);
+		if (colors.bg !== -1) {gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg);}
 		const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
@@ -583,14 +619,24 @@ function _seekbar({
 				current = timeConstant * n;
 				const bIsfuture = current > this.time;
 				const bIsfutureAllowed = (current - this.time) < this.preset.futureSecs;
-				if (this.preset.paintMode === 'partial' && !bPrePaint && bIsfuture) {break;}
-				else if (bPrePaint && bIsfuture && !bIsfutureAllowed) {break;}
+				if (this.preset.paintMode === 'partial' && !bPrePaint && bIsfuture) {
+					if (colors.bgFuture !== -1) {gr.FillSolidRect(currX, this.y, this.w, this.h, colors.bgFuture);}
+					bPaintedBg = true;
+					break;
+				} else if (bPrePaint && bIsfuture && !bIsfutureAllowed) {break;}
 				if (!this.offset[n]) {this.offset.push(0);}
 				const scale = frame;
 				const x = this.x + this.marginW + barW * n;
+				// Paint the alt background at the proper point
 				if (bIsfuture && bPrePaint && !bPaintedBg) {
-					gr.FillSolidRect(currX, this.y, this.w, this.h, this.ui.colors.bgFuture);
+					if (colors.bgFuture !== -1) {gr.FillSolidRect(currX, this.y, this.w, this.h, colors.bgFuture);}
 					bPaintedBg = true;
+				}
+				// Don't calculate waveform if not needed
+				if ([colors.main, colors.alt, colors.mainFuture, colors.altFuture].every((col) => col === -1)) {
+					n++;
+					if (bIsfuture && bPrePaint && bPaintedBg) {break;}
+					else {continue;}
 				}
 				// Ensure points don't overlap too much without normalization
 				if (past.every((p) => (p.y !== Math.sign(scale) && this.preset.waveMode !== 'halfbars') || (p.y === Math.sign(scale) || this.preset.waveMode === 'halfbars') && (x - p.x) >= minPointDiff)) {
@@ -601,24 +647,24 @@ function _seekbar({
 						const y = scaledSize > 0 
 							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
 							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
-						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						const color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
+						const altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
 						let z = bVisualizer ? Math.abs(y) : y;
 						if (z > 0) {
 							if (altColor !== color) {
-								gr.FillSolidRect(x, this.h / 2 - z, 1, z / 2, color);
-								gr.FillSolidRect(x, this.h / 2 - z / 2, 1, z / 2, altColor);
+								if (color !== -1) {gr.FillSolidRect(x, this.h / 2 - z, 1, z / 2, color);}
+								if (altColor !== -1) {gr.FillSolidRect(x, this.h / 2 - z / 2, 1, z / 2, altColor);}
 							} else {
-								gr.FillSolidRect(x, this.h / 2 - z, 1, z, color);
+								if (color !== -1) {gr.FillSolidRect(x, this.h / 2 - z, 1, z, color);}
 							}
 						}
 						z = bVisualizer ? - Math.abs(y) : y;
 						if (z < 0) {
 							if (altColor !== color) {
-								gr.FillSolidRect(x, this.h / 2 - z / 2, 1, - z / 2, color);
-								gr.FillSolidRect(x, this.h / 2, 1, - z / 2, altColor);
+								if (color !== -1) {gr.FillSolidRect(x, this.h / 2 - z / 2, 1, - z / 2, color);}
+								if (altColor !== -1) {gr.FillSolidRect(x, this.h / 2, 1, - z / 2, altColor);}
 							} else {
-								gr.FillSolidRect(x, this.h / 2, 1, - z, color);
+								if (color !== -1) {gr.FillSolidRect(x, this.h / 2, 1, - z, color);}
 							}
 						}
 					} else if (this.preset.waveMode === 'halfbars') {
@@ -629,19 +675,19 @@ function _seekbar({
 							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
 							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 						if (this.preset.bHalfBarsShowNeg) {y = Math.abs(y);}
-						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						let color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
+						let altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
-						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
-							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
+						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe' && colors.currPos !== -1) {
+							if (x <= currX && x >= currX - 2 * barW) {color = altColor = colors.currPos;}
 						}
 						if (y > 0) {
 							if (altColor !== color) {
-								gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y , barW, y, 1, color);
-								gr.DrawRect(x, this.h / 2 + size / 2 - y  , barW, y, 1, altColor);
+								if (color !== -1) {gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y , barW, y, 1, color);}
+								if (altColor !== -1) {gr.DrawRect(x, this.h / 2 + size / 2 - y  , barW, y, 1, altColor);}
 							} else {
-								gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y  , barW, 2 * y, 1, color);
+								if (color !== -1) {gr.DrawRect(x, this.h / 2 + size / 2 - 2 * y  , barW, 2 * y, 1, color);}
 							}
 						}
 					} else if (this.preset.waveMode === 'bars') {
@@ -651,18 +697,18 @@ function _seekbar({
 						const y = scaledSize > 0 
 							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
 							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
-						let color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						let altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						let color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
+						let altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
 						const x = this.x + this.marginW + barW * n;
 						// Current position
-						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe') {
-							if (x <= currX && x >= currX - 2 * barW) {color = altColor = this.ui.colors.currPos;}
+						if ((this.preset.bPaintCurrent || this.mouseDown) && this.analysis.binaryMode !== 'ffprobe' && colors.currPos !== -1) {
+							if (x <= currX && x >= currX - 2 * barW) {color = altColor = colors.currPos;}
 						}
 						let z = bVisualizer ? Math.abs(y) : y;
 						if (z > 0) { // Split waveform in 2, and then each half in 2 for highlighting
 							if (altColor !== color) {
-								gr.DrawRect(x, this.h / 2 - z, barW, z / 2, 1, color);
-								gr.DrawRect(x, this.h / 2 - z / 2, barW, z / 2, 1, altColor);
+								if (color !== -1) {gr.DrawRect(x, this.h / 2 - z, barW, z / 2, 1, color);}
+								if (altColor !== -1) {gr.DrawRect(x, this.h / 2 - z / 2, barW, z / 2, 1, altColor);}
 							} else {
 								gr.DrawRect(x, this.h / 2 - z, barW, z, 1, color);
 							}
@@ -670,10 +716,10 @@ function _seekbar({
 						z = bVisualizer ? - Math.abs(y) : y;
 						if (z < 0) {
 							if (altColor !== color) {
-								gr.DrawRect(x, this.h / 2 - z / 2, barW, - z / 2, 1, color);
-								gr.DrawRect(x, this.h / 2, barW, - z / 2, 1, altColor);
+								if (color !== -1) {gr.DrawRect(x, this.h / 2 - z / 2, barW, - z / 2, 1, color);}
+								if (altColor !== -1) {gr.DrawRect(x, this.h / 2, barW, - z / 2, 1, altColor);}
 							} else {
-								gr.DrawRect(x, this.h / 2, barW, - z, 1, color);
+								if (color !== -1) {gr.DrawRect(x, this.h / 2, barW, - z, 1, color);}
 							}
 						}
 					} else if (this.preset.waveMode === 'points') {
@@ -681,8 +727,8 @@ function _seekbar({
 						const y = scaledSize > 0 
 							? Math.max(scaledSize, 1) 
 							: Math.min(scaledSize, -1);
-						const color = bPrePaint && bIsfuture ? this.ui.colors.mainFuture : this.ui.colors.main;
-						const altColor = bPrePaint && bIsfuture ? this.ui.colors.altFuture : this.ui.colors.alt;
+						const color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
+						const altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 						const rand = this.offset[n];
 						const step = Math.max(this.h / 80, 5) + (rand || 1) // Point density
@@ -692,12 +738,12 @@ function _seekbar({
 						let yCalc = this.h / 2;
 						let bottom = this.h / 2 - y / 2;
 						while (sign * (yCalc - bottom) > 0) {
-							gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor);
+							if (altColor !== -1) {gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor);}
 							yCalc += (- sign) * step;
 						}
 						bottom += - y / 2;
 						while (sign * (yCalc - bottom) > 0) {
-							gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, color);
+							if (color !== -1) {gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, color);}
 							yCalc += (- sign) * step;
 						}
 						if (bVisualizer) {
@@ -705,12 +751,12 @@ function _seekbar({
 							let yCalc = this.h / 2;
 							let bottom = this.h / 2 + y / 2;
 							while (sign * (yCalc - bottom) > 0) {
-								gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor);
+								if (altColor !== -1) {gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor);}
 								yCalc += (- sign) * step;
 							}
 							bottom += + y / 2;
 							while (sign * (yCalc - bottom) > 0) {
-								gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, color);
+								if (color !== -1) {gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, color);}
 								yCalc += (- sign) * step;
 							}
 						}
@@ -722,17 +768,19 @@ function _seekbar({
 			}
 			gr.SetSmoothingMode(0);
 			// Current position
-			if (this.preset.bPaintCurrent || this.mouseDown) {
+			if (colors.currPos !== -1 && (this.preset.bPaintCurrent || this.mouseDown)) {
 				const minBarW = Math.round(Math.max(barW, _scale(1)));
 				if (this.analysis.binaryMode === 'ffprobe') {
-					gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, this.ui.colors.currPos);
+					gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, colors.currPos);
 				} else if (this.preset.waveMode === 'waveform' || this.preset.waveMode === 'points') {
-					gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, this.ui.colors.currPos);
+					gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, colors.currPos);
 				}
 			}
 		} else if (fb.IsPlaying) {
 			const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-			const textColor = invert(this.ui.colors.bg, true);
+			const textColor = colors.bg !== -1 
+				? invert(colors.bg, true)
+				: callbacks.backgroundColor ? invert(callbacks.backgroundColor()[0], true) : 0xFFFFFFFF;
 			if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
 				gr.GdiDrawText('Not compatible file format', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else if (!this.analysis.bAutoAnalysis) {
@@ -755,15 +803,16 @@ function _seekbar({
 		}
 		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 		if (fb.IsPlaying && !fb.IsPaused) {
+			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			if (bVisualizer) {throttlePaint();}
 			else if (bPrePaint && this.preset.bAnimate && frames) {
-				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 				const futureOffset = this.preset.futureSecs === Infinity 
-					? this.w - currX - this.marginW + barW/2
+					? this.w - currX - this.marginW + barW
 					: this.preset.futureSecs / this.timeConstant * barW + barW;
 				throttlePaintRect(currX - barW, 0, futureOffset, this.h);
 			} else if (this.preset.bPaintCurrent && frames) {
-				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2)));
+				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 				throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
 			}
 			if (this.ui.bVariableRefreshRate) {
@@ -957,4 +1006,9 @@ function _seekbar({
 		}
 		return data;
 	};
+	
+	this.applyAlpaha = (color, percent) => {
+		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
+	}
+	const hexTransparencies = {100: 'FF',99: 'FC',98: 'FA',97: 'F7',96: 'F5',95: 'F2',94: 'F0',93: 'ED',92: 'EB',91: 'E8',90: 'E6',89: 'E3',88: 'E0',87: 'DE',86: 'DB',85: 'D9',84: 'D6',83: 'D4',82: 'D1',81: 'CF',80: 'CC',79: 'C9',78: 'C7',77: 'C4',76: 'C2',75: 'BF',74: 'BD',73: 'BA',72: 'B8',71: 'B5',70: 'B3',69: 'B0',68: 'AD',67: 'AB',66: 'A8',65: 'A6',64: 'A3',63: 'A1',62: '9E',61: '9C',60: '99',59: '96',58: '94',57: '91',56: '8F',55: '8C',54: '8A',53: '87',52: '85',51: '82',50: '80',49: '7D',48: '7A',47: '78',46: '75',45: '73',44: '70',43: '6E',42: '6B',41: '69',40: '66',39: '63',38: '61',37: '5E',36: '5C',35: '59',34: '57',33: '54',32: '52',31: '4F',30: '4D',29: '4A',28: '47',27: '45',26: '42',25: '40',24: '3D',23: '3B',22: '38',21: '36',20: '33',19: '30',18: '2E',17: '2B',16: '29',15: '26',14: '24',13: '21',12: '1F',11: '1C',10: '1A',9: '17',8: '14',7: '12',6: '0F',5: '0D',4: '0A',3: '08',2: '05',1: '03',0: '00'};
 }
