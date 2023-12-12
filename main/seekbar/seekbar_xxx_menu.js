@@ -1,6 +1,7 @@
 ﻿'use strict';
-//11/12/23
+//12/12/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
+include('..\\window\\window_xxx_background_menu.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma-ultra-light.min'); // Relative to helpers folder
 
@@ -212,16 +213,21 @@ function createSeekbarMenu(bClear = true) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
-		const subMenu = menu.newMenu('Color presets...');
+		const subMenu = menu.newMenu('Background...');
+	}
+	{
+		const subMenu = menu.newMenu('Colors...');
 		{
 			const subMenuTwo = menu.newMenu('Background...', subMenu);
-			menu.newEntry({menuName: subMenuTwo, entryText: 'Set panel background:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Set waveform backgr.:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			[
 				{name: 'White',		bPrepaint: false,	colors: {bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF}},
 				{name: 'Black',		bPrepaint: false,	colors: {bg: 0xFF000000, bgFuture: 0xFF1B1B1B}},
-				{name: 'Sienna',		bPrepaint: false,	colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
+				{name: 'Sienna',	bPrepaint: false,	colors: {bg: 0xFF450920, bgFuture: 0xFF74121D}},
 				{name: 'Blue',		bPrepaint: false,	colors: {bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB}},
+				{name: 'sep'},
+				{name: 'None',		bPrepaint: false,	colors: {bg: -1, bgFuture: -1}},
 			].forEach((o) => {
 				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
@@ -237,17 +243,19 @@ function createSeekbarMenu(bClear = true) {
 			{
 				const subMenuCustom = menu.newMenu('Custom...', subMenuTwo);
 				[
-					{name: 'Full panel',		bPrepaint: false,	key: 'bg'},
-					{name: 'After current pos.',bPrepaint: true,	key: 'bgFuture'},
+					{name: 'Ctrl + Click to set none:'},
+					{name: 'sep'},
+					{name: 'Full panel',		bPartial: false,	key: 'bg'},
+					{name: 'After current pos.',bPartial: true,	key: 'bgFuture'},
 				].forEach((o) => {
 					if (o.name === 'sep' || !o.hasOwnProperty('key')) {
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED});
 					} else {
-						const bEnabled = !o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint;
+						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name + '\t' + _b(getColorName(this.ui.colors[o.key])), func: () => {
-								this.updateConfig({ui: {colors: {
-									[o.key]: utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
-								}}});
+							this.updateConfig({ui: {colors: {
+								[o.key]: utils.IsKeyPressed(VK_CONTROL) ? -1 : utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
+							}}});
 							this.saveProperties();
 						}, flags: bEnabled ? MF_STRING : MF_GRAYED});
 					}
@@ -259,11 +267,13 @@ function createSeekbarMenu(bClear = true) {
 			menu.newEntry({menuName: subMenuTwo, entryText: 'Set waveform colors:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			[
-				{name: 'Green', colors: {main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF}},
-				{name: 'Lavender', colors: {main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC}},
-				{name: 'Forest', colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
-				{name: 'Sienna', colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
-				{name: 'Blue', colors: {main: 0xFF003559, alt: 0xFF006DAA,mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
+				{name: 'Green',		colors: {main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF}},
+				{name: 'Lavender',	colors: {main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC}},
+				{name: 'Forest',	colors: {main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38}},
+				{name: 'Sienna',	colors: {main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920}},
+				{name: 'Blue',		colors: {main: 0xFF003559, alt: 0xFF006DAA, mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2}},
+				{name: 'sep'},
+				{name: 'None',		colors: {main: -1, alt: -1, mainFuture: -1, altFuture: -1}},
 			].forEach((o) => {
 				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
@@ -279,31 +289,98 @@ function createSeekbarMenu(bClear = true) {
 			{
 				const subMenuCustom = menu.newMenu('Custom...', subMenuTwo);
 				[
+					{name: 'Ctrl + Click to set none:'},
+					{name: 'sep'},
 					{name: 'Exterior',					bPrepaint: false,	key: 'main'},
 					{name: 'Interior',					bPrepaint: false,	key: 'alt'},
 					{name: 'Exterior (after current)',	bPrepaint: true,	key: 'mainFuture'},
-					{name: 'Interior (after current)',	bPrepaint: true,	key: 'altFuture',},
+					{name: 'Interior (after current)',	bPrepaint: true,	key: 'altFuture'},
 				].forEach((o) => {
 					if (o.name === 'sep' || !o.hasOwnProperty('key')) {
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED});
 					} else {
-						const bEnabled = !o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint;
+						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name + '\t' + _b(getColorName(this.ui.colors[o.key])), func: () => {
-								this.updateConfig({ui: {colors: {
-									[o.key]: utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
-								}}});
+							this.updateConfig({ui: {colors: {
+								[o.key]: utils.IsKeyPressed(VK_CONTROL) ? -1 : utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
+							}}});
 							this.saveProperties();
 						}, flags: bEnabled ? MF_STRING : MF_GRAYED});
 					}
 				});
 			}
 		}
+		{
+			const subMenuTwo = menu.newMenu('Current position...', subMenu);
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Set indicator colors:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			[
+				{name: 'Green',		colors: {currPos: 0xFF90EE90}},
+				{name: 'Pink',		colors: {currPos: 0xFFFFAFCC}},
+				{name: 'Forest',	colors: {currPos: 0xFF606C38}},
+				{name: 'Purple',	colors: {currPos: 0xFF450920}},
+				{name: 'Sienna',	colors: {currPos: 0xFFBF0603}},
+				{name: 'Dark Blue',	colors: {currPos: 0xFF003559}},
+				{name: 'Blue',		colors: {currPos: 0xFFB9D6F2}},
+				{name: 'White',		colors: {currPos: 0xFFFFFFFF}},
+				{name: 'Black',		colors: {currPos: 0x00000000}},
+				{name: 'sep'},
+				{name: 'None',		colors: {currPos: -1}},
+			].forEach((o) => {
+				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
+				} else {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
+						this.updateConfig({ui: {colors: o.colors}});
+						this.saveProperties();
+					}});
+					menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
+				}
+			});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Custom\t' + _b(getColorName(this.ui.colors.currPos)), func: () => {
+				this.updateConfig({ui: {colors: {
+					currPos: utils.ColourPicker(window.ID, this.ui.colors.currPos), 
+				}}});
+				this.saveProperties();
+			}});
+		}
+		menu.newEntry({menuName: subMenu, entryText: 'sep'});
+		{
+			const subMenuTwo = menu.newMenu('Transparency...', subMenu);
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Ctrl + Click to reset:', flags: MF_GRAYED});
+			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
+			[
+				{name: 'Wav, exterior',					bPrepaint: false,	key: 'main'},
+				{name: 'Wav. Interior',					bPrepaint: false,	key: 'alt'},
+				{name: 'Wav. Ext. (after current)',		bPrepaint: true,	key: 'mainFuture'},
+				{name: 'Wav. Int. (after current)',		bPrepaint: true,	key: 'altFuture'},
+				{name: 'Bg. full panel',				bPrepaint: false,	key: 'bg'},
+				{name: 'Bg. (after current).',			bPartial: true,		key: 'bgFuture'},
+			].forEach((o) => {
+				if (o.name === 'sep' || !o.hasOwnProperty('key')) {
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
+				} else {
+					const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
+					menu.newEntry({menuName: subMenuTwo, entryText: o.name + '\t' + _b(this.ui.transparency[o.key]), func: () => {
+						const input = utils.IsKeyPressed(VK_CONTROL)
+							? 100
+							: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 200, [(n) => n >= 0 && n <= 100]);
+						if (input === null) {return;}
+						this.updateConfig({ui: {transparency: {
+							[o.key]: input, 
+						}}});
+						this.saveProperties();
+					}, flags: bEnabled ? MF_STRING : MF_GRAYED});
+				}
+			});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
 		const subMenu = menu.newMenu('Other settings...');
 		menu.newEntry({menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
-			const input = Input.number('int', this.ui.refreshRate, 'Enter integer number:\n(ms)', window.Name, 200, [(n) => n >= 50]);
+			const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', window.Name, 200, [(n) => n >= 50]);
 			if (input === null) {return;}
 			this.updateConfig({ui: {refreshRate: input}});
 			this.saveProperties();
