@@ -543,7 +543,7 @@ function _seekbar({
 		const frames = this.frames;
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
 		if (this.analysis.binaryMode === 'visualizer' || !frames) {throttlePaint();}
-		else if (bPrePaint || this.preset.bPaintCurrent) {
+		else if (bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
@@ -806,7 +806,7 @@ function _seekbar({
 		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 		if (fb.IsPlaying && !fb.IsPaused) {
 			if (bVisualizer) {throttlePaint();}
-			else if ((bPrePaint || this.preset.bPaintCurrent) && frames) {
+			else if ((bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') && frames) {
 				const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 				const prePaintW = Math.min(
