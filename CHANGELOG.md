@@ -32,6 +32,7 @@
 - UI: performance improvements when some elements are disabled due to color set to none or transparency set to 0.
 ### Removed
 ### Fixed
+- UI: 'Enable animation' menu entry is now grayed out on visualizer mode, since it's always active by design. It will also show a check in such case no matter the settings saved (at other modes).
 
 ## [1.4.0] - 2023-12-11
 ### Added

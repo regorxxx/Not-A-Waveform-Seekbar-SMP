@@ -179,7 +179,7 @@ function createSeekbarMenu(bClear = true) {
 	{
 		const subMenu = menu.newMenu('Animation', void(0), (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[
-			{name: 'Enable animation', key: 'bAnimate'},
+			{name: 'Enable animation', key: 'bAnimate', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING},
 			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
 				flags: (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
 		].forEach((o) => {
@@ -187,7 +187,7 @@ function createSeekbarMenu(bClear = true) {
 				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key] || o.key === 'bAnimate' && this.analysis.binaryMode === 'visualizer';});
 		});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		const subMenuTwo = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), subMenu, () => (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
