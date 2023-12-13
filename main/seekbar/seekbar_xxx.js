@@ -1,5 +1,5 @@
 'use strict';
-//12/12/23
+//13/12/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -541,19 +541,21 @@ function _seekbar({
 		} else {this.cache = this.current;}
 		// Repaint by zone when possible
 		const frames = this.frames;
-		const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
+		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
 		if (this.analysis.binaryMode === 'visualizer' || !frames) {throttlePaint();}
-		else if (this.preset.paintMode === 'partial' && this.preset.bPrePaint) {
+		else if (bPrePaint || this.preset.bPaintCurrent) {
+			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-			const futureOffset = this.preset.futureSecs === Infinity 
-				? this.w - currX - this.marginW + barW
-				: this.preset.futureSecs / this.timeConstant * barW + barW;
-			throttlePaintRect(currX - barW, 0, futureOffset, this.h);
-		} else if (this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
-			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
-			const barW = Math.round(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-			throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
+			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
+			const prePaintW = Math.min(
+				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
+					? this.preset.futureSecs === Infinity && this.preset.bAnimate
+						? Infinity
+						: this.preset.futureSecs / this.timeConstant * barW + barW
+					: 2.5 * barW,
+				this.w - currX + barW
+			);
+			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
 		}
 	};
 	
@@ -803,17 +805,19 @@ function _seekbar({
 		}
 		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 		if (fb.IsPlaying && !fb.IsPaused) {
-			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			if (bVisualizer) {throttlePaint();}
-			else if (bPrePaint && this.preset.bAnimate && frames) {
+			else if ((bPrePaint || this.preset.bPaintCurrent) && frames) {
+				const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-				const futureOffset = this.preset.futureSecs === Infinity 
-					? this.w - currX - this.marginW + barW
-					: this.preset.futureSecs / this.timeConstant * barW + barW;
-				throttlePaintRect(currX - barW, 0, futureOffset, this.h);
-			} else if (this.preset.bPaintCurrent && frames) {
-				const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-				throttlePaintRect(currX - barW, 0, 2.5 * barW, this.h);
+				const prePaintW = Math.min(
+					bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
+						? this.preset.futureSecs === Infinity && this.preset.bAnimate
+							? Infinity
+							: this.preset.futureSecs / this.timeConstant * barW + barW
+						: 2.5 * barW,
+					this.w - currX + barW
+				);
+				throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
 			}
 			if (this.ui.bVariableRefreshRate) {
 				if (profilerPaint.Time > this.ui.refreshRate) {this.updateConfig({ui: {refreshRate: this.ui.refreshRate + 50}});}
