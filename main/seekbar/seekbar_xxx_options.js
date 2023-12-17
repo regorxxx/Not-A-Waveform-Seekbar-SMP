@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/05/23
+//14/12/23
 
 include('..\\window\\window_xxx.js');
 
@@ -18,7 +18,7 @@ const options = new _window({width: window.Width, height: window.Height, tabWidt
 // Set save and load methods to call them easily later (they would be used too if setting autosave to true)
 options.save = () => {
 	const seekbarOptions = {};
-	for (let key in options.properties) {
+	for (const key in options.properties) {
 		if (propertiesOptions.hasOwnProperty(key)) {
 			propertiesOptions[key][1] = options.properties[key][1];
 		} else {
@@ -31,9 +31,9 @@ options.save = () => {
 }
 options.load = () => {
 	const properties = getPropertiesPairs(seekbarProperties, '', 0);
-	for (let key in properties) {
-		options.properties[key] = properties[key][2].func === isJSON 
-			? JSON.parse(properties[key][1], (key, value) => {return value === null ? Infinity : value;})
+	for (const key in properties) {
+		options.properties[key] = properties[key][2].func === isJSON
+			? JSON.parse(properties[key][1], (key, value) => value === null ? Infinity : value)
 			: properties[key][1];
 	}
 }

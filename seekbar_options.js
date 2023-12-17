@@ -1,5 +1,5 @@
 'use strict';
-//18/02/23
+//14/12/23
 include('seekbar.js');
 include('main\\seekbar\\seekbar_xxx_options.js');
 
@@ -9,7 +9,7 @@ removeEventListeners([
 	'on_key_down', 'on_mouse_lbtn_up', 'on_mouse_lbtn_down', 'on_mouse_lbtn_dblclk',
 	'on_mouse_move', 'on_mouse_leave', 'on_mouse_rbtn_up', 'on_paint', 'on_size'
  ]);
- 
+
 addEventListener('on_key_down', (k) => {
 	if (options.properties.bOptions[1]) {options.key_down(k);}
 });

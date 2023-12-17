@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/12/23
+//14/12/23
 
 // Helpers for input popup and checking proper values are provided
 // Provides extensive error popups on output to give feedback to the user
@@ -67,12 +67,12 @@ const Input = Object.seal(Object.freeze({
 			}
 			if (checks && checks.length) {
 				if (type.startsWith('array')) {
-					if (!newVal.some((row) => {return !checks.some((check) => {return check.call(this, row);});})) {
+					if (!newVal.some((row) => !checks.some((check) => check.call(this, row)))) {
 						throw new Error('Invalid checks');
 					}
-				} else if (type.startsWith('object')) { 
-					for (let key in newVal) {
-						if (!checks.some((check) => {return check.call(this, newVal[key]);})) {
+				} else if (type.startsWith('object')) {
+					for (const key in newVal) {
+						if (!checks.some((check) => check.call(this, newVal[key]))) {
 							throw new Error('Invalid checks');
 						}
 					}
@@ -124,7 +124,7 @@ const Input = Object.seal(Object.freeze({
 					break;
 				}
 			}
-			if (checks && checks.length && !checks.some((check) => {return check.call(this, newVal);})) {
+			if (checks && checks.length && !checks.some((check) => check.call(this, newVal))) {
 				throw new Error('Invalid checks');
 			}
 		}
@@ -167,7 +167,7 @@ const Input = Object.seal(Object.freeze({
 			if (checks) {
 				if (!Array.isArray(checks)) {
 					throw new Error('Invalid checks argument');
-				} else if (checks.length && !checks.some((check) => {return check.call(this, newVal);})) {
+				} else if (checks.length && !checks.some((check) => check.call(this, newVal))) {
 					throw new Error('Invalid checks');
 				}
 			}
@@ -200,7 +200,7 @@ const Input = Object.seal(Object.freeze({
 			try {fb.GetQueryItems(new FbMetadbHandleList(), newVal);} // Sanity check
 			catch (e) {throw new Error('Invalid query');}
 			if (bFilterEmpty && fb.GetQueryItems(fb.GetLibraryItems(), newVal).Count === 0) {throw new Error('Zero items query');}
-			if (checks && checks.length  && !checks.some((check) => {return check.call(this, newVal);})) {
+			if (checks && checks.length  && !checks.some((check) => check.call(this, newVal))) {
 				throw new Error('Invalid checks');
 			}
 		}

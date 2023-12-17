@@ -1,10 +1,10 @@
 ﻿'use strict';
-//08/11/23
+//14/12/23
 
 include('helpers_xxx_file.js');
 include('helpers_xxx_console.js');
 
-/* 
+/*
 	Panels
 */
 
@@ -43,7 +43,7 @@ function memoryUsed(bConsole = false) { // In Mbs
 }
 
 function isPortable(propertyText, bWarn = true) {
-	let bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
+	const bPort = _isFile(fb.FoobarPath + 'portable_mode_enabled');
 	if (bPort && bWarn) {
 		if (isArray(propertyText)) {propertyText = propertyText.join('\n');}
 		fb.ShowPopupMessage('This is a portable installation. It\'s recommended to use relative paths on the properties panel for these variables:\n' + propertyText, window.Name);

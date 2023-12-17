@@ -1,8 +1,8 @@
 ﻿'use strict';
-//05/04/23
+//14/12/23
 
-/* 
-	Global Variables 
+/*
+	Global Variables
 */
 
 const fso = new ActiveXObject('Scripting.FileSystemObject');
@@ -16,7 +16,7 @@ function onScriptUnloadTT() {
 }
 if (on_script_unload) {
 	const oldFunc = on_script_unload;
-	on_script_unload = function() {
+	on_script_unload = () => {
 		oldFunc();
 		onScriptUnloadTT();
 	}
@@ -38,7 +38,7 @@ function _scale(size) {
 	return scaleDPI[size];
 }
 
-/* 
+/*
 	Funcs
 */
 const debounce = (fn, delay, immediate = false, parent = this) => {
@@ -53,7 +53,7 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 	};
 };
 
-/* 
+/*
 	Tooltip
 */
 
@@ -104,7 +104,7 @@ function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 1200) {
 
 }
 
-/* 
+/*
 	Colours
 */
 
@@ -159,7 +159,7 @@ function darkenColor(color, percent) {
 
 function tintColor(color, percent) {
 	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
-	return isDark(r, g, b) 
+	return isDark(r, g, b)
 		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
 		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));;
 }
@@ -182,12 +182,12 @@ function isDark(r, g, b) {
 	return (getBrightness(r,g,b) < 186);
 }
 
-/* 
+/*
 	Fonts
 */
 
 function _gdiFont(name, size, style) {
-	let id = name.toLowerCase() + '_' + size + '_' + (style || 0);
+	const id = name.toLowerCase() + '_' + size + '_' + (style || 0);
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}
@@ -199,7 +199,7 @@ function _textWidth(value, font) {
 	return _gr.CalcTextWidth(value, font);
 }
 
-/* 
+/*
 	Objects
 */
 function clone(obj) {
@@ -208,9 +208,9 @@ function clone(obj) {
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();
-		for (let value of obj) {
+		for (const value of obj) {
 			// include prototype properties
-			let type = {}.toString.call(value).slice(8, -1);
+			const type = {}.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result.add(clone(value));
 			} else if (type === 'Date') {
@@ -226,7 +226,7 @@ function clone(obj) {
 		result = new Map();
 		for (let [key, value] of obj) {
 			// include prototype properties
-			let type = {}.toString.call(value).slice(8, -1);
+			const type = {}.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result.set(key, clone(value));
 			} else if (type === 'Date') {
@@ -240,10 +240,10 @@ function clone(obj) {
 		return result;
 	} else {
 		result = Array.isArray(obj) ? [] : {};
-		for (let key in obj) {
+		for (const key in obj) {
 			// include prototype properties
-			let value = obj[key];
-			let type = {}.toString.call(value).slice(8, -1);
+			const value = obj[key];
+			const type = {}.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result[key] = clone(value);
 			} else if (type === 'Date') {
@@ -271,7 +271,7 @@ function setNested(obj, value, ...args) => {
 	return obj;
 }
 
-/* 
+/*
 	Num
 */
 

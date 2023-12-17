@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/12/23
+//14/12/23
 include('..\\..\\helpers\\helpers_xxx_input.js')
 include('..\\window\\window_xxx_background_menu.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
@@ -24,7 +24,7 @@ function createSeekbarMenu(bClear = true) {
 			seekbarProperties.bEnabled[1] = this.active;
 			this.saveProperties();
 		}});
-		menu.newCheckMenu(void(0), 'Enable seekbar', void(0), () => {return this.active;});
+		menu.newCheckMenu(void(0), 'Enable seekbar', void(0), () => this.active);
 		menu.newEntry({entryText: 'sep'});
 	}
 	// Menus
@@ -42,7 +42,7 @@ function createSeekbarMenu(bClear = true) {
 				this.saveProperties();
 			}, flags: bFound ? MF_STRING : MF_GRAYED});
 		});
-		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.analysis.binaryMode);});
+		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => options.findIndex(o => o.key === this.analysis.binaryMode));
 	}
 	{
 		const subMenu = menu.newMenu('Analysis');
@@ -58,7 +58,7 @@ function createSeekbarMenu(bClear = true) {
 			}, flags: this.analysis.binaryMode === 'ffprobe' ? MF_STRING : MF_GRAYED});
 		});
 		if (this.analysis.binaryMode === 'ffprobe') {
-			menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.analysisMode);});
+			menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => options.findIndex(o => o.key === this.preset.analysisMode));
 		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{
@@ -73,7 +73,7 @@ function createSeekbarMenu(bClear = true) {
 					this.updateConfig({analysis: {[o.key]: !this.analysis[o.key]}});
 					this.saveProperties();
 				}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED});
-				menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.analysis[o.key];});
+				menu.newCheckMenu(subMenu, o.name, void(0), () => this.analysis[o.key]);
 			});
 		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
@@ -102,7 +102,7 @@ function createSeekbarMenu(bClear = true) {
 				this.saveProperties();
 			}});
 		});
-		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.waveMode);});
+		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => options.findIndex(o => o.key === this.preset.waveMode));
 		if (this.preset.waveMode === 'halfbars') {
 			menu.newEntry({menuName: subMenu, entryText: 'sep'});
 			menu.newEntry({menuName: subMenu, entryText: 'Show negative values (inverted)', func: () => {
@@ -124,17 +124,17 @@ function createSeekbarMenu(bClear = true) {
 				this.saveProperties();
 			}});
 		});
-		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => {return options.findIndex(o => o.key === this.preset.paintMode);});
+		menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => options.findIndex(o => o.key === this.preset.paintMode));
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		[
-			{name: 'Paint after current' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPrePaint', 
+			{name: 'Paint after current' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPrePaint',
 				flags: this.preset.paintMode === 'full' ? MF_GRAYED : MF_STRING}
 		].forEach((o) => {
 			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
 				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => this.preset[o.key]);
 		});
 		const subMenuTwo = menu.newMenu('Seconds...', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
 		[Infinity, 2, 5, 10]
@@ -144,7 +144,7 @@ function createSeekbarMenu(bClear = true) {
 					this.updateConfig({preset: {futureSecs: s}});
 					this.saveProperties();
 				}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPrePaint) ? MF_GRAYED : MF_STRING});
-				menu.newCheckMenu(subMenuTwo, entryText, void(0), () => {return (this.preset.futureSecs === s);});
+				menu.newCheckMenu(subMenuTwo, entryText, void(0), () => (this.preset.futureSecs === s));
 			});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		[
@@ -154,7 +154,7 @@ function createSeekbarMenu(bClear = true) {
 				this.updateConfig({preset: {[o.key]: !this.preset[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key];});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => this.preset[o.key]);
 		});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		[
@@ -164,7 +164,7 @@ function createSeekbarMenu(bClear = true) {
 				this.updateConfig({ui: {[o.key]: !this.ui[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.ui[o.key];});
+			menu.newCheckMenu(subMenu, o.name, void(0), () => this.ui[o.key]);
 		});
 		const subMenuThree = menu.newMenu('Width...', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
 		[20, 10, 8, 6, 4, 2, 1]
@@ -173,14 +173,14 @@ function createSeekbarMenu(bClear = true) {
 					this.updateConfig({ui: {normalizeWidth: _scale(s)}});
 					this.saveProperties();
 				}, flags: (this.analysis.binaryMode === 'visualizer' || !this.ui.bNormalizeWidth) ? MF_GRAYED : MF_STRING});
-				menu.newCheckMenu(subMenuThree, s, void(0), () => {return (this.ui.normalizeWidth === _scale(s));});
+				menu.newCheckMenu(subMenuThree, s, void(0), () => (this.ui.normalizeWidth === _scale(s)));
 			});
 	}
 	{
 		const subMenu = menu.newMenu('Animation', void(0), (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[
 			{name: 'Enable animation', key: 'bAnimate', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING},
-			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM', 
+			{name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM',
 				flags: (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED},
 		].forEach((o) => {
 			menu.newEntry({menuName: subMenu, entryText: o.name, func: () => {
@@ -198,7 +198,7 @@ function createSeekbarMenu(bClear = true) {
 					this.updateConfig({ui: {refreshRate: s}});
 					this.saveProperties();
 				}});
-				menu.newCheckMenu(subMenuTwo, s, void(0), () => {return (this.ui.refreshRate === s);});
+				menu.newCheckMenu(subMenuTwo, s, void(0), () => (this.ui.refreshRate === s));
 			});
 		menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 		[
@@ -208,7 +208,7 @@ function createSeekbarMenu(bClear = true) {
 				this.updateConfig({ui: {[o.key]: !this.ui[o.key]}});
 				this.saveProperties();
 			}, flags: o.flags || MF_STRING});
-			menu.newCheckMenu(subMenuTwo, o.name, void(0), () => {return this.ui[o.key];});
+			menu.newCheckMenu(subMenuTwo, o.name, void(0), () => this.ui[o.key]);
 		});
 	}
 	menu.newEntry({entryText: 'sep'});
@@ -254,7 +254,7 @@ function createSeekbarMenu(bClear = true) {
 						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name + '\t' + _b(getColorName(this.ui.colors[o.key])), func: () => {
 							this.updateConfig({ui: {colors: {
-								[o.key]: utils.IsKeyPressed(VK_CONTROL) ? -1 : utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
+								[o.key]: utils.IsKeyPressed(VK_CONTROL) ? -1 : utils.ColourPicker(window.ID, this.ui.colors[o.key]),
 							}}});
 							this.saveProperties();
 						}, flags: bEnabled ? MF_STRING : MF_GRAYED});
@@ -302,7 +302,7 @@ function createSeekbarMenu(bClear = true) {
 						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name + '\t' + _b(getColorName(this.ui.colors[o.key])), func: () => {
 							this.updateConfig({ui: {colors: {
-								[o.key]: utils.IsKeyPressed(VK_CONTROL) ? -1 : utils.ColourPicker(window.ID, this.ui.colors[o.key]), 
+								[o.key]: utils.IsKeyPressed(VK_CONTROL) ? -1 : utils.ColourPicker(window.ID, this.ui.colors[o.key]),
 							}}});
 							this.saveProperties();
 						}, flags: bEnabled ? MF_STRING : MF_GRAYED});
@@ -340,7 +340,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'Custom\t' + _b(getColorName(this.ui.colors.currPos)), func: () => {
 				this.updateConfig({ui: {colors: {
-					currPos: utils.ColourPicker(window.ID, this.ui.colors.currPos), 
+					currPos: utils.ColourPicker(window.ID, this.ui.colors.currPos),
 				}}});
 				this.saveProperties();
 			}});
@@ -368,7 +368,7 @@ function createSeekbarMenu(bClear = true) {
 							: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 200, [(n) => n >= 0 && n <= 100]);
 						if (input === null) {return;}
 						this.updateConfig({ui: {transparency: {
-							[o.key]: input, 
+							[o.key]: input,
 						}}});
 						this.saveProperties();
 					}, flags: bEnabled ? MF_STRING : MF_GRAYED});

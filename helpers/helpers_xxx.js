@@ -1,10 +1,10 @@
 ﻿'use strict';
-//13/12/23
+//14/12/23
 
 // Folders
 const folders = {};
 folders.JsPackageDirs = (utils.GetPackageInfo(window.ScriptInfo.PackageId || -1) || {Directories: null}).Directories;
-if (folders.JsPackageDirs) {for (let key in folders.JsPackageDirs) {folders.JsPackageDirs[key] += '\\';}}
+if (folders.JsPackageDirs) {for (const key in folders.JsPackageDirs) {folders.JsPackageDirs[key] += '\\';}}
 folders.xxxName = 'scripts\\SMP\\xxx-scripts\\'; // Edit here to change install path (this is relative to the profile path)
 folders.dataName = 'js_data\\';
 folders.xxx = folders.JsPackageDirs ? folders.JsPackageDirs.Root : fb.ProfilePath + folders.xxxName;
@@ -27,8 +27,8 @@ include('helpers_xxx_console.js');
 include('helpers_xxx_foobar.js');
 include('helpers_xxx_so.js');
 
-/* 
-	Global Variables 
+/*
+	Global Variables
 */
 const isFoobarV2 = isCompatible('2.0', 'fb');
 const isEnhPlayCount = utils.CheckComponent('foo_enhanced_playcount');
@@ -45,12 +45,12 @@ const iDelayPlaylists = 120; // ms per step for playlist processing: playlist ma
 console.File = fb.ProfilePath + 'console.log'; // Edit here to change logging file. Replace with '' or null to disable logging
 console.MaxSize = 1000000; // File size, in bytes. Setting to zero or null disables logging too
 
-/* 
+/*
 	SO features
 */
 const soFeat = getSoFeatures();
 
-/* 
+/*
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
@@ -74,9 +74,9 @@ Object.keys(globFonts).forEach((key) => {
 	}
 });
 
-/* 
+/*
 	SO features
 */
-if (Object.values(soFeat).slice(0, -1).some((val) => {return !val;})) { // Retry once if something fails
+if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if something fails
 	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then((resolve) => {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);});
 } else {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);}

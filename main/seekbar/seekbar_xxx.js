@@ -1,5 +1,5 @@
 'use strict';
-//13/12/23
+//14/12/23
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
 
@@ -29,18 +29,18 @@ function _seekbar({
 				bg: 0xFF000000, // Black
 				main: 0xFF90EE90, // LimeGreen
 				alt: 0xFF7CFC00, // LawnGreen
-				bgFuture: 0xFF1B1B1B, 
-				mainFuture: 0xFFB7FFA2, 
-				altFuture: 0xFFF9FF99, 
+				bgFuture: 0xFF1B1B1B,
+				mainFuture: 0xFFB7FFA2,
+				altFuture: 0xFFF9FF99,
 				currPos: 0xFFFFFFFF // White
 			},
 			transparency: {
 				bg: 100,
 				main: 100,
 				alt: 100,
-				bgFuture: 100, 
-				mainFuture: 100, 
-				altFuture: 100, 
+				bgFuture: 100,
+				mainFuture: 100,
+				altFuture: 100,
 				currPos: 100
 			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
@@ -86,18 +86,18 @@ function _seekbar({
 				bg: 0xFF000000, // Black
 				main: 0xFF90EE90, // LimeGreen
 				alt: 0xFF7CFC00, // LawnGreen
-				bgFuture: 0xFF1B1B1B, 
-				mainFuture: 0xFFB7FFA2, 
-				altFuture: 0xFFF9FF99, 
+				bgFuture: 0xFF1B1B1B,
+				mainFuture: 0xFFB7FFA2,
+				altFuture: 0xFFF9FF99,
 				currPos: 0xFFFFFFFF // White
 			},
 			transparency: {
 				bg: 100,
 				main: 100,
 				alt: 100,
-				bgFuture: 100, 
-				mainFuture: 100, 
-				altFuture: 100, 
+				bgFuture: 100,
+				mainFuture: 100,
+				altFuture: 100,
 				currPos: 100
 			},
 			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
@@ -120,11 +120,11 @@ function _seekbar({
 		};
 		const options = [{from: defBinaries, to: binaries}, {from: defPreset, to: preset}, {from: defUi, to: ui}, {from: defAnalysis, to: analysis}, {from: defCallbacks, to: callbacks}];
 		options.forEach((option) => {
-			for (let key in option.from){
+			for (const key in option.from){
 				const subOption = option.from[key];
 				if (!option.to.hasOwnProperty(key)) {option.to[key] = subOption;}
 				if (typeof subOption === 'object' && !Array.isArray(subOption) &&  subOption !== null && Object.keys(subOption).length) {
-					for (let key2 in subOption){
+					for (const key2 in subOption){
 						if (!option.to[key].hasOwnProperty(key2)) {option.to[key][key2] = subOption[key2];}
 					}
 				}
@@ -180,10 +180,10 @@ function _seekbar({
 	const bFallbackMode = {paint: false, analysis: false}; // For bVisualizerFallbackAnalysis
 	const modes = {rms_level: {key: 'rms', pos: 1}, rms_peak: {key: 'rmsPeak', pos: 2}, peak_level: {key: 'peak', pos: 3}}; // For ffprobe
 	const compatibleFiles = {
-		ffprobe: new RegExp('\\.(' + 
+		ffprobe: new RegExp('\\.(' +
 			['mp3', 'flac', 'wav' , 'ogg', 'opus', 'aac', 'ac3', 'aiff', 'ape', 'wv', 'wma', 'spx', 'spc', 'snd', 'ogx', 'mp4', 'au', 'aac', '2sf', 'dff', 'shn', 'tak', 'tta', 'vgm', 'minincsf', 'la', 'hmi']
 			.join('|') + ')$', 'i'),
-		audiowaveform: new RegExp('\\.(' + 
+		audiowaveform: new RegExp('\\.(' +
 			['mp3', 'flac', 'wav', 'ogg', 'opus']
 		.join('|') + ')$', 'i')
 	}
@@ -203,11 +203,11 @@ function _seekbar({
 		let bRecalculate = false;
 		if (newConfig.preset) {
 			if (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer') {
-				this.offset = []; 
+				this.offset = [];
 				this.step = 0;
 			}
 			if (newConfig.preset.hasOwnProperty('bUseBPM') || newConfig.preset.hasOwnProperty('bAnimate')) {
-				if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps();} 
+				if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps();}
 				else {this.defaultSteps();}
 			}
 		}
@@ -234,12 +234,12 @@ function _seekbar({
 		let notAllowed;
 		config.binaries = {};
 		notAllowed = new Set(['visualizer']);
-		for (let key in this.binaries) {
+		for (const key in this.binaries) {
 			if (!notAllowed.has(key)) {config.binaries[key] = clone(this.binaries[key]);}
 		}
 		config.ui = {};
 		notAllowed = new Set(['gFont']);
-		for (let key in this.ui) {
+		for (const key in this.ui) {
 			if (key === 'pos') {
 				if (bSkipPanelDependent) {continue;}
 				config.ui.pos = {scaleH: this.ui.pos.scaleH, marginW: this.ui.pos.marginW};
@@ -255,7 +255,7 @@ function _seekbar({
 		this.active = bEnable;
 		if (fb.IsPlaying) {
 			if (!wasActive && this.active) {
-				window.Repaint(); 
+				window.Repaint();
 				setTimeout(() => {seekbar.newTrack(fb.GetNowPlaying()); this.updateTime(fb.PlaybackTime);}, 0);
 			} else if (wasActive && !this.active) {
 				this.stop(-1);
@@ -341,7 +341,7 @@ function _seekbar({
 			let lower = 0;
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				// Calculate max values
-				const key = modes[this.preset.analysisMode].key; 
+				const key = modes[this.preset.analysisMode].key;
 				const pos = modes[this.preset.analysisMode].pos;
 				let max = 0;
 				this.current.forEach((frame) => {
@@ -356,8 +356,8 @@ function _seekbar({
 					this.current.forEach((frame, n) => {
 						if (frame.length === 5) {frame.length = 4;}
 						frame.push(
-							isFinite(frame[pos]) 
-								? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max))) 
+							isFinite(frame[pos])
+								? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max)))
 								: 1
 						);
 						if (!isFinite(frame[4])) {frame[4] = 0;}
@@ -376,7 +376,7 @@ function _seekbar({
 					});
 				}
 				// Flat data
-				this.current = this.current.map((x, i) => {return Math.sign((0.5 - i % 2)) * (1 - x[4]);});
+				this.current = this.current.map((x, i) => Math.sign((0.5 - i % 2)) * (1 - x[4]));
 				// Calculate max values
 				this.current.forEach((frame) => {
 					upper = Math.max(upper, frame);
@@ -392,7 +392,7 @@ function _seekbar({
 				});
 				max = Math.max(Math.abs(upper), Math.abs(lower));
 				// Calculate point scale
-				this.current = this.current.map((frame) => {return frame / max;});
+				this.current = this.current.map((frame) => frame / max);
 			}
 			// Adjust num of frames to window size
 			if (bNormalizeWidth) {
@@ -481,30 +481,28 @@ function _seekbar({
 	this.isDataValid = () => {
 		// When iterating too many tracks in a short ammount of time weird things may happen without this check
 		if (!Array.isArray(this.current) || !this.current.length) {return false;}
-		if (this.analysis.binaryMode === 'ffprobe') {
-			return this.current.every((frame) => {
+		return this.analysis.binaryMode === 'ffprobe'
+			? this.current.every((frame) => {
 				const len = frame.hasOwnProperty('length') ? frame.length : null;
 				return (len === 4 || len === 5);
-			});
-		} else {
-			return this.current.every((frame) => {
+			})
+			: this.current.every((frame) => {
 				return (frame >= -128 && frame <= 127);
 			});
-		}
 	};
 	
 	this.verifyData = (handle, file, bIsRetry = false) => {
 		if (!this.isDataValid()) {
 			if (bIsRetry) {
-				console.log('File was not sucessfully analyzed after retrying.');
+				console.log('File was not successfully analyzed after retrying.');
 				file && _deleteFile(file);
 				this.isAllowedFile = false;
 				this.isFallback = this.analysis.bVisualizerFallback;
 				this.isError = true;
-				this.current = []; 
+				this.current = [];
 				this.frames = 0;
 				this.timeConstant = 0;
-			}  else {
+			} else {
 				console.log('Seekbar file not valid. Creating new one' + (file ? ': ' + file : '.'));
 				file && _deleteFile(file);
 				this.newTrack(handle, true);
@@ -518,8 +516,8 @@ function _seekbar({
 		this.isAllowedFile = this.analysis.binaryMode !== 'visualizer' && handle.SubSong === 0 && compatibleFiles[this.analysis.binaryMode].test(handle.Path);
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
 	};
-	
-	this.bpmSteps = (handle = fb.GetNowPlaying()) => { 
+
+	this.bpmSteps = (handle = fb.GetNowPlaying()) => {
 		// Don't allow anything faster than 2 steps or slower than 10 (scaled to 200 ms refresh rate) and consider all tracks have 100 BPM as default
 		if (!handle) {return this.defaultSteps();}
 		const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
@@ -574,7 +572,7 @@ function _seekbar({
 	};
 	
 	this.resetAnimation = () => {
-		this.step = 0; 
+		this.step = 0;
 		this.offset = [];
 		this.defaultSteps();
 	};
@@ -617,7 +615,7 @@ function _seekbar({
 			const timeConstant = this.timeConstant;
 			let current, past = [{x: 0, y: 1}, {x: 0, y: -1}];
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
-			for (let frame of this.current) { // [peak]
+			for (const frame of this.current) { // [peak]
 				current = timeConstant * n;
 				const bIsfuture = current > this.time;
 				const bIsfutureAllowed = (current - this.time) < this.preset.futureSecs;
@@ -646,8 +644,8 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = scaledSize > 0 
-							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
+						const y = scaledSize > 0
+							? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 						const color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
 						const altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
@@ -673,8 +671,8 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						let y = scaledSize > 0 
-							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
+						let y = scaledSize > 0
+							? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 						if (this.preset.bHalfBarsShowNeg) {y = Math.abs(y);}
 						let color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
@@ -696,8 +694,8 @@ function _seekbar({
 						const scaledSize = size / 2 * scale;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 						const rand = Math.sign(scale) * this.offset[n];
-						const y = scaledSize > 0 
-							? Math.min(Math.max(scaledSize + rand, 1), size / 2) 
+						const y = scaledSize > 0
+							? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 							: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 						let color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
 						let altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
@@ -726,8 +724,8 @@ function _seekbar({
 						}
 					} else if (this.preset.waveMode === 'points') {
 						const scaledSize = size / 2 * scale;
-						const y = scaledSize > 0 
-							? Math.max(scaledSize, 1) 
+						const y = scaledSize > 0
+							? Math.max(scaledSize, 1)
 							: Math.min(scaledSize, -1);
 						const color = bPrePaint && bIsfuture ? colors.mainFuture : colors.main;
 						const altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
@@ -780,7 +778,7 @@ function _seekbar({
 			}
 		} else if (fb.IsPlaying) {
 			const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-			const textColor = colors.bg !== -1 
+			const textColor = colors.bg !== -1
 				? invert(colors.bg, true)
 				: callbacks.backgroundColor ? invert(callbacks.backgroundColor()[0], true) : 0xFFFFFFFF;
 			if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
@@ -927,13 +925,13 @@ function _seekbar({
 					const processedData = [];
 					data.frames.forEach((frame) => {
 						// Save values as array to compress file as much as possible, also round decimals...
-						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf' 
+						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf'
 							? round(Number(frame.tags['lavfi.astats.Overall.RMS_level']), 1)
 							: -Infinity;
-						const rmsPeak = frame.tags['lavfi.astats.Overall.RMS_peak'] !== '-inf' 
+						const rmsPeak = frame.tags['lavfi.astats.Overall.RMS_peak'] !== '-inf'
 							? round(Number(frame.tags['lavfi.astats.Overall.RMS_peak']), 1)
 							: -Infinity;
-						const peak = frame.tags['lavfi.astats.Overall.Peak_level'] !== '-inf' 
+						const peak = frame.tags['lavfi.astats.Overall.Peak_level'] !== '-inf'
 							? round(Number(frame.tags['lavfi.astats.Overall.Peak_level']), 1)
 							: -Infinity;
 						const time = round(Number(frame.pkt_pts_time), 2);
@@ -988,7 +986,7 @@ function _seekbar({
 	};
 	
 	this.visualizerData = (handle, preset = 'classic spectrum analyzer', bVariableLen = false) => {
-		const samples = bVariableLen 
+		const samples = bVariableLen
 			? handle.Length * (this.analysis.resolution || 1)
 			: this.w / _scale(5) * (this.analysis.resolution || 1);
 		const data = [];

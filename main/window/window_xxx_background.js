@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/11/23
+//14/12/23
 
 include('window_xxx_helpers.js');
 
@@ -30,7 +30,7 @@ function _background({
 		const handle = (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null) || fb.GetFocusItem(true);
 		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === this.coverModeOptions.path)) {return;}
 		const AlbumArtId = {front: 0, back: 1, disc: 2, icon: 3, artist: 4};
-		const promise = bPath && this.coverModeOptions.path.length 
+		const promise = bPath && this.coverModeOptions.path.length
 			? gdi.LoadImageAsyncV2('', this.coverModeOptions.path)
 			: handle
 				? utils.GetAlbumArtAsyncV2(void(0), handle, AlbumArtId[this.coverMode] || 0, true, false, false)
@@ -163,8 +163,8 @@ function _background({
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
 	};
 	this.resize = ({x = this.x, y = this.y, w = this.w, h = this.h, bRepaint = true} = {}) => {
-		this.x = x; 
-		this.y = y; 
+		this.x = x;
+		this.y = y;
 		this.w = w;
 		this.h = h;
 		if (bRepaint) {this.repaint();}
@@ -206,7 +206,7 @@ function _background({
 			case 'disc':
 			case 'icon':
 			case 'artist':
-			case 'path': 
+			case 'path':
 				if (this.coverImg.art.image) {return this.coverImg.art.image.GetColourScheme(2);}
 			case 'none':
 			default:

@@ -1,5 +1,5 @@
 'use strict';
-//12/12/23
+//14/12/23
 
 include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
@@ -15,12 +15,12 @@ include('main\\window\\window_xxx_background.js');
 if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '1.4.0'});}
 
 let seekbarProperties = {
-	binaries:	['Binaries paths', 
+	binaries:	['Binaries paths',
 		JSON.stringify({
 			ffprobe: folders.xxx + '\\helpers-external\\ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
 			audiowaveform: folders.xxx + '\\helpers-external\\audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
 		}), {func: isJSON}],
-	analysis:	['Analysis config', 
+	analysis:	['Analysis config',
 		JSON.stringify({
 			binaryMode: 'audiowaveform',
 			resolution: 1,
@@ -42,24 +42,24 @@ let seekbarProperties = {
 			futureSecs: Infinity,
 			bHalfBarsShowNeg: true
 		}), {func: isJSON}],
-	ui:			['UI config', 
+	ui:			['UI config',
 		JSON.stringify({
 			colors: {
 				bg: 0xFF000000, // Black
 				main: 0xFF003559, // Blue
 				alt: 0xFF006DAA, // Blue
 				bgFuture: 0xFF1B1B1B, // Grey
-				mainFuture: 0xFF0353A4, 
-				altFuture: 0xFF061A40, 
+				mainFuture: 0xFF0353A4,
+				altFuture: 0xFF061A40,
 				currPos: 0xFFB9D6F2 // White
 			},
 			transparency: {
 				bg: 30,
 				main: 75,
 				alt: 75,
-				bgFuture: 15, 
-				mainFuture: 75, 
-				altFuture: 75, 
+				bgFuture: 15,
+				mainFuture: 75,
+				altFuture: 75,
 				currPos: 100
 			},
 			refreshRate: 200,
@@ -71,7 +71,7 @@ let seekbarProperties = {
 	matchPattern: ['File name TF format', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', {func: isString}],
 	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, {func: isBoolean}],
 	background:	['Background options', JSON.stringify(deepAssign()(
-		(new _background).defaults(), 
+		(new _background).defaults(),
 		{colorMode: 'bigradient', colorModeOptions: {color: [RGB(270,270,270), RGB(300,300,300)]}, coverMode: 'none'}
 	)), {func: isJSON}],
 };
@@ -94,9 +94,9 @@ if (folders.JsPackageDirs || _isFile(fb.FoobarPath + 'portable_mode_enabled')) {
 	const binaries = JSON.parse(seekbarProperties.binaries[1]);
 	const defBinaries = JSON.parse(seekbarProperties.binaries[3]);
 	let bDone = false;
-	for (let key in binaries) {
+	for (const key in binaries) {
 		if (!_isFile(binaries[key]) && _isFile(defBinaries[key])) {
-			binaries[key] = defBinaries[key]; 
+			binaries[key] = defBinaries[key];
 			bDone = true;
 		}
 	}
@@ -106,7 +106,7 @@ if (folders.JsPackageDirs || _isFile(fb.FoobarPath + 'portable_mode_enabled')) {
 	}
 }
 
-/* 
+/*
 	Panel background
 */
 const background = new _background({
@@ -122,7 +122,7 @@ const background = new _background({
 	},
 });
 
-/* 
+/*
 	Seekbar
 */
 const seekbar = new _seekbar({
@@ -139,7 +139,7 @@ bindMenu(seekbar);
 // Helpers
 seekbar.saveProperties = function() {
 	const config = this.exportConfig(true);
-	for (let key in config) {
+	for (const key in config) {
 		if (seekbarProperties.hasOwnProperty(key)) {
 			seekbarProperties[key][1] = JSON.stringify(config[key]);
 		}
@@ -153,7 +153,7 @@ if (seekbarProperties.bAutoUpdateCheck[1]) {
 	setTimeout(checkUpdate, 120000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb});
 }
 
-/* 
+/*
 	Callbacks
 */
 
