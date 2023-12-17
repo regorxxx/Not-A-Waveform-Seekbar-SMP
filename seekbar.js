@@ -12,7 +12,7 @@ include('main\\seekbar\\seekbar_xxx_menu.js');
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 
-if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '1.4.0'});}
+if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '2.0.0'});}
 
 let seekbarProperties = {
 	binaries:	['Binaries paths',
