@@ -1,9 +1,16 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursivefile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
+/* global convertCharsetToCodepage:readable */
 include('helpers_xxx.js');
+/* global folders:readable, isCompatible:readable, lastStartup:readable, VK_SHIFT:readable */
+include('helpers_xxx_basic_js.js');
+/* global tryMethod:readable */
 include('helpers_xxx_prototypes.js');
+/* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */
 
 /*
 	Global Variables
@@ -199,8 +206,8 @@ function _recycleFile(file, bCheckBin = false) {
 			} catch (e) {
 				try {
 					if (utils.IsKeyPressed(VK_SHIFT)) {throw 'Shift';}
-						app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
-						// fso.GetFile(file).Delete(true);
+					app.NameSpace(0).ParseName(file).InvokeVerb('delete'); // Second nameSpace method (may not work on Unix systems)
+					// fso.GetFile(file).Delete(true);
 				} catch (e) {
 					try {_runCmd(_q(folders.xxx + 'helpers-external\\cmdutils\\Recycle.exe') + ' -f ' + _q(file), true);} // cmdUtils as fallback
 					catch (e) {return false;}
@@ -286,7 +293,7 @@ function _saveFSO(file, value, bUTF16) {
 			fileObj.Write(value);
 			fileObj.Close();
 			return true;
-		} catch (e) {}
+		} catch (e) { /* log error later */ }
 	}
 	console.log('Error saving to ' + file);
 	return false;
@@ -325,7 +332,7 @@ function _jsonParseFile(file, codePage = 0) {
 	return _jsonParse(_open(file, codePage));
 }
 
-function _jsonParseFileSplit(filePath, reportName = 'Json', popupName = window.Name, codePage = 0) {
+function _jsonParseFileSplit(filePath, codePage = 0) {
 	const [path, fileName, extension] = utils.SplitFilePath(filePath);
 	const files = utils.Glob(path + '\\' + fileName + '*' + extension);
 	let result = [];
@@ -471,8 +478,8 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	} else if (bAdvancedCheck) {
 		if (plsText.length && plsText.some((line) => {
 			line = line.toLowerCase();
-			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1) ;
-			})) {
+			return (line.indexOf('ã©') !== -1 || line.indexOf('ã¨') !== -1 || line.indexOf('ã¼') !== -1 || line.indexOf('ãº') !== -1);
+		})) {
 			codepage = utf8;
 		} else if (plsText.length && plsText.some((line) => {line = line.toLowerCase(); return (line.indexOf('�') !== -1);})) {
 			codepage = systemCodePage;
@@ -531,6 +538,7 @@ function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 	return finalPath;
 }
 
+/* eslint-disable no-useless-escape */
 function sanitize(value) {
 	return value && value.length ? value.replace(/[\/\\|:–]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/\?/g, '').replace(/(?! )\s/g, '') : '';
 }
@@ -540,6 +548,7 @@ function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
 	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/[\/]/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[\?:]/g, '').replace(/(?! )\s/g, '');
 }
+/* eslint-enable  no-useless-escape */
 
 function UUID() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g , (c) => {

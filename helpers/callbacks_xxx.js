@@ -1,5 +1,8 @@
 'use strict';
-//14/12/23
+//17/12/23
+
+/* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, registerAllCallbacks */
+
 
 /*
 	Usage:
@@ -99,7 +102,7 @@ const callbacks = {
 const parentWindow = this; // This is Window in this context without SMP wrapping
 parentWindow.eventListener = {event: null, id: null};
 
-function addEventListener(event, listener, bRegister = true) {
+function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
 	if (!callbacks.hasOwnProperty(event)) {console.log('addEventListener: event does not exist -> ' + event); return false;}
 	const id = UUID();
 	callbacks[event].listeners.push({id, listener});
@@ -113,7 +116,7 @@ function findEventListener(event, listener = null, id = null) {
 	return callbacks[event].listeners.findIndex((event) => (event.id === id || event.listener === listener));
 }
 
-function removeEventListener(event, listener = null, id = null) {
+function removeEventListener(event, listener = null, id = null) { // eslint-disable-line no-redeclare
 	if (!callbacks.hasOwnProperty(event)) {return false;}
 	if (!listener && !id) {return false;}
 	const idx = findEventListener(event, listener, id);
@@ -216,7 +219,7 @@ const callbacksListener = {
 
 callbacksListener.checkPanelNames = function() {
 	if (!window.Name.length) {
-		console.popup('Panel has no name: ' + _q(window.Name) + '\n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
+		console.popup('Panel has no name: "' + window.Name + '"\n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
 	} else {
 		this.listenNames = true;
 		window.NotifyOthers('xxx-scripts: panel name', window.Name);
@@ -234,7 +237,7 @@ addEventListener('on_notify_data', (name, info) => {
 		}
 		case 'xxx-scripts: panel name reply': {
 			if (callbacksListener.listenNames && info === window.Name) {
-				console.popup('There is another panel with same name: ' + _q(info) + '\n\nNames must be different to allow running dynamic menus. Change it at the SMP panel configuration.', window.Name);
+				console.popup('There is another panel with same name: "' + info + '"\n\nNames must be different to allow running dynamic menus. Change it at the SMP panel configuration.', window.Name);
 				callbacksListener.highlight = true;
 				window.Repaint();
 			}

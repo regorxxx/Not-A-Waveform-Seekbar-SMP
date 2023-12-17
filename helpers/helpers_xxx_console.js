@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 
@@ -14,6 +14,7 @@ Object.defineProperty(console, 'Throttling', {enumerable: false, configurable: f
 Object.defineProperty(console, 'Timer', {enumerable: false, configurable: false, writable: true});
 Object.defineProperty(console, 'Cache', {enumerable: false, configurable: false, writable: true, value: []});
 
+/* global fso:readable */
 const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
 
 // Override logging

@@ -1,7 +1,12 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported checkCompatible, memoryUsed, isPortable, lastStartup*/
 
 include('helpers_xxx_file.js');
+/* global _isFile, lastModified */
+include('helpers_xxx_prototypes.js');
+/* global round, isArray */
 include('helpers_xxx_console.js');
 
 /*
@@ -24,8 +29,7 @@ function compareVersions(from, to, bNum = true) {
 }
 
 function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
-	// return compareVersions((target.toLowerCase === 'smp' ? utils : fb).Version.split('.'), requiredVersionStr.split('.'));
-	return true;
+	return compareVersions((target.toLowerCase === 'smp' ? utils : fb).Version.split('.'), requiredVersionStr.split('.'));
 }
 
 function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {

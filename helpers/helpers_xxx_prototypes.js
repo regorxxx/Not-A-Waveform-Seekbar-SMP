@@ -1,5 +1,10 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, biMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool */
+
+include('helpers_xxx_basic_js.js');
+/* global require:readable */
 
 /*
 	Objects
@@ -187,7 +192,7 @@ function toType(a) {
 }
 
 function isDeepObject(obj) {
-	return "Object" === toType(obj);
+	return 'Object' === toType(obj);
 }
 
 // Throw errors when trying to get length from objects
@@ -205,8 +210,8 @@ Object.defineProperty(Object.prototype, 'toStr', {
 					? capitalize(entry[0].toString())
 					: entry[0].toString()
 			) + ': ' + (typeof entry[1] === 'object'
-					? entry[1] === null ? 'null' : entry[1].toStr()
-					:  typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
+				? entry[1] === null ? 'null' : entry[1].toStr()
+				:  typeof entry[1] === 'undefined' ? 'undefined' : entry[1].toString()
 			);
 		}).join(separator) + (bClosure ? '}' : '');
 	}
@@ -234,7 +239,7 @@ class biMap {
 	entries() {return Object.entries(this.map);}
 	uniEntries() {return Object.entries(this.uniMap);}
 	set(key, value) {this.map[key] = value; this.uniMap[key] = value;}
-	unset(key) {delete this.map[key]; delete this.uniMap[key]}
+	unset(key) {delete this.map[key]; delete this.uniMap[key];}
 }
 
 /*
@@ -259,7 +264,7 @@ Function.prototype.applyInChunks = function applyInChunks() {
 		result[i] = this.apply(null, subResult);
 	}
 	return this.apply(null, result);
-}
+};
 
 // JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
 function $args(func) {
@@ -306,9 +311,9 @@ Object.defineProperty(Promise, 'serial', {
 		const reducer = (acc$, inputValue, i) =>
 			acc$.then(acc => {
 				return (timeout
-						? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
-						: mapper(inputValue, i)
-					).then(result => acc.push(result) && acc);
+					? new Promise((resolve) => {setTimeout(() => resolve(mapper(inputValue, i)), timeout)})
+					: mapper(inputValue, i)
+				).then(result => acc.push(result) && acc);
 			});
 		return inputValues.reduce(reducer, Promise.resolve([]));
 	}
@@ -554,9 +559,9 @@ Array.shuffle = function() {
 	let last = 0;
 	const argsLength = arguments.length;
 	for (let idx = 0; idx < argsLength; idx++) {
-		if (!isArray(arguments[idx])) {throw new TypeError("Argument is not an array.");}
+		if (!isArray(arguments[idx])) {throw new TypeError('Argument is not an array.');}
 		if (idx === 0) {last = arguments[0].length;}
-		if (last !== arguments[idx].length) {throw new RangeError("Array lengths do not match.");}
+		if (last !== arguments[idx].length) {throw new RangeError('Array lengths do not match.');}
 	}
 	let n;
 	while (last > 0) {
@@ -595,7 +600,7 @@ Array.prototype.multiIndexOf = function(el) {
 	return idxs;
 };
 
-Array.prototype.partialSort = function(order, bOptimze = true) {
+Array.prototype.partialSort = function(order, bOptimize = true) {
 	if (bOptimize) {order = [...(new Set(order).intersection(new Set(this)))];}
 	const profiler = new FbProfiler('partialSort');
 	const orderIndex = [];
@@ -623,7 +628,7 @@ Array.prototype.partialSort = function(order, bOptimze = true) {
 // https://en.wikipedia.org/wiki/Schwartzian_transform
 Array.prototype.schwartzianSort = function(processFunc, sortFunc = (a, b) => a[1] - b[1]) { // or (a, b) => {return a[1].localeCompare(b[1]);}
 	return this.map((x) => [x, processFunc(x)]).sort(sortFunc).map((x) => x[0]);
-}
+};
 
 // https://github.com/aldo-gutierrez/bitmasksorterJS
 const bitmask = require('..\\helpers-external\\bitmasksorterjs\\bitmasksorterjs');
@@ -716,12 +721,12 @@ function isFloat(n){
 // Adds/subtracts 'offset' to 'reference' considering the values must follow cyclic logic within 'limits' range (both values included)
 // Ex: [1,8], x = 5 -> x + 4 = 1 <=> cyclicOffset(5, 4, [1,8])
 function cyclicOffset(reference, offset, limits) {
-		if (offset && reference >= limits[0] && reference <= limits[1]) {
-			reference += offset;
-			if (reference < limits[0]) {reference += limits[1];}
-			if (reference > limits[1]) {reference -= limits[1];}
-		}
-		return reference;
+	if (offset && reference >= limits[0] && reference <= limits[1]) {
+		reference += offset;
+		if (reference < limits[0]) {reference += limits[1];}
+		if (reference > limits[1]) {reference -= limits[1];}
+	}
+	return reference;
 }
 
 const range = (start, stop, step) => new Array(Math.round((stop - start) / step + 1)).fill(void(0)).map((_, i) => start + (i * step));
@@ -743,11 +748,11 @@ Math.randomNum = function randomNum(min, max, options = {integer: false, include
 	} else {
 		return Math.random() * (max - min + (options.includeMax ? 1 : 0)) + min;
 	}
-}
+};
 
 Math.randomInt = function randomNum(min, max, includeMax = false) {
 	return Math.randomNum(min, max, {integer: true, includeMax});
-}
+};
 
 /*
 	UUID

@@ -1,5 +1,7 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported clone, getNested, setNested, getRegExpFlags, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require */
 
 // https://github.com/angus-c/just
 /*
@@ -71,11 +73,10 @@ function setNested(obj, value, ...args) {
 		if (obj && len === idx && obj.hasOwnProperty(level)) {obj[level] = value;}
 		return obj && obj[level];
 	}, obj);
-	return obj;
 }
 
 function getRegExpFlags(regExp) {
-		if (typeof regExp.source.flags === 'string') {
+	if (typeof regExp.source.flags === 'string') {
 		return regExp.source.flags;
 	} else {
 		const flags = [];

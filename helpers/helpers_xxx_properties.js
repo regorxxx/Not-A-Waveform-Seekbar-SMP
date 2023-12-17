@@ -1,7 +1,10 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues */
 
 include('helpers_xxx_file.js');
+/* global _isFile:readable, _isFolder:readable*/
 
 /*
 	Properties
@@ -172,7 +175,7 @@ function enumeratePropertiesValues(propertiesDescriptor, prefix = '', count = 1,
 	return output;
 }
 
-// Checks property against given conditions. This is called everytime a property is set, overwritten
+// Checks property against given conditions. This is called every-time a property is set, overwritten
 // or get from/to the properties panel. Therefore allows for generic error checking.
 // propertiesObj 	--->	{propertyKey: [description, defaultValue, check, fallbackValue]}
 // property			---> 	[description, defaultValue, check, fallbackValue]

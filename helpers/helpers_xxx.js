@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
 
 // Folders
 const folders = {};
@@ -17,6 +17,7 @@ folders.userPresets = folders.data + 'presets\\';
 folders.userPresetsGlobal = folders.userPresets + 'global\\';
 
 // Files
+/* exported soFeatFile */
 const soFeatFile = folders.temp + 'soFeatures.json'; // Used at helpers_xxx_so.js
 
 // Global helpers
@@ -25,17 +26,21 @@ include(fb.ComponentPath + 'docs\\Flags.js');
 include('helpers_xxx_basic_js.js');
 include('helpers_xxx_console.js');
 include('helpers_xxx_foobar.js');
+/* global isCompatible:readable */
 include('helpers_xxx_so.js');
+/* global getSoFeatures:readable, initCheckFeatures:readable */
 
 /*
 	Global Variables
 */
+/* exported isFoobarV2, isEnhPlayCount, isPlayCount, isYouTube */
 const isFoobarV2 = isCompatible('2.0', 'fb');
 const isEnhPlayCount = utils.CheckComponent('foo_enhanced_playcount');
 const isPlayCount = utils.CheckComponent('foo_playcount');
 const isYouTube = utils.CheckComponent('foo_youtube');
 
 // Async processing
+/* exported iStepsLibrary, iDelayLibrary, iDelayLibraryPLM, iDelayPlaylists */
 const iStepsLibrary = 100; // n steps to split whole library processing: check library tags, pre-cache paths, etc.
 const iDelayLibrary = isFoobarV2 ? 200 : 100; // ms per step for whole handle processing
 const iDelayLibraryPLM = isFoobarV2 ? 40 : 25; // ms per step for whole handle processing
@@ -54,6 +59,7 @@ const soFeat = getSoFeatures();
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
+/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, addGlobTags:readable */
 // Load user files used at helpers_xxx_global.js
 loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
@@ -78,5 +84,5 @@ Object.keys(globFonts).forEach((key) => {
 	SO features
 */
 if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if something fails
-	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then((resolve) => {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);});
+	new Promise((resolve) => {setTimeout(getSoFeatures, 1000); resolve(true);}).then(() => {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);});
 } else {initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures);}

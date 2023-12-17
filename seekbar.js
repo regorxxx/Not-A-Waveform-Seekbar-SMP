@@ -1,16 +1,25 @@
 'use strict';
-//14/12/23
+//17/12/23
 
 include('helpers\\helpers_xxx.js');
+/* global folders:readable, globSettings:readable, soFeat:readable, globFonts:readable */
 include('helpers\\helpers_xxx_UI.js');
+/* global _scale:readable, RGB:readable, _gdiFont:readable */
 include('helpers\\helpers_xxx_file.js');
+/* global _isFile:readable */
 include('helpers\\helpers_xxx_prototypes.js');
+/* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable */
 include('helpers\\helpers_xxx_properties.js');
+/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable */
 include('helpers\\menu_xxx.js');
+/* global bindMenu:readable */
 include('main\\seekbar\\seekbar_xxx.js');
+/* global _seekbar:readable */
 include('main\\seekbar\\seekbar_xxx_menu.js');
+/* global createBackgroundMenu:readable */
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
+/* global _background:readable */
 
 if (!window.ScriptInfo.PackageId) {window.DefineScript('Not-A-Waveform-Seekbar-SMP', {author: 'regorxxx', version: '2.0.0'});}
 
@@ -75,7 +84,7 @@ let seekbarProperties = {
 		{colorMode: 'bigradient', colorModeOptions: {color: [RGB(270,270,270), RGB(300,300,300)]}, coverMode: 'none'}
 	)), {func: isJSON}],
 };
-Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]))
+Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 
@@ -149,6 +158,7 @@ seekbar.saveProperties = function() {
 
 // Update check
 if (seekbarProperties.bAutoUpdateCheck[1]) {
+	/* global checkUpdate:readable */
 	include('helpers\\helpers_xxx_web_update.js');
 	setTimeout(checkUpdate, 120000, {bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb});
 }
@@ -228,7 +238,7 @@ addEventListener('on_script_unload', () => {
 	seekbar.unload();
 });
 
-addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
+addEventListener('on_mouse_rbtn_up', (x, y) => {
 	seekbar.rbtn_up(x, y, ['sep', createBackgroundMenu.call(background, {menuName: 'Background...'}, void(0), {nameColors: true})]);
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 });

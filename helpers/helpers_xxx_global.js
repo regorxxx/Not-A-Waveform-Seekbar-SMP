@@ -1,5 +1,12 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported loadUserDefFile, addGlobTags, globFonts, globSettings*/
+
+include('helpers_xxx.js');
+/* global folders, soFeat */
+include('helpers_xxx_file.js');
+/* global _isFile, _jsonParseFileCheck, utf8, _save */
 
 /*
 	Global tags, queries, RegExp
@@ -24,7 +31,7 @@ function loadUserDefFile(def) {
 						if (def[key].hasOwnProperty('re')) { // Parse RegExp from strings and make sure it's valid or use default value
 							let re, flag;
 							try {
-								[, re, flag] = def[key].re.match(/\/(.*)\/([a-z]+)?/)
+								[, re, flag] = def[key].re.match(/\/(.*)\/([a-z]+)?/);
 								def[key].re = new RegExp(re, flag);
 							} catch (e) {
 								fb.ShowPopupMessage(
@@ -48,15 +55,16 @@ function loadUserDefFile(def) {
 		}
 	} else {bSave = true;}
 	if (bSave) {
-		const { _type, _file, ...rest} = def;
-		_save(def._file, JSON.stringify(rest, (key, value) => {return (value instanceof RegExp ? value.toSource() : value);}, '\t'));
+		const {_type, _file, ...rest} = def; // eslint-disable-line no-unused-vars
+		_save(_file, JSON.stringify(rest, (key, value) => {return (value instanceof RegExp ? value.toSource() : value);}, '\t'));
 	}
 }
 
+/* eslint-disable no-useless-escape */
 function addGlobTags() { // Add calculated properties
 	globTags.title = '$ascii($lower($trim($replace(%' + globTags.titleRaw + '%,\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
 	globTags.artist = globTags.artistRaw.indexOf('%') === -1 && globTags.artistRaw.indexOf('$') === -1 ? '%' + globTags.artistRaw + '%' : globTags.artistRaw;
-	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,\'#\'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');;
+	globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,\'#\'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 	globTags.sortPlayCount = '$sub(99999,' + globTags.playCount + ')';
 	globTags.remDupl = [globTags.title, globTags.artist, globTags.date];
 	globTags.genreStyle = [globTags.genre, globTags.style, globTags.folksonomy];
@@ -68,8 +76,9 @@ function addGlobTags() { // Add calculated properties
 	globQuery.noLiveNone = 'NOT (' + globQuery.live + ')';
 	globQuery.noLive = globQuery.noLiveNone + ' OR (' + globQuery.liveHifi + ')';
 	globQuery.noSACD = 'NOT (' + globQuery.SACD + ')';
-	globQuery.remDuplBias = globTags.rating + '|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)';	
+	globQuery.remDuplBias = globTags.rating + '|$ifgreater($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),live),0,0,1)|$ifgreater($if2($strstr($lower(' + globTags.genreStyle.map((t) => '%' + t + '%').join('\', \'') + '),instrumental),$strstr($lower(%LANGUAGE%),zxx)),0,0,1)';
 }
+/* eslint-enable  no-useless-escape */
 
 // Tags: user replaceable with a presets file at folders.data
 const globTags = {
@@ -116,6 +125,7 @@ const globQuery = {
 	SACD: '%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64',
 };
 
+/* eslint-disable no-useless-escape */
 // RegExp: user replaceable with a presets file at folders.data
 const globRegExp = {
 	_type: 'RegExp',
@@ -136,6 +146,7 @@ const globRegExp = {
 	}
 };
 Object.keys(globRegExp).filter((k) => !k.startsWith('_')).forEach((k) => globRegExp[k].default = globRegExp[k].re); // Add default values
+/* eslint-enable  no-useless-escape */
 
 // Fonts: user replaceable with a presets file at folders.data
 const globFonts = {

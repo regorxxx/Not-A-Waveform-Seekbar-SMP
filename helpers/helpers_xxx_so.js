@@ -1,5 +1,10 @@
 ﻿'use strict';
-//14/12/23
+//17/12/23
+
+/* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
+
+include('helpers_xxx.js');
+/* global soFeatFile:readable */
 
 /*
 	Global tags, queries, RegExp
