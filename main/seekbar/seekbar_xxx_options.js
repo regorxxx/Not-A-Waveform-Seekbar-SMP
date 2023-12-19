@@ -1,7 +1,10 @@
 ﻿'use strict';
-//14/12/23
+//18/12/23
+
+/* global setProperties:readable, getPropertiesPairs:readable, _createFolder:readable, folders:readable, seekbar:readable, overwriteProperties:readable, seekbarProperties:readable, isJSON:readable, _menu:readable */
 
 include('..\\window\\window_xxx.js');
+/* global _window:readable */
 
 // Set default properties (used on data later)
 let propertiesOptions = {
@@ -19,7 +22,7 @@ const options = new _window({width: window.Width, height: window.Height, tabWidt
 options.save = () => {
 	const seekbarOptions = {};
 	for (const key in options.properties) {
-		if (propertiesOptions.hasOwnProperty(key)) {
+		if (Object.prototype.hasOwnProperty.call(propertiesOptions, key)) {
 			propertiesOptions[key][1] = options.properties[key][1];
 		} else {
 			seekbarOptions[key] = options.properties[key];
@@ -28,7 +31,7 @@ options.save = () => {
 	seekbar.updateConfig(seekbarOptions);
 	seekbar.saveProperties();
 	overwriteProperties(propertiesOptions);
-}
+};
 options.load = () => {
 	const properties = getPropertiesPairs(seekbarProperties, '', 0);
 	for (const key in properties) {
@@ -36,7 +39,7 @@ options.load = () => {
 			? JSON.parse(properties[key][1], (key, value) => value === null ? Infinity : value)
 			: properties[key][1];
 	}
-}
+};
 
 // Add tabs with its data
 options.addTab({title: 'Analysis', columns: 3, data: [

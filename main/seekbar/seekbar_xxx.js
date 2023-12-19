@@ -1,68 +1,74 @@
 'use strict';
-//14/12/23
+//18/12/23
+
+/* exported _seekbar */
+/* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
+
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
+/* global LZUTF8:readable */
 include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string compression
+/* global LZString:readable */
 
 function _seekbar({
-		matchPattern = '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', // Used to create folder path
-		bDebug = false,
-		bProfile = false,
-		binaries = {
-			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
-			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
-			visualizer: fb.ProfilePath + 'running', // Just a placeholder
+	matchPattern = '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', // Used to create folder path
+	bDebug = false,
+	bProfile = false,
+	binaries = {
+		ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
+		audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+		visualizer: fb.ProfilePath + 'running', // Just a placeholder
+	},
+	preset = {
+		waveMode: 'waveform', // waveform | bars | points | halfbars
+		analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
+		paintMode: 'full', // full | partial
+		bPrePaint: false,
+		bPaintCurrent: true,
+		bAnimate: true,
+		bUseBPM: true,
+		futureSecs: Infinity,
+		bHalfBarsShowNeg: true
+	},
+	ui = {
+		gFont: _gdiFont('Segoe UI', _scale(15)),
+		colors: {
+			bg: 0xFF000000, // Black
+			main: 0xFF90EE90, // LimeGreen
+			alt: 0xFF7CFC00, // LawnGreen
+			bgFuture: 0xFF1B1B1B,
+			mainFuture: 0xFFB7FFA2,
+			altFuture: 0xFFF9FF99,
+			currPos: 0xFFFFFFFF // White
 		},
-		preset = {
-			waveMode: 'waveform', // waveform | bars | points | halfbars
-			analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
-			paintMode: 'full', // full | partial
-			bPrePaint: false,
-			bPaintCurrent: true,
-			bAnimate: true,
-			bUseBPM: true,
-			futureSecs: Infinity,
-			bHalfBarsShowNeg: true
+		transparency: {
+			bg: 100,
+			main: 100,
+			alt: 100,
+			bgFuture: 100,
+			mainFuture: 100,
+			altFuture: 100,
+			currPos: 100
 		},
-		ui = {
-			gFont: _gdiFont('Segoe UI', _scale(15)),
-			colors: {
-				bg: 0xFF000000, // Black
-				main: 0xFF90EE90, // LimeGreen
-				alt: 0xFF7CFC00, // LawnGreen
-				bgFuture: 0xFF1B1B1B,
-				mainFuture: 0xFFB7FFA2,
-				altFuture: 0xFFF9FF99,
-				currPos: 0xFFFFFFFF // White
-			},
-			transparency: {
-				bg: 100,
-				main: 100,
-				alt: 100,
-				bgFuture: 100,
-				mainFuture: 100,
-				altFuture: 100,
-				currPos: 100
-			},
-			pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
-			refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
-			bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
-			bNormalizeWidth: false,
-			normalizeWidth: _scale(4)
-		},
-		analysis = {
-			binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
-			resolution: 1, // pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
-			compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
-			bAutoAnalysis: true,
-			bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
-			bVisualizerFallback: true, // Uses visualizer mode when file can not be processed (not compatible format)
-			bVisualizerFallbackAnalysis: true // Uses visualizer mode while analyzing file
-		},
-		callbacks = {
-			backgroundColor: null, // Used to set the fallback color for text when there is no background color set for the waveform, otherwise will be white
-		}
+		pos: {x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30},
+		refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
+		bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
+		bNormalizeWidth: false,
+		normalizeWidth: _scale(4)
+	},
+	analysis = {
+		binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
+		resolution: 1, // pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
+		compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
+		bAutoAnalysis: true,
+		bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
+		bVisualizerFallback: true, // Uses visualizer mode when file can not be processed (not compatible format)
+		bVisualizerFallbackAnalysis: true // Uses visualizer mode while analyzing file
+	},
+	callbacks = {
+		backgroundColor: null, // Used to set the fallback color for text when there is no background color set for the waveform, otherwise will be white
+	}
 } = {}) {
-		
+
 	this.defaults = () => {
 		const defBinaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
@@ -122,17 +128,17 @@ function _seekbar({
 		options.forEach((option) => {
 			for (const key in option.from){
 				const subOption = option.from[key];
-				if (!option.to.hasOwnProperty(key)) {option.to[key] = subOption;}
+				if (!Object.prototype.hasOwnProperty.call(option.to, key)) {option.to[key] = subOption;}
 				if (typeof subOption === 'object' && !Array.isArray(subOption) &&  subOption !== null && Object.keys(subOption).length) {
 					for (const key2 in subOption){
-						if (!option.to[key].hasOwnProperty(key2)) {option.to[key][key2] = subOption[key2];}
+						if (!Object.prototype.hasOwnProperty.call(option.to[key], key2)) {option.to[key][key2] = subOption[key2];}
 					}
 				}
 			}
 		});
 	};
 	this.checkConfig = () => {
-		if (!this.binaries.hasOwnProperty(this.analysis.binaryMode)) {
+		if (!Object.prototype.hasOwnProperty.call(this.binaries, this.analysis.binaryMode)) {
 			throw new Error('Binary mode not recognized or path not set: ' + this.analysis.binaryMode);
 		}
 		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
@@ -182,21 +188,21 @@ function _seekbar({
 	const compatibleFiles = {
 		ffprobe: new RegExp('\\.(' +
 			['mp3', 'flac', 'wav' , 'ogg', 'opus', 'aac', 'ac3', 'aiff', 'ape', 'wv', 'wma', 'spx', 'spc', 'snd', 'ogx', 'mp4', 'au', 'aac', '2sf', 'dff', 'shn', 'tak', 'tta', 'vgm', 'minincsf', 'la', 'hmi']
-			.join('|') + ')$', 'i'),
+				.join('|') + ')$', 'i'),
 		audiowaveform: new RegExp('\\.(' +
 			['mp3', 'flac', 'wav', 'ogg', 'opus']
-		.join('|') + ')$', 'i')
-	}
-	
+				.join('|') + ')$', 'i')
+	};
+
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
-	
+
 	const profilerPaint = new FbProfiler('paint');
-	
+
 	// Check
 	this.checkConfig();
 	if (!_isFolder(this.folder)) {_createFolder(this.folder);}
-	
+
 	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
 		if (newConfig) {deepAssign()(this, newConfig);}
 		this.checkConfig();
@@ -206,18 +212,18 @@ function _seekbar({
 				this.offset = [];
 				this.step = 0;
 			}
-			if (newConfig.preset.hasOwnProperty('bUseBPM') || newConfig.preset.hasOwnProperty('bAnimate')) {
+			if (Object.prototype.hasOwnProperty.call(newConfig.preset, 'bUseBPM') || Object.prototype.hasOwnProperty.call(newConfig.preset, 'bAnimate')) {
 				if (this.preset.bAnimate && this.preset.bUseBPM) {this.bpmSteps();}
 				else {this.defaultSteps();}
 			}
 		}
 		if (newConfig.ui) {
-			if (newConfig.ui.hasOwnProperty('refreshRate')) {
+			if (Object.prototype.hasOwnProperty.call(newConfig.ui, 'refreshRate')) {
 				this.ui.refreshRateOpt = this.ui.refreshRate;
 				throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 				throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
 			}
-			if (newConfig.ui.hasOwnProperty('bNormalizeWidth') ||  newConfig.ui.hasOwnProperty('normalizeWidth')) {
+			if (Object.prototype.hasOwnProperty.call(newConfig.ui, 'bNormalizeWidth') ||  Object.prototype.hasOwnProperty.call(newConfig.ui, 'normalizeWidth')) {
 				bRecalculate = true;
 			}
 		}
@@ -228,7 +234,7 @@ function _seekbar({
 		if (bRecalculate) {this.newTrack();}
 		else {throttlePaint();}
 	};
-	
+
 	this.exportConfig = (bSkipPanelDependent = true) => {
 		const config = {};
 		let notAllowed;
@@ -249,25 +255,25 @@ function _seekbar({
 		config.analysis = clone(this.analysis);
 		return config;
 	};
-	
+
 	this.switch = (bEnable = !this.active) => {
 		const wasActive = this.active;
 		this.active = bEnable;
 		if (fb.IsPlaying) {
 			if (!wasActive && this.active) {
 				window.Repaint();
-				setTimeout(() => {seekbar.newTrack(fb.GetNowPlaying()); this.updateTime(fb.PlaybackTime);}, 0);
+				setTimeout(() => {this.newTrack(fb.GetNowPlaying()); this.updateTime(fb.PlaybackTime);}, 0);
 			} else if (wasActive && !this.active) {
 				this.stop(-1);
 			}
 		}
 	};
-	
+
 	this.newTrackQueue = function () {
 		if (this.queueId) {clearTimeout(this.queueId);}
-		this.queueId = setTimeout(() => {this.newTrack(...arguments)}, this.queueMs); // Arguments points to the first non arrow func
+		this.queueId = setTimeout(() => {this.newTrack(...arguments);}, this.queueMs); // Arguments points to the first non arrow func
 	};
-	
+
 	this.newTrack = async (handle = fb.GetNowPlaying(), bIsRetry = false) => {
 		if (!this.active) {return;}
 		this.reset();
@@ -278,30 +284,30 @@ function _seekbar({
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.json')) {
 				this.current = _jsonParseFile(seekbarFile + '.ff.json', this.codePage) || [];
-				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) {return;};
+				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) {return;}
 			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.lz')) {
 				let str = _open(seekbarFile + '.ff.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) {return;};
+				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) {return;}
 			} else if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.lz16')) {
 				let str = _open(seekbarFile + '.ff.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) {return;};
+				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) {return;}
 			} else if (this.analysis.binaryMode === 'audiowaveform' && _isFile(seekbarFile + '.aw.json')) {
 				this.current = _jsonParseFile(seekbarFile + '.aw.json', this.codePage) || [];
-				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) {return;};
+				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) {return;}
 			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.aw.lz')) {
 				let str = _open(seekbarFile + '.aw.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, {inputEncoding: 'Base64'}) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) {return;};
+				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) {return;}
 			} else if (this.analysis.binaryMode === 'audiowaveform' &&_isFile(seekbarFile + '.aw.lz16')) {
 				let str = _open(seekbarFile + '.aw.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
-				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) {return;};
+				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) {return;}
 			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
 				if (this.analysis.bVisualizerFallbackAnalysis) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
@@ -316,7 +322,7 @@ function _seekbar({
 				throttlePaint(true);
 				if (this.analysis.bVisualizerFallbackAnalysis) {bFallbackMode.analysis = false;}
 				await this.analyze(handle, seekbarFolder, seekbarFile);
-				if (!this.verifyData(handle, void(0), bIsRetry)) {return;};
+				if (!this.verifyData(handle, void(0), bIsRetry)) {return;}
 				bFallbackMode.analysis = bFallbackMode.paint = false;
 				bAnalysis  = true;
 			}
@@ -333,7 +339,7 @@ function _seekbar({
 		// And paint
 		throttlePaint();
 	};
-	
+
 	this.normalizePoints = (bNormalizeWidth = false) => {
 		this.frames = this.current.length;
 		if (this.frames) {
@@ -341,7 +347,6 @@ function _seekbar({
 			let lower = 0;
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				// Calculate max values
-				const key = modes[this.preset.analysisMode].key;
 				const pos = modes[this.preset.analysisMode].pos;
 				let max = 0;
 				this.current.forEach((frame) => {
@@ -353,7 +358,7 @@ function _seekbar({
 				// Calculate point scale
 				let maxVal = 1;
 				if (this.preset.analysisMode !== 'RMS_level') {
-					this.current.forEach((frame, n) => {
+					this.current.forEach((frame) => {
 						if (frame.length === 5) {frame.length = 4;}
 						frame.push(
 							isFinite(frame[pos])
@@ -403,7 +408,7 @@ function _seekbar({
 				if (newFrames !== frames) {
 					if (newFrames < frames) {
 						const scale = frames / newFrames;
-						data = Array(newFrames).fill(null).map((_) => {return {val: 0, count: 0};});
+						data = Array(newFrames).fill(null).map(() => {return {val: 0, count: 0};});
 						let j = 0, h = 0, frame;
 						for (let i = 0; i < frames; i++) {
 							frame = this.current[i];
@@ -435,7 +440,7 @@ function _seekbar({
 						}
 					} else {
 						const scale = newFrames / frames;
-						data = Array(newFrames).fill(null).map((_) => {return {val: 0, count: 0};});
+						data = Array(newFrames).fill(null).map(() => {return {val: 0, count: 0};});
 						let j = 0, h = 0, frame;
 						for (let i = 0; i < frames; i++) {
 							frame = this.current[i];
@@ -477,20 +482,20 @@ function _seekbar({
 			}
 		}
 	};
-	
+
 	this.isDataValid = () => {
 		// When iterating too many tracks in a short ammount of time weird things may happen without this check
 		if (!Array.isArray(this.current) || !this.current.length) {return false;}
 		return this.analysis.binaryMode === 'ffprobe'
 			? this.current.every((frame) => {
-				const len = frame.hasOwnProperty('length') ? frame.length : null;
+				const len = Object.prototype.hasOwnProperty.call(frame, 'length') ? frame.length : null;
 				return (len === 4 || len === 5);
 			})
 			: this.current.every((frame) => {
 				return (frame >= -128 && frame <= 127);
 			});
 	};
-	
+
 	this.verifyData = (handle, file, bIsRetry = false) => {
 		if (!this.isDataValid()) {
 			if (bIsRetry) {
@@ -511,7 +516,7 @@ function _seekbar({
 		}
 		return true;
 	};
-	
+
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
 		this.isAllowedFile = this.analysis.binaryMode !== 'visualizer' && handle.SubSong === 0 && compatibleFiles[this.analysis.binaryMode].test(handle.Path);
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
@@ -524,13 +529,13 @@ function _seekbar({
 		this.maxStep = Math.round(Math.min(Math.max(200 / (BPM ? BPM : 100) * 2, 2), 10) * (200 / this.ui.refreshRate) ** (1/2));
 		return this.maxStep;
 	};
-	
+
 	this.defaultSteps = () => {
 		this.maxStep = Math.round(4 * (200 / this.ui.refreshRate) ** (1/2));
 		return this.maxStep;
 	};
 	this.defaultSteps();
-	
+
 	this.updateTime = (time) => {
 		if (!this.active) {return;}
 		this.time = time;
@@ -556,7 +561,7 @@ function _seekbar({
 			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
 		}
 	};
-	
+
 	this.reset = () => {
 		this.current = [];
 		this.frames = 0;
@@ -570,19 +575,19 @@ function _seekbar({
 		this.resetAnimation();
 		if (this.queueId) {clearTimeout(this.queueId);}
 	};
-	
+
 	this.resetAnimation = () => {
 		this.step = 0;
 		this.offset = [];
 		this.defaultSteps();
 	};
-	
+
 	this.stop = (reason = -1) => { // -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
 		if (reason !== -1 && !this.active) {return;}
 		this.reset();
 		if (reason !== 2) {throttlePaint();}
 	};
-	
+
 	this.paint = (gr) => {
 		profilerPaint.Reset();
 		if (!fb.IsPlaying) {this.reset();} // In case paint has been delayed after playback has stopped...
@@ -593,9 +598,9 @@ function _seekbar({
 		const colors = Object.fromEntries(
 			Object.keys(this.ui.transparency).map((key) => {
 				return [
-					key, 
-					this.ui.colors[key] !== -1 && this.ui.transparency[key] !== 0 
-						? Math.round(this.ui.transparency[key]) === 100 ? this.ui.colors[key] : this.applyAlpaha(this.ui.colors[key], this.ui.transparency[key]) 
+					key,
+					this.ui.colors[key] !== -1 && this.ui.transparency[key] !== 0
+						? Math.round(this.ui.transparency[key]) === 100 ? this.ui.colors[key] : this.applyAlpaha(this.ui.colors[key], this.ui.transparency[key])
 						: -1
 				];
 			})
@@ -606,12 +611,9 @@ function _seekbar({
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW =(this.w - this.marginW * 2) / frames;
-			const barBgW = (this.w - this.marginW * 2) / 100;
 			const minPointDiff = 0.5; // in px
-			let n = 0, nFull = 0;
+			let n = 0;
 			// Paint waveform layer
-			const top = this.h / 2 - size / 2;
-			const bottom = this.h / 2 + size / 2;
 			const timeConstant = this.timeConstant;
 			let current, past = [{x: 0, y: 1}, {x: 0, y: -1}];
 			gr.SetSmoothingMode(this.analysis.binaryMode === 'ffprobe' ? 3 : 4);
@@ -731,7 +733,7 @@ function _seekbar({
 						const altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
 						this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 						const rand = this.offset[n];
-						const step = Math.max(this.h / 80, 5) + (rand || 1) // Point density
+						const step = Math.max(this.h / 80, 5) + (rand || 1); // Point density
 						const circleSize = Math.max(step / 25, 1);
 						// Split waveform in 2, and then each half in 2 for highlighting. If colors match, the same amount of points are painted anyway...
 						const sign = Math.sign(y);
@@ -823,12 +825,12 @@ function _seekbar({
 			}
 		}
 	};
-	
+
 	this.trace = (x, y) => {
 		return (x >= this.x && y >= this.y && x <= this.x + this.w && y <= this.y + this.h);
 	};
-	
-	this.lbtnUp = (x, y, mask) => {
+
+	this.lbtnUp = (x, y, mask) => { // eslint-disable-line no-unused-vars
 		this.mouseDown = false;
 		if (!this.trace(x,y)) {return false;}
 		const handle = fb.GetSelection();
@@ -846,28 +848,28 @@ function _seekbar({
 		}
 		return false;
 	};
-	
+
 	this.move = (x, y, mask) => {
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}
 	};
-	
+
 	this.resize = (w, h) => {
 		this.w = w;
 		this.h = h;
 	};
-	
+
 	this.unload = () => {
 		if (this.analysis.bAutoRemove) {
 			this.removeData();
 		}
 	};
-	
+
 	this.removeData = () => {
 		_deleteFolder(this.folder);
 	};
-	
+
 	this.getPaths = (handle) => {
 		const id = sanitizePath(this.Tf.EvalWithMetadb(handle)); // Ensure paths are valid!
 		const fileName = id.split('\\').pop();
@@ -875,7 +877,7 @@ function _seekbar({
 		const seekbarFile = this.folder + id;
 		return {seekbarFolder, seekbarFile};
 	};
-	
+
 	this.analyze = async (handle, seekbarFolder, seekbarFile) => {
 		if (!_isFolder(seekbarFolder)) {_createFolder(seekbarFolder);}
 		let profiler, cmd;
@@ -903,19 +905,19 @@ function _seekbar({
 		if (this.bDebug && cmd) {console.log(cmd);}
 		let bDone = cmd ? _runCmd(cmd, false) : true;
 		bDone = bDone && (await new Promise((resolve) => {
-				if (this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackMode.analysis) {resolve(true);}
-				const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
-				const id = setInterval(() => {
-					if (_isFile(seekbarFolder + 'data.json')) {
-						// ffmpeg writes sequentially so wait until it finish...
-						if (this.analysis.binaryMode === 'ffprobe' && _jsonParseFile(seekbarFolder + 'data.json', this.codePage)) {
-							clearInterval(id); resolve(true);
-						} else if (this.analysis.binaryMode !== 'ffprobe') {
-							clearInterval(id); resolve(true);
-						}
-					} else if (Date.now() > timeout) {clearInterval(id); resolve(false);}
-				}, 300);
-			})
+			if (this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackMode.analysis) {resolve(true);}
+			const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
+			const id = setInterval(() => {
+				if (_isFile(seekbarFolder + 'data.json')) {
+					// ffmpeg writes sequentially so wait until it finish...
+					if (this.analysis.binaryMode === 'ffprobe' && _jsonParseFile(seekbarFolder + 'data.json', this.codePage)) {
+						clearInterval(id); resolve(true);
+					} else if (this.analysis.binaryMode !== 'ffprobe') {
+						clearInterval(id); resolve(true);
+					}
+				} else if (Date.now() > timeout) {clearInterval(id); resolve(false);}
+			}, 300);
+		})
 		);
 		if (bDone) {
 			const data = cmd ? _jsonParseFile(seekbarFolder + 'data.json', this.codePage) : this.visualizerData(handle);
@@ -984,7 +986,7 @@ function _seekbar({
 			else {console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path);}
 		}
 	};
-	
+
 	this.visualizerData = (handle, preset = 'classic spectrum analyzer', bVariableLen = false) => {
 		const samples = bVariableLen
 			? handle.Length * (this.analysis.resolution || 1)
@@ -1008,9 +1010,9 @@ function _seekbar({
 		}
 		return data;
 	};
-	
+
 	this.applyAlpaha = (color, percent) => {
 		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
-	}
+	};
 	const hexTransparencies = {100: 'FF',99: 'FC',98: 'FA',97: 'F7',96: 'F5',95: 'F2',94: 'F0',93: 'ED',92: 'EB',91: 'E8',90: 'E6',89: 'E3',88: 'E0',87: 'DE',86: 'DB',85: 'D9',84: 'D6',83: 'D4',82: 'D1',81: 'CF',80: 'CC',79: 'C9',78: 'C7',77: 'C4',76: 'C2',75: 'BF',74: 'BD',73: 'BA',72: 'B8',71: 'B5',70: 'B3',69: 'B0',68: 'AD',67: 'AB',66: 'A8',65: 'A6',64: 'A3',63: 'A1',62: '9E',61: '9C',60: '99',59: '96',58: '94',57: '91',56: '8F',55: '8C',54: '8A',53: '87',52: '85',51: '82',50: '80',49: '7D',48: '7A',47: '78',46: '75',45: '73',44: '70',43: '6E',42: '6B',41: '69',40: '66',39: '63',38: '61',37: '5E',36: '5C',35: '59',34: '57',33: '54',32: '52',31: '4F',30: '4D',29: '4A',28: '47',27: '45',26: '42',25: '40',24: '3D',23: '3B',22: '38',21: '36',20: '33',19: '30',18: '2E',17: '2B',16: '29',15: '26',14: '24',13: '21',12: '1F',11: '1C',10: '1A',9: '17',8: '14',7: '12',6: '0F',5: '0D',4: '0A',3: '08',2: '05',1: '03',0: '00'};
 }

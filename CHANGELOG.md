@@ -24,8 +24,10 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Code cleanup.
 ### Removed
 ### Fixed
+- Minor fixes.
 
 ## [2.0.0] - 2023-12-17
 ### Added
