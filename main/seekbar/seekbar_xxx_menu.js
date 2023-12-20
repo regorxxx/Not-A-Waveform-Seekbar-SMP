@@ -1,8 +1,16 @@
 ﻿'use strict';
-//14/12/23
-include('..\\..\\helpers\\helpers_xxx_input.js')
+//20/12/23
+
+/* exported bindMenu */
+
+/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable */
+
+include('..\\..\\helpers\\helpers_xxx_input.js');
+/* global Input:readable */
 include('..\\window\\window_xxx_background_menu.js');
+/* global _menu:readable, _attachedMenu:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
+/* global ntc:readable */
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma-ultra-light.min'); // Relative to helpers folder
 
 function bindMenu(parent) {
@@ -15,10 +23,10 @@ function createSeekbarMenu(bClear = true) {
 	const menu = this.menu;
 	if (bClear) {menu.clear(true);} // Reset on every call
 	// helper
-	const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');} // From statistics
+	const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');}; // NOSONAR From statistics
 	menu.newEntry({entryText: 'Configure the seekbar:', flags: MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
-	{
+	{ // NOSONAR [menu block]
 		menu.newEntry({entryText: 'Enable seekbar', func: () => {
 			this.switch();
 			seekbarProperties.bEnabled[1] = this.active;
@@ -61,7 +69,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newCheckMenu(subMenu, options[0].name, options[options.length - 1].name, () => options.findIndex(o => o.key === this.preset.analysisMode));
 		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
-		{
+		{ // NOSONAR [menu block]
 			[
 				{name: 'Auto-delete analysis files', key: 'bAutoRemove'},
 				{name: 'sep'},
@@ -77,15 +85,15 @@ function createSeekbarMenu(bClear = true) {
 			});
 		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
-		{
-		menu.newEntry({menuName: subMenu, entryText: 'File name format...', func: () => {
-			const tf = Input.string('string', this.Tf.Expression || '', 'File name format:\n(TF expression)', window.Name, '$lower([$replace(%ALBUM ARTIST%,\,)]\\[$replace(%ALBUM%,\,)][ {$if2($replace(%COMMENT%,\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\,))');
-			if (tf === null) {return;}
-			this.Tf = fb.TitleFormat(tf);
-			seekbarProperties.matchPattern[1] = tf;
-			this.saveProperties();
-		}});
-	}
+		{ // NOSONAR [menu block]
+			menu.newEntry({menuName: subMenu, entryText: 'File name format...', func: () => {
+				const tf = Input.string('string', this.Tf.Expression || '', 'File name format:\n(TF expression)', window.Name, '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))');
+				if (tf === null) {return;}
+				this.Tf = fb.TitleFormat(tf);
+				seekbarProperties.matchPattern[1] = tf;
+				this.saveProperties();
+			}});
+		}
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
@@ -194,7 +202,7 @@ function createSeekbarMenu(bClear = true) {
 		[1000, 500, 200, 100, 80, 60, 30]
 			.forEach((s) => {
 				const entryText = s + ' ms';
-				menu.newEntry({menuName: subMenuTwo, entryText: s, func: () => {
+				menu.newEntry({menuName: subMenuTwo, entryText, func: () => {
 					this.updateConfig({ui: {refreshRate: s}});
 					this.saveProperties();
 				}});
@@ -212,8 +220,8 @@ function createSeekbarMenu(bClear = true) {
 		});
 	}
 	menu.newEntry({entryText: 'sep'});
-	{
-		const subMenu = menu.newMenu('Background...');
+	{ // NOSONAR [menu block]
+		menu.newMenu('Background...');
 	}
 	{
 		const subMenu = menu.newMenu('Colors...');
@@ -229,7 +237,7 @@ function createSeekbarMenu(bClear = true) {
 				{name: 'sep'},
 				{name: 'None',		bPrepaint: false,	colors: {bg: -1, bgFuture: -1}},
 			].forEach((o) => {
-				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+				if (o.name === 'sep' || !Object.hasOwn(o, 'colors')) {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
 				} else {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
@@ -248,7 +256,7 @@ function createSeekbarMenu(bClear = true) {
 					{name: 'Full panel',		bPartial: false,	key: 'bg'},
 					{name: 'After current pos.',bPartial: true,	key: 'bgFuture'},
 				].forEach((o) => {
-					if (o.name === 'sep' || !o.hasOwnProperty('key')) {
+					if (o.name === 'sep' || !Object.hasOwn(o, 'key')) {
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED});
 					} else {
 						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
@@ -275,7 +283,7 @@ function createSeekbarMenu(bClear = true) {
 				{name: 'sep'},
 				{name: 'None',		colors: {main: -1, alt: -1, mainFuture: -1, altFuture: -1}},
 			].forEach((o) => {
-				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+				if (o.name === 'sep' || !Object.hasOwn(o, 'colors')) {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
 				} else {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
@@ -296,7 +304,7 @@ function createSeekbarMenu(bClear = true) {
 					{name: 'Exterior (after current)',	bPrepaint: true,	key: 'mainFuture'},
 					{name: 'Interior (after current)',	bPrepaint: true,	key: 'altFuture'},
 				].forEach((o) => {
-					if (o.name === 'sep' || !o.hasOwnProperty('key')) {
+					if (o.name === 'sep' || !Object.hasOwn(o, 'key')) {
 						menu.newEntry({menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED});
 					} else {
 						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
@@ -327,7 +335,7 @@ function createSeekbarMenu(bClear = true) {
 				{name: 'sep'},
 				{name: 'None',		colors: {currPos: -1}},
 			].forEach((o) => {
-				if (o.name === 'sep' || !o.hasOwnProperty('colors')) {
+				if (o.name === 'sep' || !Object.hasOwn(o, 'colors')) {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
 				} else {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, func: () => {
@@ -358,7 +366,7 @@ function createSeekbarMenu(bClear = true) {
 				{name: 'Bg. full panel',				bPrepaint: false,	key: 'bg'},
 				{name: 'Bg. (after current).',			bPartial: true,		key: 'bgFuture'},
 			].forEach((o) => {
-				if (o.name === 'sep' || !o.hasOwnProperty('key')) {
+				if (o.name === 'sep' || !Object.hasOwn(o, 'key')) {
 					menu.newEntry({menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED});
 				} else {
 					const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
