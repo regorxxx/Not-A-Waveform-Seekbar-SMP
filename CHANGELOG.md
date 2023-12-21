@@ -24,6 +24,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Helpers: updated helpers.
 - Update audiowaveform binaries to 1.9.1.
 - Code cleanup.
 ### Removed
