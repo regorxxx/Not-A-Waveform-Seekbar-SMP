@@ -1,8 +1,8 @@
 'use strict';
-//19/12/23
+//24/12/23
 
 include('seekbar.js');
-/* global removeEventListeners:readable, seekbar:readable, MK_SHIFT:readable, menu:readable */
+/* global removeEventListeners:readable, seekbar:readable, MK_SHIFT:readable, windowMenu:readable */
 include('main\\seekbar\\seekbar_xxx_options.js');
 /* global options:readable */
 
@@ -46,7 +46,7 @@ addEventListener('on_mouse_leave', () => {
 addEventListener('on_mouse_rbtn_up', (x, y, mask) => {
 	// Must return true, if you want to suppress the default context menu.
 	// Note: left shift + left windows key will bypass this callback and will open default context menu.
-	if (mask === MK_SHIFT) { return menu.btn_up(x, y); }
+	if (mask === MK_SHIFT) { return windowMenu.btn_up(x, y); }
 	if (options.properties.bOptions[1]) { options.rbtn_down(x, y, mask); }
 	else { seekbar.rbtn_up(x, y, mask); }
 	return true;

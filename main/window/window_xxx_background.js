@@ -1,19 +1,26 @@
 ﻿'use strict';
-//14/12/23
+//24/12/23
+
+/* exported _background */
 
 include('window_xxx_helpers.js');
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable */
 
 function _background({
-		x, y, w, h,
-		coverMode, coverModeOptions,
-		colorMode, colorModeOptions,
-		timer,
-		callbacks,
-	} = {}) {
-		
+	x, y, w, h,
+	offsetH = _scale(1),
+	/* eslint-disable no-unused-vars */
+	coverMode, coverModeOptions,
+	colorMode, colorModeOptions,
+	timer,
+	callbacks,
+	/* eslint-enable no-unused-vars */
+} = {}) {
+
 	this.defaults = () => {
 		return {
 			x: 0, y: 0, w: window.Width, h: window.Height,
+			offsetH: _scale(1),
 			timer: 60,
 			coverMode: 'none', // none | front | back | disc | icon | artist | path
 			coverModeOptions: {blur: 10, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true},
@@ -22,7 +29,7 @@ function _background({
 			callbacks: {change: null  /* (config, arguments, callbackArgs) => void(0) */},
 		};
 	};
-	
+
 	this.updateImageBg = debounce((bForce = false) => {
 		const bPath = this.coverMode.toLowerCase() === 'path';
 		if (this.coverMode.toLowerCase() === 'none') {this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.handle = null; this.coverImg.art.colors = null;}
@@ -40,7 +47,7 @@ function _background({
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = this.coverModeOptions.path;
 			} else {
-				if (!result.image) {throw 'Image not available';}
+				if (!result.image) {throw new Error('Image not available');}
 				this.coverImg.art.image = result.image;
 				this.coverImg.art.path = result.path;
 				this.coverImg.handle = handle.RawPath;
@@ -57,8 +64,8 @@ function _background({
 			return this.repaint();
 		});
 	}, 250);
-	
-	this.paintImage = (gr, limits = {x, y, w, h, offsetH}, fill = null /* {transparency: 20} */) => {
+
+	this.paintImage = (gr, limits = { x, y, w, h, offsetH }, fill = null /* {transparency: 20} */) => {
 		if (this.coverImg.art.image) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.coverImg.art.image;
@@ -76,7 +83,7 @@ function _background({
 							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, this.coverModeOptions.angle, this.coverModeOptions.alpha);
 						}
 					} else {
-							gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, this.coverModeOptions.angle, this.coverModeOptions.alpha);
+						gr.DrawImage(img, limits.x , limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, this.coverModeOptions.angle, this.coverModeOptions.alpha);
 					}
 				} else {
 					let w, h;
@@ -88,7 +95,7 @@ function _background({
 			gr.SetInterpolationMode(InterpolationMode.Default);
 		}
 	};
-	
+
 	this.paint = (gr) => {
 		if (this.w <= 0 || this.h <= 0) {return;}
 		let grImg, bCreateImg;
@@ -131,7 +138,8 @@ function _background({
 			case 'icon':
 			case 'artist':
 			case 'path': {
-				this.paintImage(gr, {x: this.x, y: this.y, w: this.w, h: this.h, offsetH: _scale(1)});
+				this.paintImage(gr, {x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH});
+				break;
 			}
 			case 'none':
 			default:
@@ -151,11 +159,11 @@ function _background({
 	};
 	const debounced = {
 		[this.timer]: debounce(window.RepaintRect, this.timer, false, window)
-	}
+	};
 	this.repaint = (timeout = 0) => {
 		if (timeout === 0) {window.RepaintRect(this.x, this.y, this.x + this.w, this.y + this.h);}
 		else {
-			if (!debounced.hasOwnProperty(timeout)) {debounced[timeout] = debounce(window.RepaintRect, timeout, false, window)}
+			if (!Object.prototype.hasOwn(debounced, timeout)) {debounced[timeout] = debounce(window.RepaintRect, timeout, false, window);}
 			debounced[timeout](this.x, this.y, this.x + this.w, this.y + this.h, true);
 		}
 	};
@@ -188,7 +196,7 @@ function _background({
 		if (config.colorMode || config.colorModeOptions) {this.colorImg = null;}
 		this.resize({bRepaint});
 		if (callback && isFunction(callback)) {callback.call(this, this.exportConfig(), arguments[0], callbackArgs);}
-	}
+	};
 	this.exportConfig = (bPosition = false) => {
 		return {
 			coverMode:			this.coverMode,
@@ -207,7 +215,9 @@ function _background({
 			case 'icon':
 			case 'artist':
 			case 'path':
-				if (this.coverImg.art.image) {return this.coverImg.art.image.GetColourScheme(2);}
+				return this.coverImg.art.image
+					? this.coverImg.art.image.GetColourScheme(2)
+					: [this.colorModeOptions.color[0], this.colorModeOptions.color[1] || this.colorModeOptions.color[0]];
 			case 'none':
 			default:
 				return [this.colorModeOptions.color[0], this.colorModeOptions.color[1] || this.colorModeOptions.color[0]];
@@ -224,6 +234,6 @@ function _background({
 	};
 	this.colorImg = null;
 	this.coverImg = {art: {path: '', image: null, colors: null}, handle: null};
-	
+
 	this.init();
 }

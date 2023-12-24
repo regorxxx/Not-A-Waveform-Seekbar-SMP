@@ -1,5 +1,7 @@
 ﻿'use strict';
-//14/12/23
+//24/12/23
+
+/* exported fso, debounce, _tt, blendColours, lightenColor, darkenColor, tintColor, _gdiFont, _textWidth, clone, getNested, setNested, */
 
 /*
 	Global Variables
@@ -19,8 +21,9 @@ if (on_script_unload) {
 	on_script_unload = () => {
 		oldFunc();
 		onScriptUnloadTT();
-	}
-} else {var on_script_unload = onScriptUnloadTT;}
+	};
+	// eslint-disable-next-line no-redeclare
+} else { var on_script_unload = onScriptUnloadTT; } // NOSONAR
 
 
 // Cache
@@ -31,8 +34,8 @@ const fonts = {}; // Caches _gdifont() values;
 function _scale(size) {
 	if (!scaleDPI[size]) {
 		let DPI;
-		try {DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')}
-		catch (e) {DPI = 96} // Fix for linux
+		try { DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); }
+		catch (e) { DPI = 96; } // Fix for linux
 		scaleDPI[size] = Math.round(size * DPI / 72);
 	}
 	return scaleDPI[size];
@@ -46,8 +49,8 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 	return (...args) => {
 		const boundFunc = fn.bind(parent, ...args);
 		clearTimeout(timerId);
-		if (immediate && !timerId) {boundFunc();}
-		const calleeFunc = immediate ? () => {timerId = null;} : boundFunc;
+		if (immediate && !timerId) { boundFunc(); }
+		const calleeFunc = immediate ? () => { timerId = null; } : boundFunc;
 		timerId = setTimeout(calleeFunc, delay);
 		return timerId;
 	};
@@ -59,47 +62,46 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 
 function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 1200) {
 	this.tooltip = window.Tooltip;
-	this.font = {name: font, size: fontSize};
+	this.font = { name: font, size: fontSize };
 	this.tooltip.SetFont(font, fontSize);
 	this.width = this.tooltip.SetMaxWidth(width);
 	this.text = this.tooltip.Text = value;
 	this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
-	
-	this.SetValue = function (value,  bForceActivate = false) {
+
+	this.SetValue = function (value, bForceActivate = false) {
 		if (value === null) {
 			this.Deactivate();
-			return;
 		} else {
 			if (this.tooltip.Text !== value) {
 				this.text = this.tooltip.Text = value;
 				this.Activate();
 			}
-			if (bForceActivate) {this.Activate();} // Only on force to avoid flicker
+			if (bForceActivate) { this.Activate(); } // Only on force to avoid flicker
 		}
 	};
-	
+
 	this.SetFont = function (font_name, font_size_pxopt, font_styleopt) {
 		this.tooltip.SetFont(font_name, font_size_pxopt, font_styleopt);
 	};
-	
+
 	this.SetMaxWidth = function (width) {
 		this.tooltip.SetMaxWidth(width);
 	};
-	
+
 	this.Activate = function () {
 		this.tooltip.Activate();
 	};
-	
+
 	this.Deactivate = function () {
 		this.tooltip.Deactivate();
 	};
-	
+
 	this.SetDelayTime = function (type, time) {
-		this.tooltip.SetDelayTime(type, time) ;
-    };
-	
+		this.tooltip.SetDelayTime(type, time);
+	};
+
 	this.GetDelayTime = function (type) {
-		this.tooltip.GetDelayTime(type) ;
+		this.tooltip.GetDelayTime(type);
 	};
 
 }
@@ -161,7 +163,7 @@ function tintColor(color, percent) {
 	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
 	return isDark(r, g, b)
 		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
-		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));;
+		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));
 }
 
 function darkenColorVal(color, percent) {
@@ -170,7 +172,7 @@ function darkenColorVal(color, percent) {
 	return Math.max(val, 0);
 }
 function lightenColorVal(color, percent) {
-	const val = Math.round(color + ((255-color) * (percent / 100)));
+	const val = Math.round(color + ((255 - color) * (percent / 100)));
 	return Math.min(val, 255);
 }
 
@@ -179,7 +181,7 @@ function getBrightness(r, g, b) { // https://www.w3.org/TR/AERT/#color-contrast
 }
 
 function isDark(r, g, b) {
-	return (getBrightness(r,g,b) < 186);
+	return (getBrightness(r, g, b) < 186);
 }
 
 /*
@@ -191,7 +193,7 @@ function _gdiFont(name, size, style) {
 	if (!fonts[id]) {
 		fonts[id] = gdi.Font(name, size, style || 0);
 	}
-	if (fonts[id].Name !== name) {console.log('Missing font: ' + name);}
+	if (fonts[id].Name !== name) { console.log('Missing font: ' + name); }
 	return fonts[id];
 }
 
@@ -204,7 +206,7 @@ function _textWidth(value, font) {
 */
 function clone(obj) {
 	const raw = new Set(['function', 'number', 'boolean', 'string']);
-	if (raw.has(typeof obj)) {return obj;}
+	if (raw.has(typeof obj)) { return obj; }
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();
@@ -262,20 +264,49 @@ function getNested(obj, ...args) {
 	return args.reduce((obj, level) => obj && obj[level], obj);
 }
 
-function setNested(obj, value, ...args) => {
+function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
-		if (obj && len === idx && obj.hasOwnProperty(level)) {obj[level] = value;}
+		if (obj && len === idx && Object.prototype.hasOwn(obj, level)) { obj[level] = value; }
 		return obj && obj[level];
 	}, obj);
-	return obj;
+}
+
+function getRegExpFlags(regExp) {
+	if (typeof regExp.source.flags === 'string') {
+		return regExp.source.flags;
+	} else {
+		const flags = [];
+		regExp.global && flags.push('g');
+		regExp.ignoreCase && flags.push('i');
+		regExp.multiline && flags.push('m');
+		regExp.sticky && flags.push('y');
+		regExp.unicode && flags.push('u');
+		return flags.join('');
+	}
+}
+
+// Add ES2022 method
+// https://github.com/tc39/proposal-accessible-object-hasownproperty
+if (!Object.hasOwn) {
+	Object.defineProperty(Object, 'hasOwn', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: function (object, property) {
+			if (object === null) {
+				throw new TypeError('Cannot convert undefined or null to object');
+			}
+			return Object.prototype.hasOwnProperty.call(Object(object), property); // NOSONAR
+		}
+	});
 }
 
 /*
 	Num
 */
 
-Math.randomNum = function randomNum(min, max, options = {integer: false, includeMax: false}) {
+Math.randomNum = function randomNum(min, max, options = { integer: false, includeMax: false }) {
 	if (options.integer) {
 		min = Math.ceil(min);
 		max = Math.floor(max) + (options.includeMax ? 1 : 0);
@@ -283,4 +314,4 @@ Math.randomNum = function randomNum(min, max, options = {integer: false, include
 	} else {
 		return Math.random() * (max - min + (options.includeMax ? 1 : 0)) + min;
 	}
-}
+};

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//24/12/23
 
 /* exported bindMenu */
 
@@ -14,7 +14,7 @@ include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma-ultra-light.min'); // Relative to helpers folder
 
 function bindMenu(parent) {
-	return _attachedMenu.call(parent, {rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
+	return _attachedMenu.call(parent, { rMenu: createSeekbarMenu.bind(parent), popup: parent.pop});
 }
 
 // Generic menu for config
