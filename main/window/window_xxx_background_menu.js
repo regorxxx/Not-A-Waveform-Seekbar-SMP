@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//27/12/23
 
 /* exported createBackgroundMenu */
 
@@ -13,14 +13,16 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 
-function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, parentMenu, options = { nameColors: false /* Requires Chroma */ }) { // Must be bound to _background() instance
+function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, parentMenu, options = { nameColors: false /* Requires Chroma */ }) { // NOSONAR [Must be bound to _background() instance]
 	// Constants
 	if (Object.prototype.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
 	const menu = parentMenu || new _menu();
 	if (appendTo) { menu.findOrNewMenu(appendTo.menuName, appendTo.subMenuFrom, appendTo.flags); }
 	const mainMenuName = appendTo.menuName || menu.getMainMenuName();
 	// helper
-	const getColorName = (val) => { return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-'); };
+	const getColorName = (val) => {
+		return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
+	};
 	const createMenuOption = (key, subKey, menuName = mainMenuName, bCheck = true, addFunc = null) => {
 		return function (option) {
 			if (option.entryText === 'sep' && menu.getEntries().pop().entryText !== 'sep') { menu.newEntry({ menuName, entryText: 'sep' }); return; } // Add sep only if any entry has been added

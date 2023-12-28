@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//27/12/23
 
 /* exported bindMenu */
 
@@ -23,7 +23,9 @@ function createSeekbarMenu(bClear = true) {
 	const menu = this.menu;
 	if (bClear) {menu.clear(true);} // Reset on every call
 	// helper
-	const getColorName = (val) => {return (val !== -1 ? ntc.name(Chroma(val).hex())[1] : '-none-');}; // NOSONAR From statistics
+	const getColorName = (val) => {
+		return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
+	};
 	menu.newEntry({entryText: 'Configure the seekbar:', flags: MF_GRAYED});
 	menu.newEntry({entryText: 'sep'});
 	{ // NOSONAR [menu block]
