@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//29/12/23
 
 /* exported createBackgroundMenu */
 
@@ -15,7 +15,7 @@ include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 
 function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, parentMenu, options = { nameColors: false /* Requires Chroma */ }) { // NOSONAR [Must be bound to _background() instance]
 	// Constants
-	if (Object.prototype.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
+	if (Object.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
 	const menu = parentMenu || new _menu();
 	if (appendTo) { menu.findOrNewMenu(appendTo.menuName, appendTo.subMenuFrom, appendTo.flags); }
 	const mainMenuName = appendTo.menuName || menu.getMainMenuName();

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/23
+//29/12/23
 
 /* exported fso, debounce, _tt, blendColours, lightenColor, darkenColor, tintColor, _gdiFont, _textWidth, clone, getNested, setNested, */
 
@@ -267,7 +267,7 @@ function getNested(obj, ...args) {
 function setNested(obj, value, ...args) {
 	const len = args.length - 1;
 	return args.reduce((obj, level, idx) => {
-		if (obj && len === idx && Object.prototype.hasOwn(obj, level)) { obj[level] = value; }
+		if (obj && len === idx && Object.hasOwn(obj, level)) { obj[level] = value; }
 		return obj && obj[level];
 	}, obj);
 }
