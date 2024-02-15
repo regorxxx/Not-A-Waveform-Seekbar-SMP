@@ -24,6 +24,7 @@
 ## [Unreleased][]
 ### Added
 - Configuration: added integrity checks to global user settings files, found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\[...].json'. In particular queries are now check to ensure they are valid and will throw a popup at init otherwise. Other settings are check to ensure they contain valid values too.
+- Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to output to console profiling logs at script init. They work globally. Disabled by default.
 ### Changed
 - Helpers: updated helpers.
 - Console: improved log file formatting on windows text editors which parse new lines only with CR+LF instead of LF.

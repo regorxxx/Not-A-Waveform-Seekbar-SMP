@@ -1,8 +1,10 @@
 'use strict';
-//19/12/23
+//15/02/24
+
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.0.0' }); }
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, soFeat:readable, globFonts:readable */
+/* global folders:readable, globSettings:readable, soFeat:readable, globFonts:readable, globProfiler:readable */
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable */
 include('helpers\\helpers_xxx_file.js');
@@ -21,7 +23,7 @@ include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.0.0' }); }
+globProfiler.Print('helpers');
 
 let seekbarProperties = {
 	binaries: ['Binaries paths',
@@ -131,6 +133,8 @@ const background = new _background({
 	},
 });
 
+globProfiler.Print('settings');
+
 /*
 	Seekbar
 */
@@ -155,6 +159,8 @@ seekbar.saveProperties = function () {
 	}
 	overwriteProperties(seekbarProperties);
 };
+
+globProfiler.Print('seekbar');
 
 // Update check
 if (seekbarProperties.bAutoUpdateCheck[1]) {
@@ -244,3 +250,5 @@ addEventListener('on_mouse_rbtn_up', (x, y) => {
 });
 
 if (fb.IsPlaying) { window.Repaint(); setTimeout(() => { on_playback_new_track(fb.GetNowPlaying()); seekbar.updateTime(fb.PlaybackTime); }, 0); }
+
+globProfiler.Print('callbacks');
