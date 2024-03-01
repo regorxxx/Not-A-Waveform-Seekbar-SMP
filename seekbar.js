@@ -1,5 +1,5 @@
 'use strict';
-//28/02/24
+//01/03/24
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.1.0' }); }
 
@@ -11,6 +11,8 @@ include('helpers\\helpers_xxx_file.js');
 /* global _isFile:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable */
+include('helpers\\helpers_xxx_prototypes_smp.js');
+/* global extendGR:readable */
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable */
 include('helpers\\menu_xxx.js');
@@ -223,7 +225,7 @@ addEventListener('on_playback_stop', (reason) => {
 });
 
 addEventListener('on_paint', (gr) => {
-	// extendGR(gr, {Repaint: true}); // helpers_xxx_prototypes_smp.js
+	if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
 	// Skip background if it will not be seen
 	if (Math.round(seekbar.ui.transparency.bg) !== 100 || seekbar.preset.paintMode === 'partial' && Math.round(seekbar.ui.transparency.bgFuture) !== 100) {
 		background.paint(gr);
