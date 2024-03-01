@@ -1,11 +1,18 @@
 ﻿'use strict';
-//29/12/23
+//29/02/24
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
 /* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable */
 
+/**
+ * Background for panel with different cover options
+ *
+ * @class
+ * @name _background
+ * @param {{ x: any y: any w: any h: any offsetH?: any coverMode: any coverModeOptions: any colorMode: any colorModeOptions: any timer: any callbacks: any }} { x, y, w, h, offsetH, coverMode, coverModeOptions, colorMode, colorModeOptions, timer, callbacks, }?
+ */
 function _background({
 	x, y, w, h,
 	offsetH = _scale(1),
@@ -234,6 +241,22 @@ function _background({
 	};
 	this.colorImg = null;
 	this.coverImg = { art: { path: '', image: null, colors: null }, handle: null };
+	/** @type {Number} */
+	this.x = this.y = this.w = this.h = 0;
+	/** @type {Number} */
+	this.offsetH = 0;
+	/** @type {('none'|'front'|'back'|'disc'|'icon'|'artist'|'path')} */
+	this.coverMode = '';
+	/** @type {{ blur:Number, angle:Number, alpha:Number, path:String, bNowPlaying:Boolean, bProportions:Boolean, bFill:Boolean }} */
+	this.coverModeOptions = {};
+	/** @type {('single'|'gradient'|'bigradient'|'none')} */
+	this.colorMode = '';
+	/** @type {{ bDither:Boolean, angle:Number, color:Number[] }} */
+	this.colorModeOptions = {};
+	/** @type {Number} */
+	this.timer = 0;
+	/** @type {{ change: function(config, arguments, callbackArgs) }} */
+	this.callbacks = {};
 
 	this.init();
 }

@@ -26,6 +26,7 @@
 ### Added
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for panel repaint debugging purpose. Disabled by default.
 ### Changed
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
