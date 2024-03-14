@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [2.2.0](#220---2023-03-15)
 - [2.1.0](#210---2023-02-28)
 - [2.0.0](#200---2023-12-17)
 - [1.4.0](#140---2023-12-11)
@@ -24,7 +25,15 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+- Helpers: updated helpers.
+### Removed
+### Fixed
+
+## [2.2.0] - 2024-03-15
+### Added
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for panel repaint debugging purpose. Disabled by default.
+- Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting to check OS features on every panel startup. Enabled by default. This has been the default behavior since OS' features check was implemented, but it can now be disabled to improve init performance a bit, specially at foobar2000 startup (since it seems to hang in some cases when running it on slow HDDs or systems).
 ### Changed
 - Helpers: updated helpers.
 ### Removed
@@ -197,7 +206,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.4.01...v2.0.0
 [1.4.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v1.3.1...v1.4.0
