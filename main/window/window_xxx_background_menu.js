@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/12/23
+//04/03/24
 
 /* exported createBackgroundMenu */
 
@@ -13,7 +13,7 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 
-function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, parentMenu, options = { nameColors: false /* Requires Chroma */ }) { // NOSONAR [Must be bound to _background() instance]
+function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, parentMenu, options = { nameColors: false /* Requires Chroma */, onInit: null /* (menu) => void(0) */ }) { // NOSONAR [Must be bound to _background() instance]
 	// Constants
 	if (Object.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
 	const menu = parentMenu || new _menu();
@@ -156,6 +156,8 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 			});
 		});
 	}
+
+	if (options.onInit) {options.onInit(menu); }
 
 	return menu;
 }
