@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/02/24
+//07/05/24
 
 /* exported _background */
 
@@ -79,7 +79,7 @@ function _background({
 			if (fill) {
 				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), this.coverModeOptions.angle, fill.transparency);
 			} else {
-				if (this.coverModeOptions.bFill) {
+				if (this.coverModeOptions.bFill) { // NOSONAR
 					if (this.coverModeOptions.bProportions) {
 						const prop = limits.w / (limits.h - limits.offsetH);
 						if (prop > 1) {
