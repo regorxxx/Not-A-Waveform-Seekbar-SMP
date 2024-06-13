@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/24
+//11/06/24
 
 /* exported _background */
 
@@ -30,7 +30,7 @@ function _background({
 			offsetH: _scale(1),
 			timer: 60,
 			coverMode: 'none', // none | front | back | disc | icon | artist | path
-			coverModeOptions: { blur: 10, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true },
+			coverModeOptions: { blur: 10, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true },
 			colorMode: 'none', // none | single | gradient | bigradient
 			colorModeOptions: { bDither: true, angle: 91, color: [] },
 			callbacks: { change: null  /* (config, arguments, callbackArgs) => void(0) */ },
@@ -39,10 +39,19 @@ function _background({
 
 	this.updateImageBg = debounce((bForce = false) => {
 		const bPath = this.coverMode.toLowerCase() === 'path';
-		if (this.coverMode.toLowerCase() === 'none') { this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.handle = null; this.coverImg.art.colors = null; }
+		if (this.coverMode.toLowerCase() === 'none') {
+			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
+			this.coverImg.handle = null; this.coverImg.id = null;
+		}
 		if (this.colorMode.toLowerCase() === 'none') { this.colorImg = null; }
 		const handle = (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null) || fb.GetFocusItem(true);
 		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === this.coverModeOptions.path)) { return; }
+		let id = null;
+		if (this.coverModeOptions.bCacheAlbum && handle) {
+			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
+			id = tf.EvalWithMetadb(handle);
+			if (!bForce && id === this.coverImg.id) { return; }
+		}
 		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
 		const promise = bPath && this.coverModeOptions.path.length
 			? gdi.LoadImageAsyncV2('', this.coverModeOptions.path)
@@ -58,6 +67,7 @@ function _background({
 				this.coverImg.art.image = result.image;
 				this.coverImg.art.path = result.path;
 				this.coverImg.handle = handle.RawPath;
+				this.coverImg.id = id;
 			}
 			if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
 				this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
@@ -67,7 +77,8 @@ function _background({
 			}
 			return this.repaint();
 		}).catch(() => {
-			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.handle = null; this.coverImg.art.colors = null;
+			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
+			this.coverImg.handle = null; this.coverImg.id = null;
 			return this.repaint();
 		});
 	}, 250);
@@ -240,7 +251,7 @@ function _background({
 		this.updateImageBg();
 	};
 	this.colorImg = null;
-	this.coverImg = { art: { path: '', image: null, colors: null }, handle: null };
+	this.coverImg = { art: { path: '', image: null, colors: null}, handle: null, id: null };
 	/** @type {Number} */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} */
