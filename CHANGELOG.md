@@ -2,9 +2,10 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
-- [2.3.0](#230---2023-03-21)
-- [2.2.0](#220---2023-03-15)
-- [2.1.0](#210---2023-02-28)
+- [2.4.0](#240---2024-07-24)
+- [2.3.0](#230---2024-03-21)
+- [2.2.0](#220---2024-03-15)
+- [2.1.0](#210---2024-02-28)
 - [2.0.0](#200---2023-12-17)
 - [1.4.0](#140---2023-12-11)
 - [1.3.1](#131---2023-12-08)
@@ -26,6 +27,12 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [2.4.0] - 2024-07-24
+### Added
 - UI: added album art caching for panel background whenever selecting/playing track changes but belongs to the same album. It checks for same album name and parent directory. 
 - Configuration: expanded user configurable file at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\globSettings.json' with a new setting for console logging to file. Disabled by default. Now this is a change from the previous behavior, where console was always logged to 'console.log' file at the [FOOBAR PROFILE FOLDER]. It can now be switched, but since it's probably not useful for most users is disabled by default.
 ### Changed
@@ -33,7 +40,6 @@
 ### Removed
 ### Fixed
 - Configuration: .json files at 'foobar2000\js_data\presets\global' not being saved with the calculated properties based on user values from other files.
-
 ## [2.3.0] - 2024-03-21
 ### Added
 ### Changed
@@ -217,7 +223,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.0.0...v2.1.0
