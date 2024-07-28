@@ -28,7 +28,8 @@
 ## [Unreleased][]
 ### Added
 ### Changed
-- UI: duplicated background submenu.
+- UI: minimum size of points is now set to 1px instead of 0.5px to be on the safer side when implemented on slow systems or other SMP themes.
+- UI: cleanup of submenu names.
 ### Removed
 ### Fixed
 - UI: duplicated background submenu.

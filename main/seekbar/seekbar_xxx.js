@@ -1,5 +1,5 @@
 'use strict';
-//20/12/23
+//29/07/24
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -611,7 +611,7 @@ function _seekbar({
 		if (frames !== 0) {
 			const size = (this.h - this.y) * this.scaleH;
 			const barW = (this.w - this.marginW * 2) / frames;
-			const minPointDiff = 0.5; // in px
+			const minPointDiff = 1; // in px
 			let n = 0;
 			// Paint waveform layer
 			const timeConstant = this.timeConstant;
