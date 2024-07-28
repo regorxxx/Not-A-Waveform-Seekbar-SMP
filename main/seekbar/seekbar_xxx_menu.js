@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//29/07/24
 
 /* exported bindMenu */
 
@@ -208,7 +208,7 @@ function createSeekbarMenu(bClear = true) {
 					this.updateConfig({ui: {refreshRate: s}});
 					this.saveProperties();
 				}});
-				menu.newCheckMenu(subMenuTwo, s, void(0), () => (this.ui.refreshRate === s));
+				menu.newCheckMenuLast(() => this.ui.refreshRate === s);
 			});
 		menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 		[

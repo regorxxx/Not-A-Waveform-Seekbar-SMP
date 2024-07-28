@@ -30,6 +30,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: refresh rate submenu not showing the actual setting used (with a check).
 
 ## [2.4.0] - 2024-07-24
 ### Added
