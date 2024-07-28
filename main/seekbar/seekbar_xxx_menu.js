@@ -3,12 +3,12 @@
 
 /* exported bindMenu */
 
-/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable */
+/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable, background:readable */
 
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
 include('..\\window\\window_xxx_background_menu.js');
-/* global _menu:readable, _attachedMenu:readable */
+/* global _menu:readable, _attachedMenu:readable, createBackgroundMenu:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma-ultra-light.min'); // Relative to helpers folder
@@ -146,7 +146,7 @@ function createSeekbarMenu(bClear = true) {
 			}, flags: o.flags || MF_STRING});
 			menu.newCheckMenu(subMenu, o.name, void(0), () => this.preset[o.key]);
 		});
-		const subMenuTwo = menu.newMenu('Seconds...', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
+		const subMenuTwo = menu.newMenu('Seconds', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
 		[Infinity, 2, 5, 10]
 			.forEach((s) => {
 				const entryText = (isFinite(s) ? s : 'Full');
@@ -176,7 +176,7 @@ function createSeekbarMenu(bClear = true) {
 			}, flags: o.flags || MF_STRING});
 			menu.newCheckMenu(subMenu, o.name, void(0), () => this.ui[o.key]);
 		});
-		const subMenuThree = menu.newMenu('Width...', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
+		const subMenuThree = menu.newMenu('Width', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
 		[20, 10, 8, 6, 4, 2, 1]
 			.forEach((s) => {
 				menu.newEntry({menuName: subMenuThree, entryText: s , func: () => {
@@ -200,7 +200,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newCheckMenu(subMenu, o.name, void(0), () => {return this.preset[o.key] || o.key === 'bAnimate' && this.analysis.binaryMode === 'visualizer';});
 		});
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
-		const subMenuTwo = menu.newMenu('Refresh rate...' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), subMenu, () => (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		const subMenuTwo = menu.newMenu('Refresh rate' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), subMenu, () => (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[1000, 500, 200, 100, 80, 60, 30]
 			.forEach((s) => {
 				const entryText = s + ' ms';
@@ -223,12 +223,17 @@ function createSeekbarMenu(bClear = true) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{ // NOSONAR [menu block]
-		menu.newMenu('Background...');
+		createBackgroundMenu.call(
+			background,
+			{ menuName: menu.newMenu('Background') },
+			menu,
+			{ nameColors: true }
+		);
 	}
 	{
-		const subMenu = menu.newMenu('Colors...');
+		const subMenu = menu.newMenu('Colors');
 		{
-			const subMenuTwo = menu.newMenu('Background...', subMenu);
+			const subMenuTwo = menu.newMenu('Background', subMenu);
 			menu.newEntry({menuName: subMenuTwo, entryText: 'Set waveform backgr.:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			[
@@ -251,7 +256,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			{
-				const subMenuCustom = menu.newMenu('Custom...', subMenuTwo);
+				const subMenuCustom = menu.newMenu('Custom', subMenuTwo);
 				[
 					{name: 'Ctrl + Click to set none:'},
 					{name: 'sep'},
@@ -273,7 +278,7 @@ function createSeekbarMenu(bClear = true) {
 			}
 		}
 		{
-			const subMenuTwo = menu.newMenu('Waveform...', subMenu);
+			const subMenuTwo = menu.newMenu('Waveform', subMenu);
 			menu.newEntry({menuName: subMenuTwo, entryText: 'Set waveform colors:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			[
@@ -297,7 +302,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			{
-				const subMenuCustom = menu.newMenu('Custom...', subMenuTwo);
+				const subMenuCustom = menu.newMenu('Custom', subMenuTwo);
 				[
 					{name: 'Ctrl + Click to set none:'},
 					{name: 'sep'},
@@ -321,7 +326,7 @@ function createSeekbarMenu(bClear = true) {
 			}
 		}
 		{
-			const subMenuTwo = menu.newMenu('Current position...', subMenu);
+			const subMenuTwo = menu.newMenu('Current position', subMenu);
 			menu.newEntry({menuName: subMenuTwo, entryText: 'Set indicator colors:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			[
@@ -357,7 +362,7 @@ function createSeekbarMenu(bClear = true) {
 		}
 		menu.newEntry({menuName: subMenu, entryText: 'sep'});
 		{
-			const subMenuTwo = menu.newMenu('Transparency...', subMenu);
+			const subMenuTwo = menu.newMenu('Transparency', subMenu);
 			menu.newEntry({menuName: subMenuTwo, entryText: 'Ctrl + Click to reset:', flags: MF_GRAYED});
 			menu.newEntry({menuName: subMenuTwo, entryText: 'sep'});
 			[
@@ -388,7 +393,7 @@ function createSeekbarMenu(bClear = true) {
 	}
 	menu.newEntry({entryText: 'sep'});
 	{
-		const subMenu = menu.newMenu('Other settings...');
+		const subMenu = menu.newMenu('Other settings');
 		menu.newEntry({menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
 			const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', window.Name, 200, [(n) => n >= 50]);
 			if (input === null) {return;}

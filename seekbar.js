@@ -1,5 +1,5 @@
 'use strict';
-//24/07/24
+//29/07/24
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.4.0' }); }
 
@@ -20,7 +20,6 @@ include('helpers\\menu_xxx.js');
 include('main\\seekbar\\seekbar_xxx.js');
 /* global _seekbar:readable */
 include('main\\seekbar\\seekbar_xxx_menu.js');
-/* global createBackgroundMenu:readable */
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
@@ -247,7 +246,7 @@ addEventListener('on_script_unload', () => {
 });
 
 addEventListener('on_mouse_rbtn_up', (x, y) => {
-	seekbar.rbtn_up(x, y, ['sep', createBackgroundMenu.call(background, { menuName: 'Background...' }, void (0), { nameColors: true })]);
+	seekbar.rbtn_up(x, y);
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 });
 
