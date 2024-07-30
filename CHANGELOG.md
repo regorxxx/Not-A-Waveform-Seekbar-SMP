@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [2.5.0](#250---2024-07-30)
 - [2.4.0](#240---2024-07-24)
 - [2.3.0](#230---2024-03-21)
 - [2.2.0](#220---2024-03-15)
@@ -26,6 +27,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [2.5.0] - 2024-07-30
 ### Added
 ### Changed
 - UI: minimum size of data points is now set to 1px (for any style) instead of 0.5px to be on the safer side when implemented on slow systems or other SMP themes.
@@ -228,7 +235,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.1.0...v2.2.0
