@@ -30,6 +30,7 @@
 ### Changed
 - UI: minimum size of data points is now set to 1px (for any style) instead of 0.5px to be on the safer side when implemented on slow systems or other SMP themes.
 - UI: cleanup of submenu names.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 - UI: duplicated background submenu.
