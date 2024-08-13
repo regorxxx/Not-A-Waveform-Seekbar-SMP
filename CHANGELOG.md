@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [2.5.1](#251---2024-08-13)
 - [2.5.0](#250---2024-07-30)
 - [2.4.0](#240---2024-07-24)
 - [2.3.0](#230---2024-03-21)
@@ -27,6 +28,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [2.5.1] - 2024-08-13
 ### Added
 ### Changed
 - Helpers: updated helpers
@@ -236,7 +243,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.1...HEAD
+[2.5.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...v2.5.1
 [2.5.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.2.0...v2.3.0
