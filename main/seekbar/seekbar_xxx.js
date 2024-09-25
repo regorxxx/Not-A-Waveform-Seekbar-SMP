@@ -1,5 +1,5 @@
 'use strict';
-//29/07/24
+//25/09/24
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -180,6 +180,7 @@ function _seekbar({
 	this.time = 0;
 	this.ui.refreshRateOpt = this.ui.refreshRate;
 	this.mouseDown = false;
+	this.isZippedFile = false; // Set at checkAllowedFile()
 	this.isAllowedFile = true; // Set at checkAllowedFile()
 	this.isFallback = false; // For bVisualizerFallback, set at checkAllowedFile()
 	this.isError = false; // Set at verifyData() after retrying analysis
@@ -280,7 +281,7 @@ function _seekbar({
 		if (handle) {
 			this.checkAllowedFile(handle);
 			let bAnalysis = false;
-			const { seekbarFolder, seekbarFile } = this.getPaths(handle);
+			const { seekbarFolder, seekbarFile, sourceFile } = this.getPaths(handle);
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (this.analysis.binaryMode === 'ffprobe' && _isFile(seekbarFile + '.ff.json')) {
 				this.current = _jsonParseFile(seekbarFile + '.ff.json', this.codePage) || [];
@@ -308,10 +309,10 @@ function _seekbar({
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) { return; }
-			} else if (this.analysis.bAutoAnalysis && _isFile(handle.Path)) {
+			} else if (this.analysis.bAutoAnalysis && _isFile(sourceFile)) {
 				if (this.analysis.bVisualizerFallbackAnalysis) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
-					await this.analyze(handle, seekbarFolder, seekbarFile);
+					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
 					// Calculate waveform on the fly
 					this.normalizePoints();
 					// Set animation using BPM if possible
@@ -321,7 +322,7 @@ function _seekbar({
 				}
 				throttlePaint(true);
 				if (this.analysis.bVisualizerFallbackAnalysis) { bFallbackMode.analysis = false; }
-				await this.analyze(handle, seekbarFolder, seekbarFile);
+				await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
 				if (!this.verifyData(handle, void (0), bIsRetry)) { return; }
 				bFallbackMode.analysis = bFallbackMode.paint = false;
 				bAnalysis = true;
@@ -518,7 +519,11 @@ function _seekbar({
 	};
 
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
-		this.isAllowedFile = this.analysis.binaryMode !== 'visualizer' && handle.SubSong === 0 && compatibleFiles[this.analysis.binaryMode].test(handle.Path);
+		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
+		const bNoSubSong = handle.SubSong === 0;
+		const bValidExt = compatibleFiles[this.analysis.binaryMode].test(handle.Path);
+		this.isZippedFile = handle.RawPath.indexOf('unpack://') !== -1;
+		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
 	};
 
@@ -568,6 +573,7 @@ function _seekbar({
 		this.timeConstant = 0;
 		this.cache = null;
 		this.time = 0;
+		this.isZippedFile = false;
 		this.isAllowedFile = true;
 		this.isFallback = false;
 		this.isError = false;
@@ -864,15 +870,16 @@ function _seekbar({
 		const fileName = id.split('\\').pop();
 		const seekbarFolder = this.folder + id.replace(fileName, '');
 		const seekbarFile = this.folder + id;
-		return { seekbarFolder, seekbarFile };
+		const sourceFile = this.isZippedFile ? handle.Path.split('|')[0] : handle.Path;
+		return { seekbarFolder, seekbarFile, sourceFile };
 	};
 
-	this.analyze = async (handle, seekbarFolder, seekbarFile) => {
+	this.analyze = async (handle, seekbarFolder, seekbarFile, sourceFile = handle.Path) => {
 		if (!_isFolder(seekbarFolder)) { _createFolder(seekbarFolder); }
 		let profiler, cmd;
 		// Change to track folder since ffprobe has stupid escape rules which are impossible to apply right with amovie input mode
-		let handleFileName = handle.Path.split('\\').pop();
-		const handleFolder = handle.Path.replace(handleFileName, '');
+		let handleFileName = sourceFile.split('\\').pop();
+		const handleFolder = sourceFile.replace(handleFileName, '');
 		if (this.isAllowedFile && !bFallbackMode.analysis && this.analysis.binaryMode === 'audiowaveform') {
 			if (this.bProfile) { profiler = new FbProfiler('audiowaveform'); }
 			const extension = handleFileName.match(/(?:\.)(\w+$)/i)[1];
@@ -970,7 +977,7 @@ function _seekbar({
 				else { profiler.Print('Visualizer.'); }
 			}
 			if (this.current.length) { throttlePaint(); }
-			else { console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + handle.Path); }
+			else { console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + sourceFile); }
 		}
 	};
 

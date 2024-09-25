@@ -32,6 +32,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: compressed files don't display neither an "incompatible format" nor the visualizer as fallback.
 
 ## [2.5.1] - 2024-08-13
 ### Added
