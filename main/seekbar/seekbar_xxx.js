@@ -523,7 +523,7 @@ function _seekbar({
 		const bNoSubSong = handle.SubSong === 0;
 		const bValidExt = compatibleFiles[this.analysis.binaryMode].test(handle.Path);
 		this.isZippedFile = handle.RawPath.indexOf('unpack://') !== -1;
-		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && this.isZippedFile;
+		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
 	};
 
@@ -898,7 +898,12 @@ function _seekbar({
 		} else if (this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackMode.analysis) {
 			profiler = new FbProfiler('visualizer');
 		}
-		if (this.bDebug && cmd) { console.log(cmd); }
+		if (cmd) {
+			console.log('Seekbar scanning: ' + sourceFile);
+			if (this.bDebug) { console.log(cmd); }
+		} else if (!this.isAllowedFile && this.analysis.binaryMode !== 'visualizer'  && !bFallbackMode.analysis) {
+			console.log('Seekbar skipping incompatible file: ' + sourceFile);
+		}
 		let bDone = cmd ? _runCmd(cmd, false) : true;
 		bDone = bDone && (await new Promise((resolve) => {
 			if (this.isFallback || this.analysis.binaryMode === 'visualizer' || bFallbackMode.analysis) { resolve(true); }
