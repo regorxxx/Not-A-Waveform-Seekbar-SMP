@@ -287,27 +287,33 @@ function _seekbar({
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (bFfProbe && _isFile(seekbarFile + '.ff.json')) {
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.ff.json');
 				this.current = _jsonParseFile(seekbarFile + '.ff.json', this.codePage) || [];
 				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) { return; }
 			} else if (bFfProbe && _isFile(seekbarFile + '.ff.lz')) {
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.ff.lz');
 				let str = _open(seekbarFile + '.ff.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, { inputEncoding: 'Base64' }) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) { return; }
 			} else if (bFfProbe && _isFile(seekbarFile + '.ff.lz16')) {
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.ff.lz16');
 				let str = _open(seekbarFile + '.ff.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && _isFile(seekbarFile + '.aw.json')) {
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.aw.json');
 				this.current = _jsonParseFile(seekbarFile + '.aw.json', this.codePage) || [];
 				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) { return; }
 			} else if (bAuWav && _isFile(seekbarFile + '.aw.lz')) {
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.aw.lz');
 				let str = _open(seekbarFile + '.aw.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, { inputEncoding: 'Base64' }) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) { return; }
 			} else if (bAuWav && _isFile(seekbarFile + '.aw.lz16')) {
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.aw.lz16');
 				let str = _open(seekbarFile + '.aw.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
