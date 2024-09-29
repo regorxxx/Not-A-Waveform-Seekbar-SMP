@@ -31,6 +31,7 @@
 ### Added
 ### Changed
 - Analysis: default TF path pattern for analysis files now removes/replaces any non ASCII value on new installations.
+- Helpers: updated helpers.
 ### Fixed
 - UI: compressed files don't display neither an "incompatible format" nor the visualizer as fallback.
 
