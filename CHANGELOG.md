@@ -30,7 +30,7 @@
 ## [Unreleased][]
 ### Added
 - Analysis: expanded the list of compatible files with ffprobe. Thanks @TT-ReBORN.
-- UI: new menu entry which shows if the currently playing (or focused) item is compatible with the binary mode chosen and also shows a popup with the list of extensions supported.
+- UI: new menu entry which shows if the currently playing (or focused) item is incompatible with the binary mode chosen and also shows a popup with the list of extensions supported.
 ### Changed
 - Analysis: default TF path pattern for analysis files now removes/replaces any non ASCII value on new installations.
 - Helpers: updated helpers.
