@@ -34,6 +34,7 @@
 - Helpers: updated helpers.
 ### Fixed
 - UI: compressed files don't display neither an "incompatible format" nor the visualizer as fallback.
+- UI: 'Visualizer during analysis' setting was overriding the 'Visuzalizer for incompatible files' in some cases, displaying the visualizer indefinitely for incompatible files (and not just during the analysis).
 
 ## [2.5.1] - 2024-08-13
 ### Added

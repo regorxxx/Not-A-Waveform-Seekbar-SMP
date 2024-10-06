@@ -1,5 +1,5 @@
 'use strict';
-//27/09/24
+//06/10/24
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -319,7 +319,7 @@ function _seekbar({
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) { return; }
 			} else if (this.analysis.bAutoAnalysis && _isFile(sourceFile)) {
-				if (this.analysis.bVisualizerFallbackAnalysis) {
+				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
 					// Calculate waveform on the fly
