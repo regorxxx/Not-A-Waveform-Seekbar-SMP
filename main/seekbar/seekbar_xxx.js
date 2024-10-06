@@ -187,13 +187,14 @@ function _seekbar({
 	const bFallbackMode = { paint: false, analysis: false }; // For bVisualizerFallbackAnalysis
 	const modes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 } }; // For ffprobe
 	const compatibleFiles = {
-		ffprobe: new RegExp('\\.(' +
-			['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv']
-				.join('|') + ')$', 'i'),
-		audiowaveform: new RegExp('\\.(' +
-			['mp3', 'flac', 'wav', 'ogg', 'opus']
-				.join('|') + ')$', 'i')
+		ffprobeList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv'],
+		ffprobe: null,
+		audiowaveformList: ['mp3', 'flac', 'wav', 'ogg', 'opus'],
+		audiowaveform: null
 	};
+	['ffprobe', 'audiowaveform'].forEach((key) => {
+		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
+	});
 
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
@@ -531,10 +532,22 @@ function _seekbar({
 		if (!handle) { throw new Error('No handle argument'); }
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
 		const bNoSubSong = handle.SubSong === 0;
-		const bValidExt = bNoVisual ? compatibleFiles[this.analysis.binaryMode].test(handle.Path) : true;
+		const bValidExt = this.isCompatibleFileExtension(handle);
 		this.isZippedFile = handle.RawPath.indexOf('unpack://') !== -1;
 		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
+	};
+
+	this.isCompatibleFileExtension = (handle = fb.GetNowPlaying(), mode = this.analysis.binaryMode) => {
+		return mode === 'visualizer'
+			? true
+			: handle
+				? compatibleFiles[mode].test(handle.Path)
+				: false;
+	};
+
+	this.reportCompatibleFileExtension = (mode = this.analysis.binaryMode) => {
+		return [...compatibleFiles[mode + 'List']];
 	};
 
 	this.bpmSteps = (handle = fb.GetNowPlaying()) => {
