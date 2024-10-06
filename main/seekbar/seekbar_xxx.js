@@ -188,7 +188,7 @@ function _seekbar({
 	const modes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 } }; // For ffprobe
 	const compatibleFiles = {
 		ffprobe: new RegExp('\\.(' +
-			['mp3', 'flac', 'wav', 'ogg', 'opus', 'aac', 'ac3', 'aiff', 'ape', 'wv', 'wma', 'spx', 'spc', 'snd', 'ogx', 'mp4', 'au', 'aac', '2sf', 'dff', 'shn', 'tak', 'tta', 'vgm', 'minincsf', 'la', 'hmi']
+			['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv']
 				.join('|') + ')$', 'i'),
 		audiowaveform: new RegExp('\\.(' +
 			['mp3', 'flac', 'wav', 'ogg', 'opus']
@@ -287,33 +287,33 @@ function _seekbar({
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (bFfProbe && _isFile(seekbarFile + '.ff.json')) {
-				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.ff.json');
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff.json');
 				this.current = _jsonParseFile(seekbarFile + '.ff.json', this.codePage) || [];
 				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) { return; }
 			} else if (bFfProbe && _isFile(seekbarFile + '.ff.lz')) {
-				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.ff.lz');
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff.lz');
 				let str = _open(seekbarFile + '.ff.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, { inputEncoding: 'Base64' }) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) { return; }
 			} else if (bFfProbe && _isFile(seekbarFile + '.ff.lz16')) {
-				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.ff.lz16');
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff.lz16');
 				let str = _open(seekbarFile + '.ff.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && _isFile(seekbarFile + '.aw.json')) {
-				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.aw.json');
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw.json');
 				this.current = _jsonParseFile(seekbarFile + '.aw.json', this.codePage) || [];
 				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) { return; }
 			} else if (bAuWav && _isFile(seekbarFile + '.aw.lz')) {
-				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.aw.lz');
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw.lz');
 				let str = _open(seekbarFile + '.aw.lz', this.codePage) || '';
 				str = LZUTF8.decompress(str, { inputEncoding: 'Base64' }) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) { return; }
 			} else if (bAuWav && _isFile(seekbarFile + '.aw.lz16')) {
-				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath,'.\\') + '.aw.lz16');
+				console.log('Analysis file path: ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw.lz16');
 				let str = _open(seekbarFile + '.aw.lz16', this.codePageV2) || '';
 				str = LZString.decompressFromUTF16(str) || null;
 				this.current = str ? JSON.parse(str) || [] : [];
@@ -528,9 +528,10 @@ function _seekbar({
 	};
 
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
+		if (!handle) { throw new Error('No handle argument'); }
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
 		const bNoSubSong = handle.SubSong === 0;
-		const bValidExt = compatibleFiles[this.analysis.binaryMode].test(handle.Path);
+		const bValidExt = bNoVisual ? compatibleFiles[this.analysis.binaryMode].test(handle.Path) : true;
 		this.isZippedFile = handle.RawPath.indexOf('unpack://') !== -1;
 		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
