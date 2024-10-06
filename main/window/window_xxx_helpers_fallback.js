@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/12/23
+//06/10/24
 
 /* exported fso, debounce, _tt, blendColours, lightenColor, darkenColor, tintColor, _gdiFont, _textWidth, clone, getNested, setNested, */
 
@@ -218,7 +218,7 @@ function clone(obj) {
 			} else if (type === 'Date') {
 				result.add(new Date(value.getTime()));
 			} else if (type === 'RegExp') {
-				result.add(RegExp(value.source, getRegExpFlags(value)));
+				result.add(RegExp(value.source, value.flags));
 			} else {
 				result.add(value);
 			}
@@ -234,7 +234,7 @@ function clone(obj) {
 			} else if (type === 'Date') {
 				result.set(key, new Date(value.getTime()));
 			} else if (type === 'RegExp') {
-				result.set(key, RegExp(value.source, getRegExpFlags(value)));
+				result.set(key, RegExp(value.source, value.flags));
 			} else {
 				result.set(key, value);
 			}
@@ -251,7 +251,7 @@ function clone(obj) {
 			} else if (type === 'Date') {
 				result[key] = new Date(value.getTime());
 			} else if (type === 'RegExp') {
-				result[key] = RegExp(value.source, getRegExpFlags(value));
+				result[key] = RegExp(value.source, value.flags);
 			} else {
 				result[key] = value;
 			}
@@ -270,20 +270,6 @@ function setNested(obj, value, ...args) {
 		if (obj && len === idx && Object.hasOwn(obj, level)) { obj[level] = value; }
 		return obj && obj[level];
 	}, obj);
-}
-
-function getRegExpFlags(regExp) {
-	if (typeof regExp.source.flags === 'string') {
-		return regExp.source.flags;
-	} else {
-		const flags = [];
-		regExp.global && flags.push('g');
-		regExp.ignoreCase && flags.push('i');
-		regExp.multiline && flags.push('m');
-		regExp.sticky && flags.push('y');
-		regExp.unicode && flags.push('u');
-		return flags.join('');
-	}
 }
 
 // Add ES2022 method

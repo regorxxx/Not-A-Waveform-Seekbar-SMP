@@ -34,6 +34,7 @@
 ### Changed
 - Analysis: default TF path pattern for analysis files now removes/replaces any non ASCII value on new installations.
 - Helpers: updated helpers.
+- [JSplitter (SMP)](https://foobar2000.ru/forum/viewtopic.php?t=6378&start=360) support and ES2021 compatibility.
 ### Fixed
 - UI: compressed files don't display neither an "incompatible format" nor the visualizer as fallback.
 - UI: 'Visualizer during analysis' setting was overriding the 'Visualizer for incompatible files' in some cases, displaying the visualizer indefinitely for incompatible files (and not just during the analysis).
