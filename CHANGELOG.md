@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [2.6.0](#260---2024-10-09)
 - [2.5.1](#251---2024-08-13)
 - [2.5.0](#250---2024-07-30)
 - [2.4.0](#240---2024-07-24)
@@ -28,6 +29,11 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Fixed
+
+## [2.6.0] - 2024-10-09
 ### Added
 - Analysis: expanded the list of compatible files with ffprobe. Thanks @TT-ReBORN.
 - UI: new menu entry which shows if the currently playing (or focused) item is incompatible with the binary mode chosen and also shows a popup with the list of extensions supported.
@@ -250,8 +256,9 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.1...HEAD
-[2.5.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...v2.5.1
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.1...v2.6.0
+[2.5.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.2.0...v2.3.0
