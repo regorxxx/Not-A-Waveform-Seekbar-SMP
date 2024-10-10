@@ -32,6 +32,7 @@
 ### Added
 - Readme: readme is shown as popup on first installation and available at the settings menu.
 ### Changed
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
