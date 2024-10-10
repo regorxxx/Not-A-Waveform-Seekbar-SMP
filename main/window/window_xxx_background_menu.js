@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/03/24
+//10/10/24
 
 /* exported createBackgroundMenu */
 
@@ -77,7 +77,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	menu.newEntry({ menuName: mainMenuName, entryText: 'sep' });
 	// Menus
 	{
-		const subMenu = menu.newMenu('Cover mode...', mainMenuName);
+		const subMenu = menu.newMenu('Cover mode', mainMenuName);
 		[
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'none', entryText: 'None' },
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'front', entryText: 'Front' },
@@ -122,7 +122,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		});
 	}
 	{
-		const subMenu = menu.newMenu('Color mode...', mainMenuName);
+		const subMenu = menu.newMenu('Color mode', mainMenuName);
 		[
 			{ isEq: null, key: this.colorMode, value: null, newValue: 'none', entryText: 'None' },
 			{ isEq: null, key: this.colorMode, value: null, newValue: 'single', entryText: 'Single...' + (options.nameColors ? '\t[' + getColorName(this.colorModeOptions.color[0]) + ']' : '') },

@@ -1,5 +1,5 @@
 'use strict';
-//09/10/24
+//10/10/24
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable */
 include('helpers\\helpers_xxx_file.js');
-/* global _isFile:readable */
+/* global _isFile:readable, _open:readable, utf8:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
@@ -86,6 +86,7 @@ let seekbarProperties = {
 		(new _background).defaults(),
 		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }
 	)), { func: isJSON }],
+	firstPopup: ['Seekbar: Fired once', false, { func: isBoolean }, false],
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
@@ -162,6 +163,15 @@ seekbar.saveProperties = function () {
 };
 
 globProfiler.Print('seekbar');
+
+// Info Popup
+if (!seekbarProperties.firstPopup[1]) {
+	seekbarProperties.firstPopup[1] = true;
+	overwriteProperties(seekbarProperties); // Updates panel
+	const readmePath = folders.xxx + 'helpers\\readme\\seekbar.txt';
+	const readme = _open(readmePath, utf8);
+	if (readme.length) { fb.ShowPopupMessage(readme, 'Not-A-Waveform-seekbar-SMP'); }
+}
 
 // Update check
 if (seekbarProperties.bAutoUpdateCheck[1]) {

@@ -1,10 +1,12 @@
 ﻿'use strict';
-//06/10/24
+//10/10/24
 
 /* exported bindMenu */
 
-/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable, background:readable */
+/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable, background:readable, folders:readable */
 
+include('..\\..\\helpers\\helpers_xxx_file.js');
+/* global _open:readable, utf8:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
 include('..\\window\\window_xxx_background_menu.js');
@@ -516,5 +518,16 @@ function createSeekbarMenu(bClear = true) {
 			}
 		}, flags: fb.IsPlaying && this.active ? MF_STRING : MF_GRAYED
 	});
+	menu.newEntry({ entryText: 'sep' });
+	{	// Readme
+		const path = folders.xxx + 'helpers\\readme\\seekbar.txt';
+		menu.newEntry({
+			entryText: 'Open readme...', func: () => {
+				const readme = _open(path, utf8);
+				if (readme.length) { fb.ShowPopupMessage(readme, 'Not-A-Waveform-seekbar-SMP'); }
+				else { console.log('Readme not found: ' + path); }
+			}
+		});
+	}
 	return menu;
 }
