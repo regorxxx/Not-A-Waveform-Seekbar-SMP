@@ -80,7 +80,7 @@ let seekbarProperties = {
 			normalizeWidth: _scale(4)
 		}), { func: isJSON }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
-	matchPattern: ['File name TF format', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))', { func: isString }],
+	matchPattern: ['File name TF format', '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)', { func: isString }],
 	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	background: ['Background options', JSON.stringify(deepAssign()(
 		(new _background).defaults(),

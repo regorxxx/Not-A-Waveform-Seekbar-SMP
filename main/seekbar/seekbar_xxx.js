@@ -10,7 +10,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
 /* global LZString:readable */
 
 function _seekbar({
-	matchPattern = '$replace($ascii($lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))),?,)', // Used to create folder path
+	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)', // Used to create folder path
 	bDebug = false,
 	bProfile = false,
 	binaries = {
