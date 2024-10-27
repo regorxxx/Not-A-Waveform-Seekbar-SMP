@@ -1,5 +1,5 @@
 'use strict';
-//06/10/24
+//27/10/24
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -50,6 +50,11 @@ function _seekbar({
 			currPos: 100
 		},
 		pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30 },
+		wheel: {
+			unit: 's', // 's' | 'ms' | '%' of length
+			step: 5,
+			bReversed: false
+		},
 		refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
 		bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
 		bNormalizeWidth: false,
@@ -107,6 +112,7 @@ function _seekbar({
 				currPos: 100
 			},
 			pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30 },
+			wheel: { unit: 's', step: 5, bReversed: false },
 			refreshRate: 200,
 			bVariableRefreshRate: false,
 			bNormalizeWidth: false,
@@ -146,6 +152,8 @@ function _seekbar({
 			this.bBinaryFound = false;
 		} else { this.bBinaryFound = true; }
 		if (this.preset.futureSecs <= 0 || this.preset.futureSecs === null) { this.preset.futureSecs = Infinity; }
+		if (this.ui.wheel.step < 0) { this.ui.wheel.step = 1; }
+		else if (this.ui.wheel.step > 100 && this.ui.wheel.unit === '%') { this.ui.wheel.step = 100; }
 	};
 	// Add default args
 	this.defaults();
@@ -857,6 +865,7 @@ function _seekbar({
 
 	this.lbtnUp = (x, y, mask) => { // eslint-disable-line no-unused-vars
 		this.mouseDown = false;
+		if (!this.active) { return; }
 		if (!this.trace(x, y)) { return false; }
 		const handle = fb.GetSelection();
 		if (handle && fb.IsPlaying) { // Seek
@@ -864,6 +873,30 @@ function _seekbar({
 			if (frames !== 0) {
 				const barW = (this.w - this.marginW * 2) / frames;
 				let time = Math.round(fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW);
+				if (time < 0) { time = 0; }
+				else if (time > fb.PlaybackLength) { time = fb.PlaybackLength; }
+				fb.PlaybackTime = time;
+				throttlePaint(true);
+				return true;
+			}
+		}
+		return false;
+	};
+
+	this.wheel = (step) => { // eslint-disable-line no-unused-vars
+		if (!this.active) { return; }
+		const handle = fb.GetSelection();
+		if (handle && fb.IsPlaying) { // Seek
+			const frames = this.frames;
+			if (frames !== 0) {
+				const scroll = step * this.ui.wheel.step * (this.ui.wheel.bReversed ? -1 : 1);
+				let time = fb.PlaybackTime;
+				switch (this.ui.wheel.unit.toLowerCase()) {
+					case 'ms': time += scroll / 1000; break;
+					case '%': time += scroll / 100 * fb.PlaybackLength; break;
+					case 's':
+					default: time += scroll; break;
+				}
 				if (time < 0) { time = 0; }
 				else if (time > fb.PlaybackLength) { time = fb.PlaybackLength; }
 				fb.PlaybackTime = time;

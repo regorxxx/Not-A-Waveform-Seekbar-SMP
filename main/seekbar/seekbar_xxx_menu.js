@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/24
+//27/10/24
 
 /* exported bindMenu */
 
@@ -473,6 +473,46 @@ function createSeekbarMenu(bClear = true) {
 	menu.newEntry({ entryText: 'sep' });
 	{
 		const subMenu = menu.newMenu('Other settings');
+		{
+			const subMenuTwo = menu.newMenu('Wheel scrolling', subMenu);
+			menu.newEntry({
+				menuName: subMenuTwo, entryText: 'Seek ahead/back...' + '\t' + _b(this.ui.wheel.step), func: () => {
+					let input;
+					switch (this.ui.wheel.unit.toLowerCase()) {
+						case 's':
+							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(s)', window.Name, 5, [(n) => n > 0 && n < Infinity]);
+							break;
+						case 'ms':
+							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(ms)', window.Name, 250, [(n) => n > 0 && n < Infinity]);
+							break;
+						case '%':
+							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(% of length)', window.Name, 10, [(n) => n > 0 && n <= 100]);
+							break;
+					}
+					if (input === null) { return; }
+					this.updateConfig({ ui: { wheel: {step: input} } });
+					this.saveProperties();
+				}
+			});
+			{
+				const subMenuThree = menu.newMenu('Unit\t' + _b(this.ui.wheel.unit), subMenuTwo);
+				const options = [{entryText: 'Seconds', val: 's'},{entryText: 'Miliseconds', val: 'ms'},{entryText: '% of length', val: '%'}];
+				options.forEach((opt) => {
+					menu.newEntry({menuName: subMenuThree, entryText: opt.entryText, func: () => {
+						this.updateConfig({ ui: { wheel: {unit: opt.val} } });
+						this.saveProperties();
+					}});
+				});
+				menu.newCheckMenuLast(() => options.findIndex((e) => e.val === this.ui.wheel.unit), options);
+			}
+			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newEntry({menuName: subMenuTwo, entryText: 'Reverse seeking', func: () => {
+				this.updateConfig({ ui: { wheel: {bReversed: this.ui.wheel.bReversed} } });
+				this.saveProperties();
+			}});
+			menu.newCheckMenuLast(() => this.ui.wheel.bReversed);
+		}
+		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
 				const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', window.Name, 200, [(n) => n >= 50]);

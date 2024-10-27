@@ -1,5 +1,5 @@
 'use strict';
-//10/10/24
+//27/10/24
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -258,6 +258,14 @@ addEventListener('on_script_unload', () => {
 addEventListener('on_mouse_rbtn_up', (x, y) => {
 	seekbar.rbtn_up(x, y);
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
+});
+
+addEventListener('on_mouse_wheel', (step) => {
+	seekbar.wheel(step);
+});
+
+addEventListener('on_mouse_wheel_h', (step) => {
+	seekbar.wheel(step);
 });
 
 if (fb.IsPlaying) { window.Repaint(); setTimeout(() => { on_playback_new_track(fb.GetNowPlaying()); seekbar.updateTime(fb.PlaybackTime); }, 0); }

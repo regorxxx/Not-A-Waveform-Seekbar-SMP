@@ -30,6 +30,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
 - Readme: readme is shown as popup on first installation and available at the settings menu.
 ### Changed
 - Helpers: updated helpers.
