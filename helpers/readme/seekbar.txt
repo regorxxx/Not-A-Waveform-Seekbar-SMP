@@ -39,3 +39,19 @@ Other UI usage:
 ---------------
 Press Shift + Win + R. Click to open SMP/JSpliter panel menu
 (which works globally on any script and panel, at any position).
+
+FAQ:
+----
+- Some tracks are not analyzed:
+	+ Check 'Mode\Show Compatible extensions'. The list
+of compatible files depends on the mode (binary) used. You
+can convert them to a compatible format, analyze them and 
+delete the converted tracks afterwards though. Analyis
+
+	+ The tracks are within a compressed file. This is
+not supported, although if associated analysis files are
+found, they will be used.
+
+	+ Otherwise check the analysis files TF path at 
+'Analysis\File name format...'. Exotic paths, chars, artist 
+names or setups should be handled by the user.
