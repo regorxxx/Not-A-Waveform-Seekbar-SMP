@@ -1,5 +1,5 @@
 'use strict';
-//01/11/24
+//06/11/24
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -64,6 +64,7 @@ function _seekbar({
 		binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
 		resolution: 1, // pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
 		compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
+		storeMode: 'library', // library | all | none
 		bAutoAnalysis: true,
 		bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
 		bVisualizerFallback: true, // Uses visualizer mode when file can not be processed (not compatible format)
@@ -122,6 +123,7 @@ function _seekbar({
 			binaryMode: 'audiowaveform',
 			resolution: 1,
 			compressionMode: 'utf-16',
+			storeMode: 'library',
 			bAutoAnalysis: true,
 			bAutoRemove: false,
 			bVisualizerFallback: true,
@@ -924,6 +926,10 @@ function _seekbar({
 		}
 	};
 
+	this.allowedSaveData = (handle) => {
+		return this.analysis.storeMode === 'all' || this.analysis.storeMode === 'library' && handle && fb.IsMetadbInMediaLibrary(handle);
+	};
+
 	this.removeData = () => {
 		_deleteFolder(this.folder);
 	};
@@ -1006,35 +1012,39 @@ function _seekbar({
 					});
 					this.current = processedData;
 					// Save data and optionally compress it
-					const str = JSON.stringify(this.current);
-					if (this.analysis.compressionMode === 'utf-16') {
-						// To save UTF16-LE files, FSO is needed.
-						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-						const compressed = LZString.compressToUTF16(str);
-						_saveFSO(seekbarFile + '.ff.lz16', compressed, true);
-					} else if (this.analysis.compressionMode === 'utf-8') {
-						// Only Base64 strings can be saved on UTF8 files...
-						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-						const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
-						_save(seekbarFile + '.ff.lz', compressed);
-					} else {
-						_save(seekbarFile + '.ff.json', str);
+					if (this.allowedSaveData(handle)) {
+						const str = JSON.stringify(this.current);
+						if (this.analysis.compressionMode === 'utf-16') {
+							// To save UTF16-LE files, FSO is needed.
+							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+							const compressed = LZString.compressToUTF16(str);
+							_saveFSO(seekbarFile + '.ff.lz16', compressed, true);
+						} else if (this.analysis.compressionMode === 'utf-8') {
+							// Only Base64 strings can be saved on UTF8 files...
+							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+							const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
+							_save(seekbarFile + '.ff.lz', compressed);
+						} else {
+							_save(seekbarFile + '.ff.json', str);
+						}
 					}
 				} else if (!this.isFallback && !bFallbackMode.analysis && bAuWav && data.data && data.data.length) {
 					this.current = data.data;
-					const str = JSON.stringify(this.current);
-					if (this.analysis.compressionMode === 'utf-16') {
-						// To save UTF16-LE files, FSO is needed.
-						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-						const compressed = LZString.compressToUTF16(str);
-						_saveFSO(seekbarFile + '.aw.lz16', compressed, true);
-					} else if (this.analysis.compressionMode === 'utf-8') {
-						// Only Base64 strings can be saved on UTF8 files...
-						// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-						const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
-						_save(seekbarFile + '.aw.lz', compressed);
-					} else {
-						_save(seekbarFile + '.aw.json', str);
+					if (this.allowedSaveData(handle)) {
+						const str = JSON.stringify(this.current);
+						if (this.analysis.compressionMode === 'utf-16') {
+							// To save UTF16-LE files, FSO is needed.
+							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+							const compressed = LZString.compressToUTF16(str);
+							_saveFSO(seekbarFile + '.aw.lz16', compressed, true);
+						} else if (this.analysis.compressionMode === 'utf-8') {
+							// Only Base64 strings can be saved on UTF8 files...
+							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+							const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
+							_save(seekbarFile + '.aw.lz', compressed);
+						} else {
+							_save(seekbarFile + '.aw.json', str);
+						}
 					}
 				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length) {
 					this.current = data;

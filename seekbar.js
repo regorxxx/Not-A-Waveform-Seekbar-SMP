@@ -1,5 +1,5 @@
 'use strict';
-//27/10/24
+//06/11/24
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -37,6 +37,7 @@ let seekbarProperties = {
 			binaryMode: 'audiowaveform',
 			resolution: 1,
 			compressionMode: 'utf-16',
+			storeMode: 'library',
 			bAutoAnalysis: true,
 			bAutoRemove: false,
 			bVisualizerFallback: true,

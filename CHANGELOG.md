@@ -31,9 +31,11 @@
 ## [Unreleased][]
 ### Added
 - UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
+- Storage: added 3 storage modes to control if data files are saved for any track, only tracks from library or nothing.
 - Readme: readme is shown as popup on first installation and available at the settings menu.
 ### Changed
 - Analysis: default TF path pattern for analysis files changed to better handle track with multiple artists and some errors with unwanted spaces. Use this on existing installations (without quotes): '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\,)]\[$replace(%ALBUM%,\,)][ {$if2($replace(%COMMENT%,\,),%MUSICBRAINZ_ALBUMID%)}]\%TRACKNUMBER% - $replace(%TITLE%,\,))), ?,,= ,,?,)'
+- UI: renamed some settings to better show which ones affect the 'unplayed' section. They should be more familiar now to people using [foo_wave_minibar_mod](https://www.foobar2000.org/components/view/foo_wave_minibar_mod) component.
 - Readme: added FAQ section.
 - Helpers: updated helpers.
 - Update audiowaveform binaries to 1.10.1.
