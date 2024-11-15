@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/24
+//15/11/24
 
 /* exported createBackgroundMenu */
 
@@ -25,7 +25,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	};
 	const createMenuOption = (key, subKey, menuName = mainMenuName, bCheck = true, addFunc = null) => {
 		return function (option) {
-			if (option.entryText === 'sep' && menu.getEntries().pop().entryText !== 'sep') { menu.newEntry({ menuName, entryText: 'sep' }); return; } // Add sep only if any entry has been added
+			if (menu.isSeparator(option) && !menu.isSeparator(menu.getEntries().pop())) { menu.newSeparator(menuName); return; } // Add sep only if any entry has been added
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
 				menu.newEntry({
 					menuName, entryText: option.entryText, func: () => {
@@ -74,7 +74,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	};
 	// Header
 	menu.newEntry({ menuName: mainMenuName, entryText: 'Background settings:', flags: MF_GRAYED });
-	menu.newEntry({ menuName: mainMenuName, entryText: 'sep' });
+	menu.newSeparator(mainMenuName);
 	// Menus
 	{
 		const subMenu = menu.newMenu('Cover mode', mainMenuName);
@@ -93,7 +93,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}
 		}));
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.coverModeOptions.bNowPlaying, value: null, newValue: !this.coverModeOptions.bNowPlaying, entryText: 'Follow now playing' }
 		].forEach(createMenuOption('coverModeOptions', 'bNowPlaying', subMenu, true));
@@ -104,7 +104,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		[
 			{ isEq: null, key: this.coverModeOptions.bFill, value: null, newValue: !this.coverModeOptions.bFill, entryText: 'Fill panel' }
 		].forEach(createMenuOption('coverModeOptions', 'bFill', subMenu, true));
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
 			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)' },
@@ -139,11 +139,11 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 				this.changeConfig({ config: { colorModeOptions: { color: input } }, callbackArgs: { bSaveProperties: true } });
 			}
 		}));
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.colorModeOptions.bDither, value: null, newValue: !this.colorModeOptions.bDither, entryText: 'Apply dither' }
 		].forEach(createMenuOption('colorModeOptions', 'bDither', subMenu, true));
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num > 0 && num < 360], inputHint: '\nClockwise.\n(0 to 360)' },
 		].forEach((option) => {

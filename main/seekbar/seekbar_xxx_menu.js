@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/11/24
+//15/11/24
 
 /* exported bindMenu */
 
@@ -29,7 +29,7 @@ function createSeekbarMenu(bClear = true) {
 		return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
 	};
 	menu.newEntry({ entryText: 'Configure the seekbar:', flags: MF_GRAYED });
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	{ // NOSONAR [menu block]
 		menu.newEntry({
 			entryText: 'Enable seekbar', func: () => {
@@ -39,7 +39,7 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => this.active);
-		menu.newEntry({ entryText: 'sep' });
+		menu.newSeparator();
 	}
 	// Menus
 	{
@@ -60,7 +60,7 @@ function createSeekbarMenu(bClear = true) {
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.analysis.binaryMode), options);
 		if (this.analysis.binaryMode !== 'visualizer') {
-			menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Show compatible extensions', func: () => {
 					fb.ShowPopupMessage(this.reportCompatibleFileExtension().join(', '), window.Name + ': ' + this.analysis.binaryMode);
@@ -89,7 +89,7 @@ function createSeekbarMenu(bClear = true) {
 		if (this.analysis.binaryMode === 'ffprobe') {
 			menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.analysisMode), options);
 		}
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		{
 			const subMenuTwo = menu.newMenu('Data files storage', subMenu);
 			const options = [
@@ -107,7 +107,7 @@ function createSeekbarMenu(bClear = true) {
 				});
 			});
 			menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.analysis.storeMode), options);
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Auto-delete analysis files', func: () => {
 					this.updateConfig({ analysis: { bAutoRemove: !this.analysis.bAutoRemove } });
@@ -115,7 +115,7 @@ function createSeekbarMenu(bClear = true) {
 				}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
 			});
 			menu.newCheckMenuLast(() => this.analysis.bAutoRemove);
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'File match pattern...', func: () => {
 					const tf = Input.string('string', this.Tf.Expression || '', 'File name format for data files:\n(TF expression)\n\nUsed for track identification, default string uses same data for all encodes of a track.', window.Name, '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))');
@@ -126,13 +126,13 @@ function createSeekbarMenu(bClear = true) {
 				}
 			});
 		}
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		{ // NOSONAR [menu block]
 			[
 				{ name: 'Visualizer for incompatible files', key: 'bVisualizerFallback' },
 				{ name: 'Visualizer during analysis', key: 'bVisualizerFallbackAnalysis' },
 			].forEach((o) => {
-				if (o.name === 'sep') { menu.newEntry({ menuName: subMenu, entryText: o.name }); return; }
+				if (menu.isSeparator(o)) { menu.newEntry({ menuName: subMenu, entryText: o.name }); return; }
 				menu.newEntry({
 					menuName: subMenu, entryText: o.name, func: () => {
 						this.updateConfig({ analysis: { [o.key]: !this.analysis[o.key] } });
@@ -143,7 +143,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 		}
 	}
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	{
 		const subMenu = menu.newMenu('Style');
 		const options = [
@@ -162,7 +162,7 @@ function createSeekbarMenu(bClear = true) {
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.waveMode), options);
 		if (this.preset.waveMode === 'halfbars') {
-			menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Show negative values (inverted)', func: () => {
 					this.updateConfig({ preset: { bHalfBarsShowNeg: !this.preset.bHalfBarsShowNeg } });
@@ -187,7 +187,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.paintMode), options);
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{
 				name: 'Paint unplayed' + (this.preset.paintMode === 'full' ? '\t(partial only)' : ''), key: 'bPrePaint',
@@ -214,7 +214,7 @@ function createSeekbarMenu(bClear = true) {
 				});
 				menu.newCheckMenuLast(() => (this.preset.futureSecs === s));
 			});
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{ name: 'Show current position', key: 'bPaintCurrent' },
 		].forEach((o) => {
@@ -226,7 +226,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 			menu.newCheckMenuLast(() => this.preset[o.key]);
 		});
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		[
 			{ name: 'Normalize width', key: 'bNormalizeWidth', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING }
 		].forEach((o) => {
@@ -267,7 +267,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 			menu.newCheckMenuLast(() => { return this.preset[o.key] || o.key === 'bAnimate' && this.analysis.binaryMode === 'visualizer'; });
 		});
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		const subMenuTwo = menu.newMenu('Refresh rate' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), subMenu, () => (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[1000, 500, 200, 100, 80, 60, 30]
 			.forEach((s) => {
@@ -280,7 +280,7 @@ function createSeekbarMenu(bClear = true) {
 				});
 				menu.newCheckMenuLast(() => this.ui.refreshRate === s);
 			});
-		menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+		menu.newSeparator(subMenuTwo);
 		[
 			{ name: 'Variable refresh rate', key: 'bVariableRefreshRate' },
 		].forEach((o) => {
@@ -293,7 +293,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newCheckMenuLast(() => this.ui[o.key]);
 		});
 	}
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	{ // NOSONAR [menu block]
 		createBackgroundMenu.call(
 			background,
@@ -307,7 +307,7 @@ function createSeekbarMenu(bClear = true) {
 		{
 			const subMenuTwo = menu.newMenu('Background', subMenu);
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'Set waveform backgr.:', flags: MF_GRAYED });
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'White', bPrepaint: false, colors: { bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF } },
 				{ name: 'Black', bPrepaint: false, colors: { bg: 0xFF000000, bgFuture: 0xFF1B1B1B } },
@@ -316,7 +316,7 @@ function createSeekbarMenu(bClear = true) {
 				{ name: 'sep' },
 				{ name: 'None', bPrepaint: false, colors: { bg: -1, bgFuture: -1 } },
 			].forEach((o) => {
-				if (o.name === 'sep' || !Object.hasOwn(o, 'colors')) {
+				if (menu.isSeparator(o)) {
 					menu.newEntry({ menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED });
 				} else {
 					menu.newEntry({
@@ -328,16 +328,16 @@ function createSeekbarMenu(bClear = true) {
 					menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
 				}
 			});
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			{
 				const subMenuCustom = menu.newMenu('Custom', subMenuTwo);
+				menu.newEntry({ menuName: subMenuCustom, entryText: 'Ctrl + Click to set none:', flags: MF_GRAYED });
+				menu.newSeparator(subMenuCustom);
 				[
-					{ name: 'Ctrl + Click to set none:' },
-					{ name: 'sep' },
 					{ name: 'Full panel', bPartial: false, key: 'bg' },
 					{ name: 'Unplayed', bPartial: true, key: 'bgFuture' },
 				].forEach((o) => {
-					if (o.name === 'sep' || !Object.hasOwn(o, 'key')) {
+					if (menu.isSeparator(o)) {
 						menu.newEntry({ menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED });
 					} else {
 						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
@@ -360,7 +360,7 @@ function createSeekbarMenu(bClear = true) {
 		{
 			const subMenuTwo = menu.newMenu('Waveform', subMenu);
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'Set waveform colors:', flags: MF_GRAYED });
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'Green', colors: { main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF } },
 				{ name: 'Lavender', colors: { main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC } },
@@ -370,7 +370,7 @@ function createSeekbarMenu(bClear = true) {
 				{ name: 'sep' },
 				{ name: 'None', colors: { main: -1, alt: -1, mainFuture: -1, altFuture: -1 } },
 			].forEach((o) => {
-				if (o.name === 'sep' || !Object.hasOwn(o, 'colors')) {
+				if (menu.isSeparator(o)) {
 					menu.newEntry({ menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED });
 				} else {
 					menu.newEntry({
@@ -382,18 +382,18 @@ function createSeekbarMenu(bClear = true) {
 					menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
 				}
 			});
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			{
 				const subMenuCustom = menu.newMenu('Custom', subMenuTwo);
+				menu.newEntry({ menuName: subMenuCustom, entryText: 'Ctrl + Click to set none:', flags: MF_GRAYED });
+				menu.newSeparator(subMenuCustom);
 				[
-					{ name: 'Ctrl + Click to set none:' },
-					{ name: 'sep' },
 					{ name: 'Exterior (played)', bPrepaint: false, key: 'main' },
 					{ name: 'Interior (played)', bPrepaint: false, key: 'alt' },
 					{ name: 'Exterior (unplayed)', bPrepaint: true, key: 'mainFuture' },
 					{ name: 'Interior (unplayed)', bPrepaint: true, key: 'altFuture' },
 				].forEach((o) => {
-					if (o.name === 'sep' || !Object.hasOwn(o, 'key')) {
+					if (menu.isSeparator(o)) {
 						menu.newEntry({ menuName: subMenuCustom, entryText: o.name, flags: MF_GRAYED });
 					} else {
 						const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
@@ -416,7 +416,7 @@ function createSeekbarMenu(bClear = true) {
 		{
 			const subMenuTwo = menu.newMenu('Current position', subMenu);
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'Set indicator colors:', flags: MF_GRAYED });
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'Green', colors: { currPos: 0xFF90EE90 } },
 				{ name: 'Pink', colors: { currPos: 0xFFFFAFCC } },
@@ -430,7 +430,7 @@ function createSeekbarMenu(bClear = true) {
 				{ name: 'sep' },
 				{ name: 'None', colors: { currPos: -1 } },
 			].forEach((o) => {
-				if (o.name === 'sep' || !Object.hasOwn(o, 'colors')) {
+				if (menu.isSeparator(o)) {
 					menu.newEntry({ menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED });
 				} else {
 					menu.newEntry({
@@ -442,7 +442,7 @@ function createSeekbarMenu(bClear = true) {
 					menu.newCheckMenuLast(() => Object.keys(o.colors).every((key) => this.ui.colors[key] === o.colors[key]));
 				}
 			});
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Custom\t' + _b(getColorName(this.ui.colors.currPos)), func: () => {
 					this.updateConfig({
@@ -456,11 +456,11 @@ function createSeekbarMenu(bClear = true) {
 				}
 			});
 		}
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		{
 			const subMenuTwo = menu.newMenu('Transparency', subMenu);
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'Ctrl + Click to reset:', flags: MF_GRAYED });
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'Wav. Ext. (played)', bPrepaint: false, key: 'main' },
 				{ name: 'Wav. Int. (played)', bPrepaint: false, key: 'alt' },
@@ -469,7 +469,7 @@ function createSeekbarMenu(bClear = true) {
 				{ name: 'Bg. full panel', bPrepaint: false, key: 'bg' },
 				{ name: 'Bg. (unplayed)', bPartial: true, key: 'bgFuture' },
 			].forEach((o) => {
-				if (o.name === 'sep' || !Object.hasOwn(o, 'key')) {
+				if (menu.isSeparator(o)) {
 					menu.newEntry({ menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED });
 				} else {
 					const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
@@ -493,7 +493,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 		}
 	}
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	{
 		const subMenu = menu.newMenu('Other settings');
 		{
@@ -530,7 +530,7 @@ function createSeekbarMenu(bClear = true) {
 				});
 				menu.newCheckMenuLast(() => options.findIndex((e) => e.val === this.ui.wheel.unit), options);
 			}
-			menu.newEntry({ menuName: subMenuTwo, entryText: 'sep' });
+			menu.newSeparator(subMenuTwo);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Reverse seeking', func: () => {
 					this.updateConfig({ ui: { wheel: { bReversed: this.ui.wheel.bReversed } } });
@@ -539,7 +539,7 @@ function createSeekbarMenu(bClear = true) {
 			});
 			menu.newCheckMenuLast(() => this.ui.wheel.bReversed);
 		}
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
 				const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', window.Name, 200, [(n) => n >= 50]);
@@ -555,7 +555,7 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => this.ui.bVariableRefreshRate);
-		menu.newEntry({ menuName: subMenu, entryText: 'sep' });
+		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Automatically check for updates', func: () => {
 				seekbarProperties.bAutoUpdateCheck[1] = !seekbarProperties.bAutoUpdateCheck[1];
@@ -568,7 +568,7 @@ function createSeekbarMenu(bClear = true) {
 		});
 		menu.newCheckMenuLast(() => seekbarProperties.bAutoUpdateCheck[1]);
 	}
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Check for updates...', func: () => {
 			if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
@@ -576,7 +576,7 @@ function createSeekbarMenu(bClear = true) {
 				.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name));
 		}
 	});
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Open data file', func: () => {
 			if (fb.IsPlaying) {
@@ -585,7 +585,7 @@ function createSeekbarMenu(bClear = true) {
 			}
 		}, flags: fb.IsPlaying && this.active ? MF_STRING : MF_GRAYED
 	});
-	menu.newEntry({ entryText: 'sep' });
+	menu.newSeparator();
 	{	// Readme
 		const path = folders.xxx + 'helpers\\readme\\seekbar.txt';
 		menu.newEntry({

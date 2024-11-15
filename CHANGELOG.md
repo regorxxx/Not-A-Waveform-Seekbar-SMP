@@ -38,6 +38,7 @@
 - UI: renamed some settings to better show which ones affect the 'unplayed' section. They should be more familiar now to people using [foo_wave_minibar_mod](https://www.foobar2000.org/components/view/foo_wave_minibar_mod) component.
 - Readme: added FAQ section.
 - Helpers: updated helpers.
+- Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
 - Update audiowaveform binaries to 1.10.1.
 ### Removed
 ### Fixed
