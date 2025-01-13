@@ -229,7 +229,6 @@ CALL :copy_file readmes\_images\foobarmobile.gif
 CALL :copy_file readmes\_images\pools.gif
 REM helpers
 CALL :check_folder helpers
-CALL :copy_file helpers\buttons_panel_xxx.js
 CALL :copy_file helpers\callbacks_xxx.js
 CALL :copy_file helpers\helpers_xxx.js
 CALL :copy_file helpers\helpers_xxx_basic_js.js
@@ -441,6 +440,7 @@ CALL :copy_file helpers\helpers_xxx_foobar.js
 CALL :copy_file helpers\helpers_xxx_global.js
 CALL :copy_file helpers\helpers_xxx_global_post.js
 CALL :copy_file helpers\helpers_xxx_input.js
+CALL :copy_file helpers\helpers_xxx_math.js
 CALL :copy_file helpers\helpers_xxx_playlists.js
 CALL :copy_file helpers\helpers_xxx_properties.js
 CALL :copy_file helpers\helpers_xxx_prototypes.js
