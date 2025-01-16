@@ -1,5 +1,5 @@
 'use strict';
-//06/11/24
+//16/01/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -41,7 +41,8 @@ let seekbarProperties = {
 			bAutoAnalysis: true,
 			bAutoRemove: false,
 			bVisualizerFallback: true,
-			bVisualizerFallbackAnalysis: true
+			bVisualizerFallbackAnalysis: true,
+			bMultiChannel: false
 		}), { func: isJSON }],
 	preset: ['Preset config',
 		JSON.stringify({
@@ -53,7 +54,8 @@ let seekbarProperties = {
 			bAnimate: true,
 			bUseBPM: true,
 			futureSecs: Infinity,
-			bHalfBarsShowNeg: true
+			bHalfBarsShowNeg: true,
+			displayChannels: []
 		}), { func: isJSON }],
 	ui: ['UI config',
 		JSON.stringify({
@@ -147,7 +149,7 @@ const seekbar = new _seekbar({
 	analysis: JSON.parse(seekbarProperties.analysis[1]),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => { return value === null ? Infinity : value; }),
 	ui: { ...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: { scaleH: 0.9, marginW: window.Width / 30 } },
-	callbacks: { backgroundColor: background.getColors }
+	callbacks: { backgroundColor: () => background.getColors()[0] }
 });
 if (!seekbarProperties.bEnabled[1]) { seekbar.switch(); }
 bindMenu(seekbar);

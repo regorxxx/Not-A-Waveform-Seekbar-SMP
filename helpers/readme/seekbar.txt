@@ -16,6 +16,8 @@ Analysis data:
 --------------
 - Analysis data is cached on files which are saved according to a
 configurable TF expression.
+- There are multiple settings to control how analysis data files
+are saved or auto-deleted.
 - Files are heavily compressed, using less than 2Kb in most cases.
 File size is greatly reduced in comparison to other waveform UI
 components storing similar data.
@@ -25,6 +27,8 @@ to compatible ones, analyzed and then deleted. As long as these
 incompatible tracks share the same path, the script will load the
 associated data files when playing them and display the seekbar
 properly (even if the track can not be analyzed on real time).
+- By default data is downmixed to mono, but there is also a
+setting to enable multi-channel analysis.
 
 UI usage:
 ---------
@@ -34,6 +38,7 @@ UI usage:
 according to system responsiveness.
 - There are multiple display options but all use the same data.
 - Background is fully configurable.
+- On multi-channel mode, channels shown may be selectively set.
 
 Other UI usage:
 ---------------
@@ -45,13 +50,13 @@ FAQ:
 - Some tracks are not analyzed:
 	+ Check 'Mode\Show Compatible extensions'. The list
 of compatible files depends on the mode (binary) used. You
-can convert them to a compatible format, analyze them and 
+can convert them to a compatible format, analyze them and
 delete the converted tracks afterwards though. Analyis
 
-	+ The tracks are within a compressed file. This is
+	+ if tracks are within a compressed file. This is
 not supported, although if associated analysis files are
 found, they will be used.
 
-	+ Otherwise check the analysis files TF path at 
-'Analysis\File name format...'. Exotic paths, chars, artist 
+	+ Otherwise check the analysis files TF path at
+'Analysis\File name format...'. Exotic paths, chars, artist
 names or setups should be handled by the user.

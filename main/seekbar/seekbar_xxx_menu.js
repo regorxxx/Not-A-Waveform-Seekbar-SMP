@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/24
+//16/01/25
 
 /* exported bindMenu */
 
@@ -142,6 +142,21 @@ function createSeekbarMenu(bClear = true) {
 				menu.newCheckMenuLast(() => this.analysis[o.key]);
 			});
 		}
+		menu.newSeparator(subMenu);
+		{ // NOSONAR [menu block]
+			[
+				{ name: 'Multi-channel mode', key: 'bMultiChannel' }
+			].forEach((o) => {
+				if (menu.isSeparator(o)) { menu.newEntry({ menuName: subMenu, entryText: o.name }); return; }
+				menu.newEntry({
+					menuName: subMenu, entryText: o.name, func: () => {
+						this.updateConfig({ analysis: { [o.key]: !this.analysis[o.key] } });
+						this.saveProperties();
+					}, flags: ['audiowaveform', 'visualizer'].some((m) => this.analysis.binaryMode === m) ? MF_STRING : MF_GRAYED
+				});
+				menu.newCheckMenuLast(() => this.analysis[o.key]);
+			});
+		}
 	}
 	menu.newSeparator();
 	{
@@ -249,6 +264,47 @@ function createSeekbarMenu(bClear = true) {
 				});
 				menu.newCheckMenuLast(() => (this.ui.normalizeWidth === _scale(s)));
 			});
+		menu.newSeparator(subMenu);
+		const subMenuFour = menu.newMenu('Channels display', subMenu, () => this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED);
+		menu.newEntry({
+			menuName: subMenuFour, entryText: 'All', func: () => {
+				this.updateConfig({ preset: { displayChannels: [] } });
+				this.saveProperties();
+			}, flags: !this.analysis.bMultiChannel ? MF_GRAYED : MF_STRING
+		});
+		menu.newCheckMenuLast(() => this.preset.displayChannels.length === 0);
+		menu.newSeparator(subMenuFour);
+		[
+			{ key: '[0] FL', val: new Set([0]) },
+			{ key: '[1] FR', val: new Set([1]) },
+			{ key: '[2] FC', val: new Set([2]) },
+			{ key: '[3] LFE', val: new Set([3]) },
+			{ key: '[4] BL', val: new Set([4]) },
+			{ key: '[5] BR', val: new Set([5]) }
+		]
+			.forEach((opt) => {
+				const oldVal = new Set(this.preset.displayChannels);
+				menu.newEntry({
+					menuName: subMenuFour, entryText: opt.key, func: () => {
+						const displayChannels = opt.val.size
+							? oldVal.isSuperset(opt.val)
+								? [...oldVal.difference(opt.val)]
+								: [...oldVal.union(opt.val)]
+							: [];
+						this.updateConfig({ preset: { displayChannels } });
+						this.saveProperties();
+					}, flags: !this.analysis.bMultiChannel ? MF_GRAYED : MF_STRING
+				});
+				menu.newCheckMenuLast(() => oldVal.isSuperset(opt.val));
+			});
+		menu.newSeparator(subMenuFour);
+		menu.newEntry({
+			menuName: subMenuFour, entryText: 'Downmix to mono', func: () => {
+				this.updateConfig({ preset: { bDownMixToMono: !this.preset.bDownMixToMono } });
+				this.saveProperties();
+			}, flags: !this.analysis.bMultiChannel ? MF_GRAYED : MF_STRING
+		});
+		menu.newCheckMenuLast(() => this.preset.bDownMixToMono);
 	}
 	{
 		const subMenu = menu.newMenu('Animation', void (0), (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
