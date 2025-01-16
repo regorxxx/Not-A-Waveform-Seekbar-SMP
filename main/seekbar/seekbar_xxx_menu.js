@@ -166,6 +166,7 @@ function createSeekbarMenu(bClear = true) {
 			{ name: 'Bars', key: 'bars' },
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
+			{ name: 'VU Meter', key: 'vumeter' },
 		];
 		options.forEach((o) => {
 			menu.newEntry({
@@ -198,7 +199,7 @@ function createSeekbarMenu(bClear = true) {
 				menuName: subMenu, entryText: o.name, func: () => {
 					this.updateConfig({ preset: { paintMode: o.key } });
 					this.saveProperties();
-				}
+				}, flags: this.preset.waveMode === 'vumeter' ? MF_GRAYED : MF_STRING
 			});
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.paintMode), options);
@@ -243,7 +244,7 @@ function createSeekbarMenu(bClear = true) {
 		});
 		menu.newSeparator(subMenu);
 		[
-			{ name: 'Normalize width', key: 'bNormalizeWidth', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING }
+			{ name: 'Normalize width', key: 'bNormalizeWidth', flags: this.analysis.binaryMode === 'visualizer' || this.preset.waveMode === 'vumeter' ? MF_GRAYED : MF_STRING ? MF_GRAYED : MF_STRING }
 		].forEach((o) => {
 			menu.newEntry({
 				menuName: subMenu, entryText: o.name, func: () => {

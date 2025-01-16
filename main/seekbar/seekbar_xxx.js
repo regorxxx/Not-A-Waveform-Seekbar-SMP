@@ -20,7 +20,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} o.bProfile - Enable profiling logging.
  * @param {{ffprobe: string?, audiowaveform: string?, visualizer: string?}} o.binaries - Paths to binaries.
  * @param {object} o.preset - Waveform display related settings.
- * @param {'waveform'|'bars'|'points'|'halfbars'} o.preset.waveMode - Waveform display design.
+ * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} o.preset.waveMode - Waveform display design.
  * @param {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} o.preset.analysisMode - Data analysis mode (only available using ffprobe).
  * @param {'full'|'partial'} o.preset.paintMode - Displays entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link o.preset.bPrePaint}
  * @param {boolean} o.preset.bPrePaint - Displays the region after the current time. How many seconds are shown is set by {@link o.preset.futureSecs}
@@ -204,6 +204,10 @@ function _seekbar({
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name);
 			this.bBinaryFound = false;
 		} else { this.bBinaryFound = true; }
+		if (this.preset.waveMode === 'vumeter') {
+			this.ui.bNormalizeWidth = false;
+			this.preset.paintMode = 'full';
+		}
 		if (this.preset.futureSecs <= 0 || this.preset.futureSecs === null) { this.preset.futureSecs = Infinity; }
 		if (this.ui.wheel.step < 0) { this.ui.wheel.step = 1; }
 		else if (this.ui.wheel.step > 100 && this.ui.wheel.unit === '%') { this.ui.wheel.step = 100; }
@@ -732,7 +736,7 @@ function _seekbar({
 		// Repaint by zone when possible
 		const frames = this.frames;
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
-		if (this.analysis.binaryMode === 'visualizer' || !frames) { throttlePaint(); }
+		if (this.analysis.binaryMode === 'visualizer' || this.preset.waveMode === 'vumeter' || !frames) { throttlePaint(); }
 		else if (bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
@@ -800,6 +804,7 @@ function _seekbar({
 		const bHalfBars = this.preset.waveMode === 'halfbars';
 		const bWaveForm = this.preset.waveMode === 'waveform';
 		const bPoints = this.preset.waveMode === 'points';
+		const bVuMeter = this.preset.waveMode === 'vumeter';
 		const displayChannels = this.preset.displayChannels.length
 			? this.preset.bDownMixToMono ? [0] : this.preset.displayChannels
 			: Array.from({ length: this.channels }, (x, i) => i);
@@ -857,7 +862,10 @@ function _seekbar({
 						else { continue; }
 					}
 					// Ensure points don't overlap too much without normalization
-					if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
+					if (bVuMeter) {
+						const bPainted = this.paintVuMeter(gr, n, x, offsetY, current, size, scale, bVisualizer, colors);
+						// if (bPainted) { n++; break; }
+					} else if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
 						if (bWaveForm) {
 							this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, colors);
 						} else if (bHalfBars) {
@@ -876,7 +884,7 @@ function _seekbar({
 				// Current position
 				if (colors.currPos !== -1 && (this.preset.bPaintCurrent || this.mouseDown)) {
 					const minBarW = Math.round(Math.max(barW, _scale(1)));
-					if (bFfProbe || bWaveForm || bPoints) {
+					if (bFfProbe || bWaveForm || bPoints || bVuMeter) {
 						gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, colors.currPos);
 					}
 				}
@@ -894,7 +902,7 @@ function _seekbar({
 		}
 		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 		if (fb.IsPlaying && !fb.IsPaused) {
-			this.paintAnimation(gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars);
+			this.paintAnimation(gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter);
 		}
 	};
 
@@ -1015,6 +1023,30 @@ function _seekbar({
 			}
 		}
 	};
+	/**
+	 * VU meter paint
+	 *
+	 * @property
+	 * @name paintVU
+	 * @kind method
+	 * @memberof _seekbar
+	 * @type {function}
+	 * @param {GdiGraphics} gr
+	 * @param {number} n
+	 * @param {number} x
+	 * @param {number} offsetY
+	 * @param {number} size
+	 * @param {boolean} bVisualizer
+	 * @returns {boolean}
+	*/
+	this.paintVuMeter = (gr, n, x, offsetY, current, size, scale, bVisualizer, colors) => { // NOSONAR
+		const bIsNow = Math.abs(current - fb.PlaybackTime) / fb.PlaybackLength < 0.005;
+		if (!bIsNow) { return; }
+		const color = colors.main;
+		const altColor = colors.alt;
+		gr.FillGradRect(this.x + this.marginW, (this.h - offsetY) / 2 - size / 2, (this.w - this.marginW * 2) * scale, size, 1, color, altColor);
+		return true;
+	};
 
 	this.paintPlaybackText = (gr, bModeVisualizer, colors) => {
 		const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -1034,8 +1066,8 @@ function _seekbar({
 		}
 	};
 
-	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars) => { // NOSONAR
-		if (bVisualizer) { throttlePaint(); }
+	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter) => { // NOSONAR
+		if (bVisualizer || (bVuMeter && frames)) { throttlePaint(); }
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
 			const widerModesScale = (bBars || bHalfBars ? 2 : 1);
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
