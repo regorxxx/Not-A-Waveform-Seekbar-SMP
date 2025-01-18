@@ -56,37 +56,37 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {() => number} o.callbacks.backgroundColor - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
  */
 function _seekbar({
-	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)', // Used to create folder path
+	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)',
 	bDebug = false,
 	bProfile = false,
 	binaries = {
 		ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
 		audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
-		visualizer: fb.ProfilePath + 'running', // Just a placeholder
+		visualizer: fb.ProfilePath + 'running',
 	},
 	preset = {
-		waveMode: 'waveform', // waveform | bars | points | halfbars
-		analysisMode: 'peak_level', // rms_level | peak_level | rms_peak (only available for ffprobe)
-		paintMode: 'full', // full | partial
+		waveMode: 'waveform',
+		analysisMode: 'peak_level',
+		paintMode: 'full',
 		bPrePaint: false,
 		bPaintCurrent: true,
 		bAnimate: true,
 		bUseBPM: true,
 		futureSecs: Infinity,
 		bHalfBarsShowNeg: true,
-		displayChannels: [], // 0-index of channel,
+		displayChannels: [],
 		bDownMixToMono: false
 	},
 	ui = {
 		gFont: _gdiFont('Segoe UI', _scale(15)),
 		colors: {
-			bg: 0xFF000000, // Black
-			main: 0xFF90EE90, // LimeGreen
-			alt: 0xFF7CFC00, // LawnGreen
-			bgFuture: 0xFF1B1B1B,
-			mainFuture: 0xFFB7FFA2,
-			altFuture: 0xFFF9FF99,
-			currPos: 0xFFFFFFFF // White
+			bg: 0xFF000000, // Black RGB(0,0,0)
+			main: 0xFF90EE90, // Green RGB(144,234,144)
+			alt: 0xFF7CFC00, // Green RGB(124,252,0)
+			bgFuture: 0xFF1B1B1B, // Gray RGB(27,27,27)
+			mainFuture: 0xFFB7FFA2, // Green RGB(183,255,162)
+			altFuture: 0xFFF9FF99, // Lemon RGB(249,255,153)
+			currPos: 0xFFFFFFFF // White RGB(255,255,255)
 		},
 		transparency: {
 			bg: 100,
@@ -99,29 +99,29 @@ function _seekbar({
 		},
 		pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30 },
 		wheel: {
-			unit: 's', // 's' | 'ms' | '%' of length
+			unit: 's',
 			step: 5,
 			bReversed: false
 		},
-		refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
-		bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
+		refreshRate: 200,
+		bVariableRefreshRate: false,
 		bNormalizeWidth: false,
 		normalizeWidth: _scale(4),
 		bLogScale: true
 	},
 	analysis = {
-		binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
-		resolution: 1, // pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
-		compressionMode: 'utf-16', // none | utf-8 (~50% compression) | utf-16 (~70% compression)  7zip (~80% compression)
-		storeMode: 'library', // library | all | none
+		binaryMode: 'audiowaveform',
+		resolution: 1,
+		compressionMode: 'utf-16',
+		storeMode: 'library',
 		bAutoAnalysis: true,
-		bAutoRemove: false, // Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate)
-		bVisualizerFallback: true, // Uses visualizer mode when file can not be processed (not compatible format)
-		bVisualizerFallbackAnalysis: true, // Uses visualizer mode while analyzing file
-		bMultiChannel: false // Output files are not combined into a single waveform
+		bAutoRemove: false,
+		bVisualizerFallback: true,
+		bVisualizerFallbackAnalysis: true,
+		bMultiChannel: false
 	},
 	callbacks = {
-		backgroundColor: null, // Used to set the fallback color for text when there is no background color set for the waveform, otherwise will be white
+		backgroundColor: null
 	}
 } = {}) {
 
@@ -147,13 +147,13 @@ function _seekbar({
 		const defUi = {
 			gFont: _gdiFont('Segoe UI', _scale(15)),
 			colors: {
-				bg: 0xFF000000, // Black
-				main: 0xFF90EE90, // LimeGreen
-				alt: 0xFF7CFC00, // LawnGreen
-				bgFuture: 0xFF1B1B1B,
-				mainFuture: 0xFFB7FFA2,
-				altFuture: 0xFFF9FF99,
-				currPos: 0xFFFFFFFF // White
+				bg: 0xFF000000, // Black RGB(0,0,0)
+				main: 0xFF90EE90, // Green RGB(144,234,144)
+				alt: 0xFF7CFC00, // Green RGB(124,252,0)
+				bgFuture: 0xFF1B1B1B, // Gray RGB(27,27,27)
+				mainFuture: 0xFFB7FFA2, // Green RGB(183,255,162)
+				altFuture: 0xFFF9FF99, // Lemon RGB(249,255,153)
+				currPos: 0xFFFFFFFF // White RGB(255,255,255)
 			},
 			transparency: {
 				bg: 100,
