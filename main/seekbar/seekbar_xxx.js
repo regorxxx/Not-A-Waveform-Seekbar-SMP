@@ -1,5 +1,5 @@
 'use strict';
-//17/01/25
+//18/01/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -631,15 +631,10 @@ function _seekbar({
 	this.downMixToMono = () => {
 		this.frames = this.current[0].length;
 		const monoData = [];
-		const displayChannels = this.preset.displayChannels.length
-			? this.preset.displayChannels
-			: Array.from({ length: this.channels }, (x, i) => i);
-		const channelsNum = Math.min(displayChannels.length, this.channels);
+		const channelsNum = this.getDisplayChannels(false).length;
 		for (let i = 0; i < this.frames; i++) {
 			let frame = 0;
 			for (let c = 0; c < channelsNum; c++) {
-				const channel = displayChannels[c];
-				if (channel >= this.channels) { continue; }
 				frame += this.current[c][i];
 			}
 			monoData.push(frame / channelsNum);
@@ -787,53 +782,71 @@ function _seekbar({
 		this.reset();
 		if (reason !== 2) { throttlePaint(); }
 	};
+
+	this.getColors = () => {
+		return Object.fromEntries(
+			Object.keys(this.ui.transparency).map((key) => {
+				return [
+					key,
+					this.ui.colors[key] !== -1 && this.ui.transparency[key] !== 0
+						? Math.round(this.ui.transparency[key]) === 100
+							? this.ui.colors[key]
+							: this.applyAlpha(this.ui.colors[key], this.ui.transparency[key])
+						: -1
+				];
+			})
+		);
+	};
+
+	this.getDisplayChannels = (bDownMix = this.preset.bDownMixToMono) => {
+		return this.preset.displayChannels.length
+			? bDownMix
+				? [0]
+				: this.preset.displayChannels.filter((c) => c < this.channels)
+			: Array.from({ length: this.channels }, (x, i) => i);
+	};
+
 	/**
-	 * Paint method
+	 * Draws the waveform bar with various designs based on the current settings.
 	 *
 	 * @property
 	 * @name paint
 	 * @kind method
 	 * @memberof _seekbar
 	 * @type {function}
-	 * @param {GdiGraphics} gr
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @returns {void(0)}
 	*/
 	this.paint = (gr) => {
 		profilerPaint.Reset();
-		if (!fb.IsPlaying) { this.reset(); } // In case paint has been delayed after playback has stopped...
-		const frames = this.frames;
-		const bPartial = this.preset.paintMode === 'partial';
-		const bPrePaint = bPartial && this.preset.bPrePaint;
-		const bModeVisualizer = this.analysis.binaryMode === 'visualizer';
-		const bVisualizer = bModeVisualizer || this.isFallback || bFallbackMode.paint;
-		const bFfProbe = this.analysis.binaryMode === 'ffprobe';
-		const bBars = this.preset.waveMode === 'bars';
-		const bHalfBars = this.preset.waveMode === 'halfbars';
-		const bWaveForm = this.preset.waveMode === 'waveform';
-		const bPoints = this.preset.waveMode === 'points';
-		const bVuMeter = this.preset.waveMode === 'vumeter';
-		const displayChannels = this.preset.displayChannels.length
-			? this.preset.bDownMixToMono ? [0] : this.preset.displayChannels
-			: Array.from({ length: this.channels }, (x, i) => i);
-		const channelsNum = Math.min(displayChannels.length, this.channels);
-		let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
-		const colors = Object.fromEntries(
-			Object.keys(this.ui.transparency).map((key) => {
-				return [
-					key,
-					this.ui.colors[key] !== -1 && this.ui.transparency[key] !== 0
-						? Math.round(this.ui.transparency[key]) === 100 ? this.ui.colors[key] : this.applyAlpha(this.ui.colors[key], this.ui.transparency[key])
-						: -1
-				];
-			})
-		);
+		const colors = this.getColors();
 		// Panel background
 		if (colors.bg !== -1) { gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg); }
-		const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
-		if (frames !== 0 && channelsNum) {
+		// In case paint has been delayed after playback has stopped...
+		if (!fb.IsPlaying) {
+			this.reset();
+			return;
+		} else if (this.frames === 0) {
+			this.paintPlaybackText(gr, colors);
+			return;
+		}
+		const displayChannels = this.getDisplayChannels();
+		const channelsNum = displayChannels.length;
+		if (channelsNum) {
+			const bPartial = this.preset.paintMode === 'partial';
+			const bPrePaint = bPartial && this.preset.bPrePaint;
+			const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
+			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
+			const bBars = this.preset.waveMode === 'bars';
+			const bHalfBars = this.preset.waveMode === 'halfbars';
+			const bWaveForm = this.preset.waveMode === 'waveform';
+			const bPoints = this.preset.waveMode === 'points';
+			const bVuMeter = this.preset.waveMode === 'vumeter';
+			let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
+			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
 			const margin = channelsNum > 1 ? _scale(5) : 0;
 			const size = (this.h - this.y - margin) * this.scaleH / channelsNum;
-			const barW = (this.w - this.marginW * 2) / frames;
+			const barW = (this.w - this.marginW * 2) / this.frames;
 			const minPointDiff = 1; // in px
 			const timeConstant = this.timeConstant;
 			for (let c = 0; c < channelsNum; c++) {
@@ -841,7 +854,6 @@ function _seekbar({
 					? size * (c !== 0 ? c : -1) + margin * (c !== 0 ? 1 : -1)
 					: 0;
 				const channel = displayChannels[c];
-				if (channel >= this.channels) { continue; }
 				let n = 0;
 				// Paint waveform layer
 				let current, past = [{ x: 0, y: 1 }, { x: 0, y: -1 }];
@@ -895,20 +907,18 @@ function _seekbar({
 					}
 				}
 			}
-		} else if (fb.IsPlaying) {
-			this.paintPlaybackText(gr, bModeVisualizer, colors);
-		}
-		// Incrementally draw animation on small steps
-		if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
-			if (this.step >= this.maxStep) { this.step = - this.step; }
-			else {
-				if (this.step === 0) { this.offset = []; }
-				this.step++;
+			// Incrementally draw animation on small steps
+			if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
+				if (this.step >= this.maxStep) { this.step = - this.step; }
+				else {
+					if (this.step === 0) { this.offset = []; }
+					this.step++;
+				}
 			}
-		}
-		// Animate smoothly, Repaint by zone when possible. Only when not in pause!
-		if (fb.IsPlaying && !fb.IsPaused) {
-			this.paintAnimation(gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter);
+			// Animate smoothly, Repaint by zone when possible. Only when not in pause!
+			if (fb.IsPlaying && !fb.IsPaused) {
+				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter);
+			}
 		}
 	};
 
@@ -1059,12 +1069,12 @@ function _seekbar({
 		return true;
 	};
 
-	this.paintPlaybackText = (gr, bModeVisualizer, colors) => {
+	this.paintPlaybackText = (gr, colors) => {
 		const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 		const textColor = colors.bg !== -1
 			? invert(colors.bg, true)
 			: this.callbacks.backgroundColor ? invert(this.callbacks.backgroundColor(), true) : 0xFFFFFFFF;
-		if (!this.isAllowedFile && !this.isFallback && !bModeVisualizer) {
+		if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
 			gr.GdiDrawText('Not compatible file format', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (!this.analysis.bAutoAnalysis) {
 			gr.GdiDrawText('Seekbar file not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
