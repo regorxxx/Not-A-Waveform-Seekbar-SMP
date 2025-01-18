@@ -777,10 +777,36 @@ function _seekbar({
 		this.defaultSteps();
 	};
 
-	this.stop = (reason = -1) => { // -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
+	/**
+	 * Called on_playback_stop. Resets data and painting.
+	 *
+	 * @property
+	 * @name stop
+	 * @kind method
+	 * @memberof _seekbar
+	 * @type {function}
+	 * @param {(-1|0|1|2|3)} reason - -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
+	 * @returns {void(0)}
+	*/
+	this.stop = (reason = -1) => {
 		if (reason !== -1 && !this.active) { return; }
 		this.reset();
 		if (reason !== 2) { throttlePaint(); }
+	};
+	/**
+	 * Called on_playback_pause. Resets painting.
+	 *
+	 * @property
+	 * @name stop
+	 * @kind method
+	 * @memberof _seekbar
+	 * @type {function}
+	 * @param {boolean} state - True when paused
+	 * @returns {void(0)}
+	*/
+	this.pause = (state) => {
+		if (!state) { this.resetAnimation(); }
+		throttlePaint(true);
 	};
 
 	this.getColors = () => {
@@ -900,25 +926,21 @@ function _seekbar({
 				}
 				gr.SetSmoothingMode(0);
 				// Current position
-				if (colors.currPos !== -1 && (this.preset.bPaintCurrent || this.mouseDown)) {
-					const minBarW = Math.round(Math.max(barW, _scale(1)));
-					if (bFfProbe || bWaveForm || bPoints || bVuMeter) {
-						gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, colors.currPos);
-					}
-				}
-			}
-			// Incrementally draw animation on small steps
-			if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
-				if (this.step >= this.maxStep) { this.step = - this.step; }
-				else {
-					if (this.step === 0) { this.offset = []; }
-					this.step++;
+				if (bFfProbe || bWaveForm || bPoints || bVuMeter) {
+					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
 			// Animate smoothly, Repaint by zone when possible. Only when not in pause!
-			if (fb.IsPlaying && !fb.IsPaused) {
+			if (!fb.IsPaused) {
 				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter);
 			}
+		}
+	};
+
+	this.paintCurrentPos = (gr, currX, barW, colors) => {
+		if (colors.currPos !== -1 && (this.preset.bPaintCurrent || this.mouseDown)) {
+			const minBarW = Math.round(Math.max(barW, _scale(1)));
+			gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, colors.currPos);
 		}
 	};
 
@@ -1088,6 +1110,14 @@ function _seekbar({
 	};
 
 	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter) => { // NOSONAR
+		// Incrementally draw animation on small steps
+		if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
+			if (this.step >= this.maxStep) { this.step = - this.step; }
+			else {
+				if (this.step === 0) { this.offset = []; }
+				this.step++;
+			}
+		}
 		if (bVisualizer || (bVuMeter && frames)) { throttlePaint(); }
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
 			const widerModesScale = (bBars || bHalfBars ? 2 : 1);

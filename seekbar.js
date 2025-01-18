@@ -1,5 +1,5 @@
 'use strict';
-//16/01/25
+//19/01/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -235,6 +235,10 @@ addEventListener('on_playback_stop', (reason) => {
 		if (background.coverMode.toLowerCase() !== 'none' && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
 	}
 	seekbar.stop(reason);
+});
+
+addEventListener('on_playback_pause', (state) => {
+	seekbar.pause(state);
 });
 
 addEventListener('on_paint', (gr) => {
