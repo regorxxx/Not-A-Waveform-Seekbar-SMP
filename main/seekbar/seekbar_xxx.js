@@ -1,5 +1,5 @@
 'use strict';
-//16/01/25
+//17/01/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -41,6 +41,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} o.ui.bVariableRefreshRate - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
  * @param {boolean} o.ui.bNormalizeWidth - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same ammount of detail this way.
  * @param {number} o.ui.normalizeWidth - [=_scale(4)] Size unit for normalization.
+ * @param {boolean} o.ui.bLogScale - [=true] Wether to display VU Meter scale in log (dBs) or linear scale
  * @param {Object} o.analysis - Analysis related settings.
  * @param {'ffprobe'|'audiowaveform'|'visualizer'} o.analysis.binaryMode - [='audiowaveform'] Binary to use. Visualizer is processed internally.
  * @param {number} o.analysis.resolution - [=1] Pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
@@ -105,7 +106,8 @@ function _seekbar({
 		refreshRate: 200, // ms when using animations of any type. 100 is smooth enough but the performance hit is high
 		bVariableRefreshRate: false, // Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
 		bNormalizeWidth: false,
-		normalizeWidth: _scale(4)
+		normalizeWidth: _scale(4),
+		bLogScale: true
 	},
 	analysis = {
 		binaryMode: 'audiowaveform', // ffprobe | audiowaveform | visualizer
@@ -167,7 +169,8 @@ function _seekbar({
 			refreshRate: 200,
 			bVariableRefreshRate: false,
 			bNormalizeWidth: false,
-			normalizeWidth: _scale(4)
+			normalizeWidth: _scale(4),
+			bLogScale: true
 		};
 		const defAnalysis = {
 			binaryMode: 'audiowaveform',
@@ -863,8 +866,7 @@ function _seekbar({
 					}
 					// Ensure points don't overlap too much without normalization
 					if (bVuMeter) {
-						const bPainted = this.paintVuMeter(gr, n, x, offsetY, current, size, scale, bVisualizer, colors);
-						// if (bPainted) { n++; break; }
+						this.paintVuMeter(gr, n, x, offsetY, current, size, scale, bVisualizer, colors);
 					} else if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
 						if (bWaveForm) {
 							this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, colors);
@@ -1040,11 +1042,16 @@ function _seekbar({
 	 * @returns {boolean}
 	*/
 	this.paintVuMeter = (gr, n, x, offsetY, current, size, scale, bVisualizer, colors) => { // NOSONAR
-		const bIsNow = Math.abs(current - fb.PlaybackTime) / fb.PlaybackLength < 0.005;
-		if (!bIsNow) { return; }
+		const threshold = this.analysis.binaryMode === 'ffprobe'
+			? 0.001
+			: 0.005;
+		const bIsNow = Math.abs(current - fb.PlaybackTime) / fb.PlaybackLength <= threshold;
+		scale = Math.abs(scale);
+		if (!bIsNow || !scale) { return; }
 		const color = colors.main;
 		const altColor = colors.alt;
-		gr.FillGradRect(this.x + this.marginW, (this.h - offsetY) / 2 - size / 2, (this.w - this.marginW * 2) * scale, size, 1, color, altColor);
+		const barSize = this.ui.bLogScale ? (100 + 1000 * Math.log10(scale)) / 100 : scale;
+		gr.FillGradRect(this.x + this.marginW, (this.h - offsetY) / 2 - size / 2, (this.w - this.marginW * 2) * barSize, size, 1, color, altColor);
 		return true;
 	};
 

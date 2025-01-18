@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/25
+//17/01/25
 
 /* exported bindMenu */
 
@@ -91,7 +91,7 @@ function createSeekbarMenu(bClear = true) {
 		}
 		menu.newSeparator(subMenu);
 		{
-			const subMenuTwo = menu.newMenu('Data files storage', subMenu);
+			const subMenuTwo = menu.newMenu('Data files storage', subMenu, this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING);
 			const options = [
 				{ name: 'Store all', key: 'all' },
 				{ name: 'Only tracks in library', key: 'library' },
@@ -201,6 +201,7 @@ function createSeekbarMenu(bClear = true) {
 					this.saveProperties();
 				}, flags: this.preset.waveMode === 'vumeter' ? MF_GRAYED : MF_STRING
 			});
+			if (this.preset.waveMode === 'vumeter') { menu.addTipLast('(not VU Meter)'); }
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.paintMode), options);
 		menu.newSeparator(subMenu);
@@ -218,18 +219,20 @@ function createSeekbarMenu(bClear = true) {
 			});
 			menu.newCheckMenuLast(() => this.preset[o.key]);
 		});
-		const subMenuTwo = menu.newMenu('Seconds', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
-		[Infinity, 2, 5, 10]
-			.forEach((s) => {
-				const entryText = (isFinite(s) ? s : 'Full');
-				menu.newEntry({
-					menuName: subMenuTwo, entryText, func: () => {
-						this.updateConfig({ preset: { futureSecs: s } });
-						this.saveProperties();
-					}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPrePaint) ? MF_GRAYED : MF_STRING
+		if (menu.getLastEntry().flags !== MF_GRAYED) {
+			const subMenuTwo = menu.newMenu('Seconds', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
+			[Infinity, 2, 5, 10]
+				.forEach((s) => {
+					const entryText = (isFinite(s) ? s : 'Full');
+					menu.newEntry({
+						menuName: subMenuTwo, entryText, func: () => {
+							this.updateConfig({ preset: { futureSecs: s } });
+							this.saveProperties();
+						}, flags: (this.preset.paintMode === 'full' || this.analysis.binaryMode === 'visualizer' || !this.preset.bPrePaint) ? MF_GRAYED : MF_STRING
+					});
+					menu.newCheckMenuLast(() => (this.preset.futureSecs === s));
 				});
-				menu.newCheckMenuLast(() => (this.preset.futureSecs === s));
-			});
+		}
 		menu.newSeparator(subMenu);
 		[
 			{ name: 'Show current position', key: 'bPaintCurrent' },
@@ -252,21 +255,33 @@ function createSeekbarMenu(bClear = true) {
 					this.saveProperties();
 				}, flags: o.flags || MF_STRING
 			});
+			if (this.preset.waveMode === 'vumeter') { menu.addTipLast('(not VU Meter)'); }
 			menu.newCheckMenuLast(() => this.ui[o.key]);
 		});
-		const subMenuThree = menu.newMenu('Width', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
-		[20, 10, 8, 6, 4, 2, 1]
-			.forEach((s) => {
-				menu.newEntry({
-					menuName: subMenuThree, entryText: s, func: () => {
-						this.updateConfig({ ui: { normalizeWidth: _scale(s) } });
-						this.saveProperties();
-					}, flags: (this.analysis.binaryMode === 'visualizer' || !this.ui.bNormalizeWidth) ? MF_GRAYED : MF_STRING
+		if (menu.getLastEntry().flags !== MF_GRAYED) {
+			const subMenuThree = menu.newMenu('Width', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
+			[20, 10, 8, 6, 4, 2, 1]
+				.forEach((s) => {
+					menu.newEntry({
+						menuName: subMenuThree, entryText: s, func: () => {
+							this.updateConfig({ ui: { normalizeWidth: _scale(s) } });
+							this.saveProperties();
+						}, flags: (this.analysis.binaryMode === 'visualizer' || !this.ui.bNormalizeWidth) ? MF_GRAYED : MF_STRING
+					});
+					menu.newCheckMenuLast(() => (this.ui.normalizeWidth === _scale(s)));
 				});
-				menu.newCheckMenuLast(() => (this.ui.normalizeWidth === _scale(s)));
+		}
+		if (this.preset.waveMode === 'vumeter') {
+			menu.newEntry({
+				menuName: subMenu, entryText: 'Logarithmic scale (dBs)', func: () => {
+					this.updateConfig({ ui: { bLogScale: !this.ui.bLogScale } });
+					this.saveProperties();
+				}
 			});
+			menu.newCheckMenuLast(() => this.ui.bLogScale);
+		}
 		menu.newSeparator(subMenu);
-		const subMenuFour = menu.newMenu('Channels display', subMenu, () => this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED);
+		const subMenuFour = menu.newMenu('Channels display' + (this.analysis.bMultiChannel ? '' : '\t(multi-channel only)'), subMenu, () => this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED);
 		menu.newEntry({
 			menuName: subMenuFour, entryText: 'All', func: () => {
 				this.updateConfig({ preset: { displayChannels: [] } });
@@ -308,7 +323,7 @@ function createSeekbarMenu(bClear = true) {
 		menu.newCheckMenuLast(() => this.preset.bDownMixToMono);
 	}
 	{
-		const subMenu = menu.newMenu('Animation', void (0), (this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		const subMenu = menu.newMenu('Animation' + (this.preset.waveMode === 'vumeter' ? '\t(not VU Meter)' : ''), void (0), ((this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer') && this.preset.waveMode !== 'vumeter' ? MF_STRING : MF_GRAYED);
 		[
 			{ name: 'Enable animation', key: 'bAnimate', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING },
 			{
@@ -635,12 +650,12 @@ function createSeekbarMenu(bClear = true) {
 	});
 	menu.newSeparator();
 	menu.newEntry({
-		entryText: 'Open data file', func: () => {
+		entryText: 'Open data file...', func: () => {
 			if (fb.IsPlaying) {
 				const { seekbarFolder } = this.getPaths(fb.GetNowPlaying());
 				if (_isFolder(seekbarFolder)) { _explorer(seekbarFolder); }
 			}
-		}, flags: fb.IsPlaying && this.active ? MF_STRING : MF_GRAYED
+		}, flags: fb.IsPlaying && this.active && this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
 	});
 	menu.newSeparator();
 	{	// Readme

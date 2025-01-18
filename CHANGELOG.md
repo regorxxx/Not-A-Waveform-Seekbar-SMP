@@ -31,7 +31,7 @@
 ## [Unreleased][]
 ### Added
 - Multi-channel: added multi-channel support. Requires tracks to be re-analyzed with the setting enabled. Currently works only in 'audiowaveform' mode. Channels are displayed vertically stacked and independent channels may be shown/hidden at the settings. Additionally, there is a down-mixing setting to mix the desired channels into a single one (contrary to single-channel mode, it's only applied to the displayed channels). Note multi-panel support allows to show now one channel per panel too with these new settings.
-- Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy depends on the mode (ffprobe > audiowaveform) and analysis setting (RMS, peak, etc.). It also has multi-channel support (see above).
+- Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy depends on the mode (ffprobe > audiowaveform) and analysis setting (RMS, peak, etc.). It also has multi-channel support (see above) and linear of logarithmic scaling.
 - UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
 - Storage: added 3 storage modes to control if data files are saved for any track, only tracks from library or nothing.
 - Readme: readme is shown as popup on first installation and available at the settings menu.

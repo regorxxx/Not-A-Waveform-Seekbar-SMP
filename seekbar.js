@@ -80,7 +80,8 @@ let seekbarProperties = {
 			refreshRate: 200,
 			bVariableRefreshRate: true,
 			bNormalizeWidth: false,
-			normalizeWidth: _scale(4)
+			normalizeWidth: _scale(4),
+			bLogScale: true
 		}), { func: isJSON }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
 	matchPattern: ['File name TF format', '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)', { func: isString }],
