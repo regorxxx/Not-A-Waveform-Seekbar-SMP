@@ -47,6 +47,11 @@ Press Shift + Win + R. Click to open SMP/JSpliter panel menu
 
 FAQ:
 ----
+- VU Meter smoothness:
+	+ It's recommended to use ffprobe instead of Audiowaveform
+	when using the VU Meter preset, since it's analysis data has
+	higher precision, resulting on a smoother animation.
+
 - Some tracks are not analyzed:
 	+ Check 'Mode\Show Compatible extensions'. The list
 of compatible files depends on the mode (binary) used. You
