@@ -45,6 +45,7 @@
 ### Removed
 ### Fixed
 - UI: '&' being displayed as '_' on tooltips.
+- Fixed some cases where stopping playback during analysis or changing the playing track affected shown data. Now files are analyzed (and saved) on the background, independently of what the panel shows (which depends on actual playback).
 
 ## [2.6.0] - 2024-10-09
 ### Added

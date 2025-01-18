@@ -446,6 +446,8 @@ function _seekbar({
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
+					const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
+					if (!nowPlaying || !handle.Compare(nowPlaying)) { return; }
 					// Calculate waveform on the fly
 					this.normalizePoints();
 					// Set animation using BPM if possible
@@ -456,6 +458,8 @@ function _seekbar({
 				throttlePaint(true);
 				if (this.analysis.bVisualizerFallbackAnalysis) { bFallbackMode.analysis = false; }
 				await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
+				const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
+				if (!nowPlaying || !handle.Compare(nowPlaying)) { return; }
 				if (!this.verifyData(handle, void (0), bIsRetry)) { return; }
 				bFallbackMode.analysis = bFallbackMode.paint = false;
 				bAnalysis = true;
@@ -1217,10 +1221,12 @@ function _seekbar({
 		} else if (!this.isAllowedFile && !bVisualizer && !bFallbackMode.analysis) {
 			console.log('Seekbar skipping incompatible file: ' + sourceFile);
 		}
+		const channels = this.channels; // If playback is changed during analysis it may change
 		let bDone = cmd ? _runCmd(cmd, false) : true;
 		bDone = bDone && (await new Promise((resolve) => {
 			if (this.isFallback || bVisualizer || bFallbackMode.analysis) { resolve(true); }
-			const timeout = Date.now() + Math.round(10000 * (handle.Length / 180)); // Break if it takes too much time: 10 secs per 3 min of track
+			const timeout = Date.now() + Math.round(10000 * (handle.Length / 180));
+			// Break if it takes too much time: 10 secs per 3 min of track
 			const id = setInterval(() => {
 				if (_isFile(seekbarFolder + 'data.json')) {
 					// ffmpeg writes sequentially so wait until it finish...
@@ -1236,9 +1242,11 @@ function _seekbar({
 				? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
 				: this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
+			const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
+			const bPlayingSameHandle = !!nowPlaying && handle.Compare(nowPlaying);
 			if (data) {
 				if (!this.isFallback && !bFallbackMode.analysis && bFfProbe && data.frames && data.frames.length) {
-					const processedData = Array.from({ length: this.channels }, () => []); // Always 1 channel
+					const processedData = Array.from({ length: channels }, () => []); // Always 1 channel
 					data.frames.forEach((frame) => {
 						// Save values as array to compress file as much as possible, also round decimals...
 						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf'
@@ -1253,10 +1261,10 @@ function _seekbar({
 						const time = round(Number(frame.pkt_pts_time), 2);
 						processedData[0].push([time, rms, rmsPeak, peak]);
 					});
-					this.current = processedData;
+					if (bPlayingSameHandle) { this.current = processedData; }
 					// Save data and optionally compress it
 					if (this.allowedSaveData(handle)) {
-						const str = JSON.stringify(this.current);
+						const str = JSON.stringify(processedData);
 						if (this.analysis.compressionMode === 'utf-16') {
 							// To save UTF16-LE files, FSO is needed.
 							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
@@ -1272,12 +1280,12 @@ function _seekbar({
 						}
 					}
 				} else if (!this.isFallback && !bFallbackMode.analysis && bAuWav && data.data && data.data.length) {
-					const processedData = Array.from({ length: this.channels }, () => []);
+					const processedData = Array.from({ length: channels }, () => []);
 					if (this.analysis.bMultiChannel) {
 						let c = 0, i = 0;
 						data.data.forEach((frame) => {
 							if (i === 2) {
-								c = c === (this.channels - 1) ? 0 : c + 1;
+								c = c === (channels - 1) ? 0 : c + 1;
 								i = 0;
 							}
 							processedData[c].push(frame);
@@ -1286,9 +1294,9 @@ function _seekbar({
 					} else {
 						processedData[0] = data.data;
 					}
-					this.current = processedData;
+					if (bPlayingSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
-						const str = JSON.stringify(this.current);
+						const str = JSON.stringify(processedData);
 						if (this.analysis.compressionMode === 'utf-16') {
 							// To save UTF16-LE files, FSO is needed.
 							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
@@ -1313,19 +1321,21 @@ function _seekbar({
 							);
 						}
 					}
-				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length) {
+				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && fb.IsPlaying) {
 					this.current = data;
 				}
 			}
 			// Set animation using BPM if possible
-			if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
+			if (bPlayingSameHandle && this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 			// Console and paint
 			if (this.bProfile) {
 				if (cmd) { profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.'); }
 				else { profiler.Print('Visualizer.'); }
 			}
-			if (this.current.length && this.current.some((channel) => channel.length)) { throttlePaint(); }
-			else { console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + sourceFile); }
+			if (bPlayingSameHandle) {
+				if (this.current.length && this.current.some((channel) => channel.length)) { throttlePaint(); }
+				else { console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + sourceFile); }
+			}
 		}
 	};
 
