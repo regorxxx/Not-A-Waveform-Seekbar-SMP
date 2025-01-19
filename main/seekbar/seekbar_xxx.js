@@ -1,8 +1,8 @@
 'use strict';
-//18/01/25
+//19/01/25
 
 /* exported _seekbar */
-/* global _gdiFont:readable, _scale:readable, _isFile:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
+/* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
 
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 /* global LZUTF8:readable */
@@ -272,6 +272,10 @@ function _seekbar({
 	this.ui.refreshRateOpt = this.ui.refreshRate;
 	/** @type {boolean} - Mouse L. Button flag */
 	this.mouseDown = false;
+	/** @type {boolean} - Flag for existing files (false if dead or online source). Set at this.checkAllowedFile */
+	this.isFile = false;
+	/** @type {boolean} - Flag for online files sources. Set at this.checkAllowedFile */
+	this.isLink = false;
 	/** @type {boolean} - Flag for compressed files. Set at this.checkAllowedFile */
 	this.isZippedFile = false;
 	/** @type {boolean} - Flag for compatible files. Set at this.checkAllowedFile */
@@ -442,7 +446,7 @@ function _seekbar({
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz16')) {
 				this.current = this.loadDataFile(seekbarFile, '.aw.m.lz16');
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz16', bIsRetry)) { return; }
-			} else if (this.analysis.bAutoAnalysis && _isFile(sourceFile)) {
+			} else if (this.analysis.bAutoAnalysis && this.isFile) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
@@ -465,10 +469,12 @@ function _seekbar({
 				bAnalysis = true;
 			}
 			if (!bAnalysis) { this.isFallback = false; } // Allow reading data from files even if track is not compatible
-			// Calculate waveform on the fly
-			if (this.analysis.bMultiChannel && this.preset.bDownMixToMono && this.channels > 1) { this.downMixToMono(); }
-			this.normalizePoints(!bVisualizer && this.ui.bNormalizeWidth);
-			this.timeConstant = handle.Length / this.frames;
+			if (this.current[0]) {
+				// Calculate waveform on the fly
+				if (this.analysis.bMultiChannel && this.preset.bDownMixToMono) { this.downMixToMono(); }
+				this.normalizePoints(!bVisualizer && this.ui.bNormalizeWidth);
+				this.timeConstant = handle.Length / this.frames;
+			}
 		}
 		this.resetAnimation();
 		// Set animation using BPM if possible
@@ -629,6 +635,7 @@ function _seekbar({
 	};
 
 	this.downMixToMono = () => {
+		if (this.channels <= 1) { return; }
 		this.frames = this.current[0].length;
 		const monoData = [];
 		const channelsNum = this.getDisplayChannels(false).length;
@@ -695,6 +702,8 @@ function _seekbar({
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
 		const bNoSubSong = handle.SubSong === 0;
 		const bValidExt = this.isCompatibleFileExtension(handle);
+		this.isFile = _isFile(handle.Path);
+		this.isLink = _isLink(handle.Path);
 		this.isZippedFile = handle.RawPath.includes('unpack://');
 		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
@@ -762,6 +771,8 @@ function _seekbar({
 		this.timeConstant = 0;
 		this.cache = null;
 		this.time = 0;
+		this.isFile = false;
+		this.isLink = false;
 		this.isZippedFile = false;
 		this.isAllowedFile = true;
 		this.isFallback = false;
@@ -1104,6 +1115,8 @@ function _seekbar({
 			gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
 			gr.GdiDrawText('File can not be analyzed', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+		} else if (this.isAllowedFile && !this.isFile && !this.isLink) {
+			gr.GdiDrawText('Dead or not found file.', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.active) {
 			gr.GdiDrawText('Analyzing track...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		}
