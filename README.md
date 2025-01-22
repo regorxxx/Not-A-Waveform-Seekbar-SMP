@@ -60,7 +60,7 @@ Alternate colors:
  2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): Component required to install this javaScript addon. Both x32 and x64.
 
 ## Installation
-See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki/Installation).
+See [_INSTALLATION (txt)](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/blob/main/_INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
 ## Support
