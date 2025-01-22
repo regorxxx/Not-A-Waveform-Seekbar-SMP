@@ -1,5 +1,5 @@
 'use strict';
-//19/01/25
+//22/01/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -370,7 +370,7 @@ function _seekbar({
 
 	this.loadDataFile = (file, ext) => {
 		let data = [];
-		console.log('Seekbar analysis file path: ' + file.replace(fb.ProfilePath, '.\\') + ext);
+		console.log('Seekbar: Analysis file path -> ' + file.replace(fb.ProfilePath, '.\\') + ext);
 		if (ext.endsWith('.json')) {
 			data = _jsonParseFile(file + ext, this.codePage) || [];
 		} else if (ext.endsWith('.lz')) {
@@ -679,7 +679,7 @@ function _seekbar({
 	this.verifyData = (handle, file, bIsRetry = false) => {
 		if (!this.isDataValid(handle)) {
 			if (bIsRetry) {
-				console.log('File was not successfully analyzed after retrying.');
+				console.log('Seekbar: Track was not successfully analyzed after retrying');
 				file && _deleteFile(file);
 				this.isAllowedFile = false;
 				this.isFallback = this.analysis.bVisualizerFallback;
@@ -688,7 +688,7 @@ function _seekbar({
 				this.frames = 0;
 				this.timeConstant = 0;
 			} else {
-				console.log('Seekbar file not valid. Creating new one' + (file ? ': ' + file : '.'));
+				console.log('Seekbar: Analysis file not valid.' + (file ? ' Creating new one -> ' + file : ''));
 				file && _deleteFile(file);
 				this.newTrack(handle, true);
 			}
@@ -1269,10 +1269,10 @@ function _seekbar({
 			profiler = new FbProfiler('visualizer');
 		}
 		if (cmd) {
-			console.log('Seekbar scanning: ' + sourceFile);
+			console.log('Seekbar: Scanning -> ' + sourceFile);
 			if (this.bDebug) { console.log(cmd); }
 		} else if (!this.isAllowedFile && !bVisualizer && !bFallbackMode.analysis) {
-			console.log('Seekbar skipping incompatible file: ' + sourceFile);
+			console.log('Seekbar: Skipping incompatible file -> ' + sourceFile);
 		}
 		const channels = this.channels; // If playback is changed during analysis it may change
 		let bDone = cmd ? _runCmd(cmd, false) : true;
@@ -1387,7 +1387,7 @@ function _seekbar({
 			}
 			if (bPlayingSameHandle) {
 				if (this.current.length && this.current.some((channel) => channel.length)) { throttlePaint(); }
-				else { console.log(this.analysis.binaryMode + ': failed analyzing the file -> ' + sourceFile); }
+				else { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
 			}
 		}
 	};
