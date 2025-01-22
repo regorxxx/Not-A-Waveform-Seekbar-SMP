@@ -888,7 +888,7 @@ function _seekbar({
 			const timeConstant = this.timeConstant;
 			for (let c = 0; c < channelsNum; c++) {
 				const offsetY = channelsNum > 1
-					? size * (c !== 0 ? c : -1) + margin * (c !== 0 ? 1 : -1)
+					? size * (c - 1 / 2 * (channelsNum - 1))
 					: 0;
 				const channel = displayChannels[c];
 				let n = 0;
@@ -967,16 +967,16 @@ function _seekbar({
 		let z = bVisualizer ? Math.abs(y) : y;
 		if (z > 0) {
 			if (altColor !== color) {
-				if (color !== -1) { gr.FillSolidRect(x, (this.h - offsetY) / 2 - z, 1, z / 2, color); }
-				if (altColor !== -1) { gr.FillSolidRect(x, (this.h - offsetY) / 2 - z / 2, 1, z / 2, altColor); }
-			} else if (color !== -1) { gr.FillSolidRect(x, (this.h - offsetY) / 2 - z, 1, z, color); }
+				if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z, 1, z / 2, color); }
+				if (altColor !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z / 2, 1, z / 2, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z, 1, z, color); }
 		}
 		z = bVisualizer ? - Math.abs(y) : y;
 		if (z < 0) {
 			if (altColor !== color) {
-				if (color !== -1) { gr.FillSolidRect(x, (this.h - offsetY) / 2 - z / 2, 1, - z / 2, color); }
-				if (altColor !== -1) { gr.FillSolidRect(x, (this.h - offsetY) / 2, 1, - z / 2, altColor); }
-			} else if (color !== -1) { gr.FillSolidRect(x, (this.h - offsetY) / 2, 1, - z, color); }
+				if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z / 2, 1, - z / 2, color); }
+				if (altColor !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY, 1, - z / 2, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY, 1, - z, color); }
 		}
 	};
 
@@ -996,9 +996,9 @@ function _seekbar({
 		}
 		if (y > 0) {
 			if (altColor !== color) {
-				if (color !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2 + size / 2 - 2 * y, barW, y, 1, color); }
-				if (altColor !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2 + size / 2 - y, barW, y, 1, altColor); }
-			} else if (color !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2 + size / 2 - 2 * y, barW, 2 * y, 1, color); }
+				if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY + size / 2 - 2 * y, barW, y, 1, color); }
+				if (altColor !== -1) { gr.DrawRect(x, this.h / 2 - offsetY + size / 2 - y, barW, y, 1, altColor); }
+			} else if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY + size / 2 - 2 * y, barW, 2 * y, 1, color); }
 		}
 	};
 
@@ -1018,18 +1018,18 @@ function _seekbar({
 		let z = bVisualizer ? Math.abs(y) : y;
 		if (z > 0) { // Split waveform in 2, and then each half in 2 for highlighting
 			if (altColor !== color) {
-				if (color !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2 - z, barW, z / 2, 1, color); }
-				if (altColor !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2 - z / 2, barW, z / 2, 1, altColor); }
+				if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY - z, barW, z / 2, 1, color); }
+				if (altColor !== -1) { gr.DrawRect(x, this.h / 2 - offsetY - z / 2, barW, z / 2, 1, altColor); }
 			} else {
-				gr.DrawRect(x, (this.h - offsetY) / 2 - z, barW, z, 1, color);
+				gr.DrawRect(x, this.h / 2 - offsetY - z, barW, z, 1, color);
 			}
 		}
 		z = bVisualizer ? - Math.abs(y) : y;
 		if (z < 0) {
 			if (altColor !== color) {
-				if (color !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2 - z / 2, barW, - z / 2, 1, color); }
-				if (altColor !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2, barW, - z / 2, 1, altColor); }
-			} else if (color !== -1) { gr.DrawRect(x, (this.h - offsetY) / 2, barW, - z, 1, color); }
+				if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY - z / 2, barW, - z / 2, 1, color); }
+				if (altColor !== -1) { gr.DrawRect(x, this.h / 2 - offsetY, barW, - z / 2, 1, altColor); }
+			} else if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY, barW, - z, 1, color); }
 		}
 	};
 
@@ -1042,12 +1042,12 @@ function _seekbar({
 		const altColor = bPrePaint && bIsfuture ? colors.altFuture : colors.alt;
 		this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 		const rand = this.offset[n];
-		const step = Math.max((this.h - offsetY) / 80, 5) + (rand || 1); // Point density
+		const step = Math.max(size / 80, 5) + (rand || 1); // Point density
 		const circleSize = Math.max(step / 25, 1);
 		// Split waveform in 2, and then each half in 2 for highlighting. If colors match, the same amount of points are painted anyway...
 		const sign = Math.sign(y);
-		let yCalc = (this.h - offsetY) / 2;
-		let bottom = (this.h - offsetY) / 2 - y / 2;
+		let yCalc = this.h / 2 - offsetY;
+		let bottom = this.h / 2 - offsetY - y / 2;
 		while (sign * (yCalc - bottom) > 0) {
 			if (altColor !== -1) { gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor); }
 			yCalc += (- sign) * step;
@@ -1059,8 +1059,8 @@ function _seekbar({
 		}
 		if (bVisualizer) {
 			const sign = - Math.sign(y);
-			let yCalc = (this.h - offsetY) / 2;
-			let bottom = (this.h - offsetY) / 2 + y / 2;
+			let yCalc = this.h / 2 - offsetY;
+			let bottom = this.h / 2 - offsetY + y / 2;
 			while (sign * (yCalc - bottom) > 0) {
 				if (altColor !== -1) { gr.DrawEllipse(x, yCalc, circleSize, circleSize, 1, altColor); }
 				yCalc += (- sign) * step;
@@ -1098,7 +1098,7 @@ function _seekbar({
 		const color = colors.main;
 		const altColor = colors.alt;
 		const barSize = this.ui.bLogScale ? (100 + 1000 * Math.log10(scale)) / 100 : scale;
-		gr.FillGradRect(this.x + this.marginW, (this.h - offsetY) / 2 - size / 2, (this.w - this.marginW * 2) * barSize, size, 1, color, altColor);
+		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * barSize, size, 1, color, altColor);
 		return true;
 	};
 
