@@ -4,7 +4,7 @@
 [![CodacyBadge][codacy_badge]](https://www.codacy.com/gh/regorxxx/Not-A-Waveform-Seekbar-SMP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=regorxxx/Not-A-Waveform-Seekbar-SMP&amp;utm_campaign=Badge_Grade)
 ![GitHub](https://img.shields.io/github/license/regorxxx/Not-A-Waveform-Seekbar-SMP) 
 
-A [foobar2000](https://www.foobar2000.org/) UI [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel/) seekbar, using [audiowaveform](https://github.com/bbc/audiowaveform) or [ffprobe](https://ffmpeg.org/ffprobe.html). It's based on RMS, peak levels, the actual waveform or visualization presets.
+A [foobar2000](https://www.foobar2000.org/) UI [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel/)/[JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378) seekbar, using [audiowaveform](https://github.com/bbc/audiowaveform) or [ffprobe](https://ffmpeg.org/ffprobe.html). It's based on RMS, peak levels, the actual waveform or visualization presets.
 
 ![visualizer](https://user-images.githubusercontent.com/83307074/215602830-06a48290-99f7-4bf5-99cd-b5766c893498.gif)
 
@@ -12,11 +12,14 @@ A [foobar2000](https://www.foobar2000.org/) UI [Spider Monkey Panel](https://the
 * Uses [audiowaveform](https://github.com/bbc/audiowaveform) by default (included).
 * [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\ffprobe\'.
 * Visualizer mode to simply show an animation which changes according to BPM (if tag exists).
+* VU Meter mode by RMS or peak levels.
 * Fully configurable using the R. Click menu:
 	* Colors
 	* Waveform modes
 	* Analysis modes
+	* VU Meter
 	* Animations
+	* Multi-channel display
 	* Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
 	
 Waveform (ffprobe):
@@ -42,10 +45,19 @@ Alternate colors:
 
 ### Integrated in
  1. [Georgia ReBORN](https://github.com/TT-ReBORN/Georgia-ReBORN): a Clean, Full Dynamic Color Reborn foobar2000 Theme.
- 
+
+## Requirements
+ 1. [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel): Component required to install this javaScript addon. Only x32.
+ 2. [JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378): Component required to install this javaScript addon. Both x32 and x64.
+
 ## Installation
 See [_TIPS and INSTALLATION (txt)](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/blob/main/_TIPS%20and%20INSTALLATION.txt) and the [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki/Installation).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
+
+## Support
+ 1. [Issues tracker](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/issues).
+ 2. [Hydrogenaudio forum](https://hydrogenaud.io/index.php/topic,124385.0.html).
+ 3. [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki).
 
 ## Nightly releases
 Automatic package [built from GitHub](https://nightly.link/regorxxx/Not-A-Waveform-Seekbar-SMP/workflows/build/main/file.zip) (using the latest commit).
