@@ -40,6 +40,15 @@ Bars:
 Partial:
 ![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
 
+VU Meter:
+![VU](https://github.com/user-attachments/assets/cd5f1847-6d6c-4b84-b369-4b91c736378d)
+
+Multi-Channel:
+![VU2](https://github.com/user-attachments/assets/301e09bc-3e27-4519-a0fe-42c9f8613891)
+
+Stereo -> Downmix:
+![Vu3](https://github.com/user-attachments/assets/25be4a68-48be-40eb-b9b0-74bb1447ef1c)
+
 Alternate colors:
 ![smooth2](https://user-images.githubusercontent.com/83307074/215738478-ea3e9a5e-3d19-49ff-a363-fc4b4be5499c.gif)
 
