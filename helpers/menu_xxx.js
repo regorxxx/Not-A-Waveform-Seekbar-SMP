@@ -19,7 +19,7 @@ include(fb.ComponentPath + 'docs\\Flags.js');
  * @name _menu
  * @param {object} [o] - arguments
  * @param {boolean?} o.bInit - [=true] Creates a main menu object at init. Set to false to directly replace with a contextual/main menu obj.
- * @param {boolean?} o.bSupressDefaultMenu - [=true] Suppress the default context menu. left shift + left windows key will bypass it.
+ * @param {boolean?} o.bSuppressDefaultMenu - [=true] Suppress the default context menu. left shift + left windows key will bypass it.
  * @param {boolean?} o.bAddInvisibleIds - [=true] When trying to add multiple (sub)menus with same name (and different parent), an invisible Id may be added to allow it. .newMenu() and .findOrNewMenu() will return the final name in such case. Entries may be duplicated without conflicts though.
  * @param {function?} o.onBtnUp - [=null] Callback called after processing mouse btn_up. Respects the value of this inside the function, if any.
  * @param {number?} o.contextIdxInitial - [=10000] Initial id for Context Menu manager.
@@ -29,7 +29,7 @@ include(fb.ComponentPath + 'docs\\Flags.js');
  * @param {boolean} o.bThrowErrors - [=true] Throws an error when passing malformed arguments on any method. It may conflict with web requests if they are active when the panel crashes (although a workarounds is implemented).
  * @returns {void}
  */
-function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false, bThrowErrors = true } = {}) {
+function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, iMaxEntryLen = Infinity, iMaxTabLen = Infinity, bAddInvisibleIds = true, onBtnUp = null, contextIdxInitial = 10000, mainIdxInitial = 100000, idxInitialOffset = 1000, bLogEntries = false, bThrowErrors = true } = {}) {
 	/* Checks */
 	if (onBtnUp && !isFunction(onBtnUp)) { throwError('onBtnUp is not a function'); }
 	if (iMaxEntryLen <= 0) { throwError('iMaxEntryLen can not be <= 0'); }
@@ -847,12 +847,12 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @param {number} x - X position in px
 	 * @param {number} y - Y position in px
 	 * @param {(_menu|Separator|MenuLikeObject)[]} [object] - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
-	 * @param {string} [forcedEntry] - [=''] Call an specific menu entry by name and ommit creation of menu on UI.
+	 * @param {string} [forcedEntry] - [=''] Call an specific menu entry by name and omit creation of menu on UI.
 	 * @param {boolean} [bExecute] - [=true] Wether to execute the entry function or not. May be used to simulate calls.
 	 * @param {function} [replaceFunc] - [=null] Function to execute instead of the entry function if 'bExecute' is set to false. The entry name is passed as argument.
 	 * @param {number} [flag] - [=0] Flags for .TrackPopupMenu() SMP method.
 	 * @param {{pos:number, args?:any}} [bindArgs] - [=null] Arguments passed to conditional entries, which are only executed at menu call. If pos is 0 or not present, then it's passed directly as first argument; otherwise, the conditional entry function is executed with arguments set to undefined -so it will use default variables- up to pos (where args is used).
-	 * @returns {boolean} - Flag to suppres default panel menu
+	 * @returns {boolean} Flag to suppress default panel menu
 	 */
 	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0, bindArgs = null) => {
 		// Recreate menu(s)
@@ -907,7 +907,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 		if (onBtnUp) { onBtnUp(x, y, object, bExecute, replaceFunc, flag, bindArgs); }
 		// Clear all
 		this.clear();
-		return bSupressDefaultMenu;
+		return bSuppressDefaultMenu;
 	};
 	/**
 	 * Cleans all temporal data after the menu has been called on UI. Called everytime .btn_up() is fired. It may also be used to completely clean all cached entries by ussing the flag.
@@ -950,7 +950,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	 * @memberof _menu
 	 * @name retry
 	 * @param {{pos:number, args:any}?} [bindArgs] - [=null] Arguments passed to conditional entries, which are only executed at menu call. If pos is 0 or not present, then it's passed directly as first argument; otherwise, the conditional entry function is executed with arguments set to undefined -so it will use default variables- up to pos (where args is used).
-	 * @returns {boolean} - Flag to suppres default panel menu
+	 * @returns {boolean} Flag to suppress default panel menu
 	 */
 	this.retry = (bindArgs = null) => {
 		return this.btn_up(void (0), void (0), void (0), this.lastCall, true, void (0), void (0), bindArgs);
