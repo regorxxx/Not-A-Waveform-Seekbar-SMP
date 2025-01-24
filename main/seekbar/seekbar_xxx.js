@@ -28,18 +28,18 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} o.preset.bAnimate - Adds animation to displayed waveform.
  * @param {boolean} o.preset.bUseBPM - Sync animation with %BPM% tag.
  * @param {number} o.preset.futureSecs - Sets the length (in seconds) to show after the current time. Requires {@link o.preset.paintMode} set to 'partial' and {@link o.preset.bPrePaint} to true.
- * @param {boolean} o.preset.bHalfBarsShowNeg -
+ * @param {boolean} o.preset.bHalfBarsShowNeg - Show (and invert) negative data values if using 'halfbars' {@link o.preset.waveMode}.
  * @param {Number[]?} o.preset.displayChannels - [=[]] Set channels which will be displayed vertically stacked, 0-based. An empty array will display all.
  * @param {boolean} o.preset.bDownMixToMono - Downmix selected display channels into a single channel. May be used to mimic non-multichannel output with multichannel analysis files.
  * @param {object} o.ui - Panel display related settings.
  * @param {GdiFont} o.ui.gFont - [=_gdiFont('Segoe UI', _scale(15))] Font used in panel
- * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos:number}} o.ui.colors - Color settings for background (bg), waveform (main|alt) and curren time indicator (currPos). Additionally colors for the region after current time (future) and alternate accent (alt) may be set.
+ * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos:number}} o.ui.colors - Color settings for background (bg), waveform (main|alt) and current time indicator (currPos). Additionally colors for the region after current time (future) and alternate accent (alt) may be set.
  * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos:number}} o.ui.transparency - Transparency settings (see colors for key meanings).
  * @param {{x:number, y:number, w:number, h:number, scaleH:number, marginW:number}} o.ui.pos - Window related position
- * @param {{unit:('s'|'ms'|'%'), step:number, bReversed:bolean}} o.ui.pos - Mouse wheel settings to control playback seeking
+ * @param {{unit:('s'|'ms'|'%'), step:number, bReversed:boolean}} o.ui.wheel - Mouse wheel settings to control playback seeking
  * @param {number} o.ui.refreshRate - [=200] ms when using animations of any type. 100 is smooth enough but the performance hit is high
  * @param {boolean} o.ui.bVariableRefreshRate - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
- * @param {boolean} o.ui.bNormalizeWidth - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same ammount of detail this way.
+ * @param {boolean} o.ui.bNormalizeWidth - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
  * @param {number} o.ui.normalizeWidth - [=_scale(4)] Size unit for normalization.
  * @param {boolean} o.ui.bLogScale - [=true] Wether to display VU Meter scale in log (dBs) or linear scale
  * @param {Object} o.analysis - Analysis related settings.
@@ -51,7 +51,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} o.analysis.bAutoRemove - [=true] Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate them).
  * @param {boolean} o.analysis.bVisualizerFallback - [=true] Uses visualizer mode when file can not be processed (not compatible format).
  * @param {boolean} o.analysis.bVisualizerFallbackAnalysis - [=true] Uses visualizer mode while analyzing files.
- * @param {boolean} o.analysis.bMultiChannel - [=false] Wether output analysis data files are combined into a single waveform or not. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via o.preset.bDownMixToMono without requiring to analize files again, so multichannel mode covers all use cases (but uses more disk space proportional to track channels).
+ * @param {boolean} o.analysis.bMultiChannel - [=false] Wether output analysis data files are combined into a single waveform or not. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via o.preset.bDownMixToMono without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to track channels).
  * @param {object} o.callbacks - Panel callbacks related settings.
  * @param {() => number} o.callbacks.backgroundColor - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
  */
@@ -220,22 +220,102 @@ function _seekbar({
 	};
 	// Add default args
 	this.defaults();
-	// Set
 	/**
-	 * @typedef {object} binaries
+	 * @typedef {object} Binaries - Binaries paths
 	 * @property {string?} ffprobe - ffprobe path
 	 * @property {string?} audiowaveform - audiowaveform path
 	 * @property {null} visualizer - Dummy placeholder
 	 */
-	/** @type {binaries} - Binaries paths */
+	/** @type {Binaries} - Binaries paths */
 	this.binaries = binaries;
+	/**
+	 * @typedef {object} UI - Panel UI related settings
+	 * @property {GdiFont} gFont - ffprobe path
+	 * @property {object} colors - Color settings
+	 * @property {number} colors.bg - Background color
+	 * @property {number} colors.main - Waveform main color
+	 * @property {number} colors.alt - Waveform alt color
+	 * @property {number} colors.bgFuture - After current time background color
+	 * @property {number} colors.mainFuture - After current time main color
+	 * @property {number} colors.altFuture - After current time alt color
+	 * @property {number} colors.currPos - Current time indicator color
+	 * @property {object} transparency - Current time indicator color
+	 * @property {number} transparency.bg - Background transparency
+	 * @property {number} transparency.main - Waveform main transparency
+	 * @property {number} transparency.alt - Waveform alt transparency
+	 * @property {number} transparency.bgFuture - After current time background transparency
+	 * @property {number} transparency.mainFuture - After current time main transparency
+	 * @property {number} transparency.altFuture - After current time alt transparency
+	 * @property {number} transparency.currPos - Current time indicator transparency
+	 * @property {object} pos - Panel coordinates
+	 * @property {number} pos.x - X-Axis position
+	 * @property {number} pos.y - Y-Axis position
+	 * @property {number} pos.w - X-Axis width
+	 * @property {number} pos.h - X-Axis width
+	 * @property {number} pos.scaleH - Y-Axis panel fill in % of height
+	 * @property {number} pos.marginW - X-axis margin in px
+	 * @property {object} wheel - Mouse wheel settings to control playback seeking
+	 * @property {'s'|'ms'|'%'} wheel.unit - Seeking per second, ms or % of total playback
+	 * @property {number} wheel.step - Wheel steps seeking ratio
+	 * @property {Boolean} wheel.bReversed - Flag to reverse seeking
+	 * @property {number} refreshRate - ms when using animations of any type.
+	 * @property {Boolean} bVariableRefreshRate - Flag to change refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
+	 * @property {Boolean} bNormalizeWidth - Flag to use data interpolation to display it normalized to the window width adjusted by normalizeWidth param (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
+	 * @property {number} normalizeWidth - Size unit for normalization.
+	 * @property {Boolean} bLogScale - Flag to display VU Meter scale in log (dBs) or linear scale.
+	 * @property {number} refreshRate - Size unit for normalization.
+	 */
+	/** @type {UI} - Panel UI related settings */
 	this.ui = ui;
+	/**
+	 * @typedef {object} Preset - Waveform display related settings.
+	 * @property {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} waveMode - Waveform design.
+	 * @property {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} analysisMode - Data analysis mode (only available using ffprobe).
+	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
+	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
+	 * @property {boolean} bPaintCurrent - Flag to paint current time indicator.
+	 * @property {boolean} bAnimate - Flag to add animation to displayed waveform.
+	 * @property {boolean} bUseBPM - Flag to sync animation with %BPM% tag.
+	 * @property {number} futureSecs - Length (in seconds) to show after the current time. Requires {@link Preset.paintMode} set to 'partial' and {@link Preset.bPrePaint} to true.
+	 * @property {boolean} bHalfBarsShowNeg - Flag to show (and invert) negative data values if using 'halfbars' {@link Preset.waveMode}.
+	 * @property {Number[]?} displayChannels - Channels which will be displayed, 0-based. An empty array will display all.
+	 * @property {boolean} bDownMixToMono - Flag to downmix selected display channels into a single channel-
+	 */
+	/** @type {Preset} - Waveform display related settings.*/
 	this.preset = preset;
+	/**
+	 * @typedef {object} Analysis - Analysis related settings.
+	 * @property {'ffprobe'|'audiowaveform'|'visualizer'} binaryMode - Binary used. Visualizer is processed internally.
+	 * @property {number} resolution - Points per second on audiowaveform, per sample on ffmpeg  (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
+	 * @property {'none'|'utf-8'|'utf-16'} compressionMode - Anything but 'none' applies compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70%  compression) and 7zip (~80% compression).
+	 * @property {'library'|'all'|'none'} storeMode - Controls wether analysis data files are saved to disk, for library items only, any item or none.
+	 * @property {boolean} bAutoAnalysis - Flag to automatically analyze tracks on playback or on demand.
+	 * @property {boolean} bAutoRemove - Flag to delete analysis files when unloading the script. They are kept during the session (to not recalculate them).
+	 * @property {boolean} bVisualizerFallback -  Flag to use visualizer mode when file can not be processed (not compatible format).
+	 * @property {boolean} bVisualizerFallbackAnalysis - Flag to use visualizer mode while analyzing files.
+	 * @property {boolean} bMultiChannel - Flag to output analysis data files compatible with multichannel or downmixed to mono. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via {@link Preset.bDownMixToMono} without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to  track channels).
+	 */
+	/** @type {Analysis} - Waveform display related settings.*/
 	this.analysis = analysis;
+	/**
+	 * @typedef {object} Callbacks - Panel callbacks related settings.
+	 * @property {() => number} backgroundColor - Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
+	 */
+	/** @type {Callbacks} - Panel callbacks related settings. */
 	this.callbacks = callbacks;
 	// Easy access
-	this.x = ui.pos.x; this.y = ui.pos.y; this.w = ui.pos.w; this.h = ui.pos.h;
-	this.scaleH = ui.pos.scaleH; this.marginW = ui.pos.marginW;
+	/** @type {number} - X-Axis position */
+	this.x = this.ui.pos.x;
+	/** @type {number} - Y-Axis position */
+	this.y = this.ui.pos.y;
+	/** @type {number} - X-Axis width */
+	this.w = this.ui.pos.w;
+	/** @type {number} - Y-Axis height */
+	this.h = this.ui.pos.h;
+	/** @type {number} - Y-Axis panel fill in % of height */
+	this.scaleH = this.ui.pos.scaleH;
+	/** @type {number} - X-axis margin in px */
+	this.marginW = this.ui.pos.marginW;
 	// Internals
 	/** @type {number|null} - Queue interval id */
 	this.queueId = null;
@@ -307,7 +387,7 @@ function _seekbar({
 	['ffprobe', 'audiowaveform'].forEach((key) => {
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
-	/** @type {(bForce = false) => void(0)} - Repaint entire window throttled */
+	/** @type {(bForce = false) => void} - Repaint entire window throttled */
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	/** @type {(x:number, y:number, w:number, h:number, bForce = false) => void(0)} - Repaint part of window throttled */
 	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
@@ -804,9 +884,8 @@ function _seekbar({
 	 * @name stop
 	 * @kind method
 	 * @memberof _seekbar
-	 * @type {function}
 	 * @param {(-1|0|1|2|3)} reason - -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
-	 * @returns {void(0)}
+	 * @returns {void}
 	*/
 	this.stop = (reason = -1) => {
 		if (reason !== -1 && !this.active) { return; }
@@ -820,9 +899,8 @@ function _seekbar({
 	 * @name stop
 	 * @kind method
 	 * @memberof _seekbar
-	 * @type {function}
 	 * @param {boolean} state - True when paused
-	 * @returns {void(0)}
+	 * @returns {void}
 	*/
 	this.pause = (state) => {
 		if (!state) { this.resetAnimation(); }
@@ -859,9 +937,8 @@ function _seekbar({
 	 * @name paint
 	 * @kind method
 	 * @memberof _seekbar
-	 * @type {function}
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
-	 * @returns {void(0)}
+	 * @returns {void}
 	*/
 	this.paint = (gr) => {
 		profilerPaint.Reset();
@@ -1088,7 +1165,6 @@ function _seekbar({
 	 * @name paintVU
 	 * @kind method
 	 * @memberof _seekbar
-	 * @type {function}
 	 * @param {GdiGraphics} gr
 	 * @param {number} n
 	 * @param {number} x
@@ -1100,7 +1176,7 @@ function _seekbar({
 	this.paintVuMeter = (gr, n, x, offsetY, current, size, scale, bVisualizer, colors) => { // NOSONAR
 		const threshold = this.analysis.binaryMode === 'ffprobe'
 			? 0.001
-			: 0.005;
+			: 0.010;
 		const bIsNow = Math.abs(current - fb.PlaybackTime) / fb.PlaybackLength <= threshold;
 		scale = Math.abs(scale);
 		if (!bIsNow || !scale) { return; }
@@ -1110,7 +1186,6 @@ function _seekbar({
 		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * barSize, size, 1, color, altColor);
 		return true;
 	};
-
 	this.paintPlaybackText = (gr, colors) => {
 		const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 		const textColor = colors.bg !== -1

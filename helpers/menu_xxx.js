@@ -199,7 +199,7 @@ function _menu({ bInit = true, bSupressDefaultMenu = true, properties = null, iM
 	/**
 	 * Returns if last entry is a separator
 	 *
-	 * @kind propgerty
+	 * @kind property
 	 * @memberof _menu
 	 * @type {boolean}
 	 * @name isLastEntrySep
