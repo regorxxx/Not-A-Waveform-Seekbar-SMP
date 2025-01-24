@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/01/25
+//24/01/25
 
 /* exported bindMenu */
 
@@ -48,17 +48,19 @@ function createSeekbarMenu(bClear = true) {
 			{ name: 'FFprobe', key: 'ffprobe' },
 			{ name: 'Audiowaveform', key: 'audiowaveform' },
 			{ name: 'Visualizer', key: 'visualizer' }
-		];
-		options.forEach((o) => {
-			const bFound = _isFile(this.binaries[o.key]);
-			menu.newEntry({
-				menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found' : ''), func: () => {
-					this.updateConfig({ analysis: { binaryMode: o.key } });
-					this.saveProperties();
-				}, flags: bFound ? MF_STRING : MF_GRAYED
+		].filter((o) => this.binaries[o.key] || o.key === 'visualizer');
+		if (options.length) {
+			options.forEach((o) => {
+				const bFound = !this.binaries[o.key] || _isFile(this.binaries[o.key]);
+				menu.newEntry({
+					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : ''), func: () => {
+						this.updateConfig({ analysis: { binaryMode: o.key } });
+						this.saveProperties();
+					}, flags: bFound ? MF_STRING : MF_GRAYED
+				});
 			});
-		});
-		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.analysis.binaryMode), options);
+			menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.analysis.binaryMode), options);
+		}
 		if (this.analysis.binaryMode !== 'visualizer') {
 			menu.newSeparator(subMenu);
 			menu.newEntry({

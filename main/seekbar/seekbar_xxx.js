@@ -129,7 +129,7 @@ function _seekbar({
 		const defBinaries = {
 			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
 			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
-			visualizer: fb.ProfilePath + 'running',
+			visualizer: null,
 		};
 		const defPreset = {
 			waveMode: 'waveform',
@@ -203,9 +203,11 @@ function _seekbar({
 		if (!Object.hasOwn(this.binaries, this.analysis.binaryMode)) {
 			throw new Error('Binary mode not recognized or path not set: ' + this.analysis.binaryMode);
 		}
-		if (!_isFile(this.binaries[this.analysis.binaryMode])) {
+		if (this.binaries[this.analysis.binaryMode] && !_isFile(this.binaries[this.analysis.binaryMode])) {
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name);
 			this.bBinaryFound = false;
+		} else if (!this.binaries[this.analysis.binaryMode]) {
+			this.bBinaryFound = this.analysis.binaryMode === 'visualizer';
 		} else { this.bBinaryFound = true; }
 		if (this.preset.waveMode === 'vumeter') {
 			this.ui.bNormalizeWidth = false;
@@ -219,6 +221,13 @@ function _seekbar({
 	// Add default args
 	this.defaults();
 	// Set
+	/**
+	 * @typedef {object} binaries
+	 * @property {string?} ffprobe - ffprobe path
+	 * @property {string?} audiowaveform - audiowaveform path
+	 * @property {null} visualizer - Dummy placeholder
+	 */
+	/** @type {binaries} - Binaries paths */
 	this.binaries = binaries;
 	this.ui = ui;
 	this.preset = preset;
@@ -446,7 +455,7 @@ function _seekbar({
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz16')) {
 				this.current = this.loadDataFile(seekbarFile, '.aw.m.lz16');
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz16', bIsRetry)) { return; }
-			} else if (this.analysis.bAutoAnalysis && this.isFile) {
+			} else if (this.analysis.bAutoAnalysis && this.isFile && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
