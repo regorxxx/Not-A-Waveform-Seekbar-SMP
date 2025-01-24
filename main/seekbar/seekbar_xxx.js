@@ -1,5 +1,5 @@
 'use strict';
-//22/01/25
+//24/01/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -869,7 +869,7 @@ function _seekbar({
 		}
 		const displayChannels = this.getDisplayChannels();
 		const channelsNum = displayChannels.length;
-		if (channelsNum) {
+		if (channelsNum && fb.PlaybackLength > 1) {
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
 			const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
