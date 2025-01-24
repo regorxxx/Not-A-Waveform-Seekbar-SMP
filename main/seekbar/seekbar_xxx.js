@@ -374,8 +374,8 @@ function _seekbar({
 	/** @type {boolean} - Flag for compressed files. Set at this.checkAllowedFile */
 	this.isZippedFile = false;
 	/** @type {boolean} - Flag for compatible files. Set at this.checkAllowedFile */
-	this.isAllowedFile = true;
-	/** @type {boolean} - Flag when visualizer should be used as fallback. For bVisualizerFallback, set at this.checkAllowedFile */
+	this.isAllowedFile = false;
+	/** @type {boolean} - Flag when visualizer should be used as fallback. Set at this.checkAllowedFile() */
 	this.isFallback = false;
 	/** @type {boolean} - Flag for analysis error. Set at this.verifyData after retrying analysis */
 	this.isError = false;
@@ -598,7 +598,7 @@ function _seekbar({
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz16')) {
 				this.current = this.loadDataFile(seekbarFile, '.aw.m.lz16');
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz16', bIsRetry)) { return; }
-			} else if (this.analysis.bAutoAnalysis && this.isFile && this.bBinaryFound) {
+			} else if (this.analysis.bAutoAnalysis && (this.isFile || this.isLink) && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
@@ -1025,7 +1025,7 @@ function _seekbar({
 		this.isFile = false;
 		this.isLink = false;
 		this.isZippedFile = false;
-		this.isAllowedFile = true;
+		this.isAllowedFile = false;
 		this.isFallback = false;
 		this.isError = false;
 		bFallbackMode.paint = bFallbackMode.analysis = false;
@@ -1139,10 +1139,10 @@ function _seekbar({
 		}
 		const displayChannels = this.getDisplayChannels();
 		const channelsNum = displayChannels.length;
-		if (channelsNum && fb.PlaybackLength > 1) {
+		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
+		if (channelsNum && (fb.PlaybackLength > 1 || bVisualizer)) {
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
-			const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			const bBars = this.preset.waveMode === 'bars';
 			const bHalfBars = this.preset.waveMode === 'halfbars';
@@ -1477,16 +1477,16 @@ function _seekbar({
 		const textColor = colors.bg !== -1
 			? invert(colors.bg, true)
 			: this.callbacks.backgroundColor ? invert(this.callbacks.backgroundColor(), true) : 0xFFFFFFFF;
-		if (!this.isAllowedFile && !this.isFallback && this.analysis.binaryMode !== 'visualizer') {
-			gr.GdiDrawText('Not compatible file format', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
-		} else if (!this.analysis.bAutoAnalysis) {
-			gr.GdiDrawText('Seekbar file not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
-		} else if (!this.bBinaryFound) {
+		if (!this.bBinaryFound) {
 			gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
 			gr.GdiDrawText('File can not be analyzed', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+		} else if (!this.isAllowedFile && !this.isFallback && (this.isFile || this.isLink) && this.analysis.binaryMode !== 'visualizer') {
+			gr.GdiDrawText('Not compatible file format', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+		} else if (!this.analysis.bAutoAnalysis) {
+			gr.GdiDrawText('Seekbar file not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isAllowedFile && !this.isFile && !this.isLink) {
-			gr.GdiDrawText('Dead or not found file.', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			gr.GdiDrawText('Dead or not found file', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.active) {
 			gr.GdiDrawText('Analyzing track...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		}
