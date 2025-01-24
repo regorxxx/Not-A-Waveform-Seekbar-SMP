@@ -316,6 +316,12 @@ function _seekbar({
 	this.scaleH = this.ui.pos.scaleH;
 	/** @type {number} - X-axis margin in px */
 	this.marginW = this.ui.pos.marginW;
+	['x', 'y', 'w', 'h', 'scaleH', 'marginW'].forEach((key) => {
+		Object.defineProperty(this, key, {
+			get() { return this.ui.pos[key]; },
+			set(val) { this.ui.pos[key] = val; }
+		});
+	});
 	// Internals
 	/** @type {number|null} - Queue interval id */
 	this.queueId = null;
