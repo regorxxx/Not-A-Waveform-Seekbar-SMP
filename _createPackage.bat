@@ -508,6 +508,8 @@ CALL :copy_folder main\volume
 CALL :check_folder main\window
 CALL :copy_file main\window\window_xxx_slider.js
 CALL :copy_file main\window\window_xxx_helpers.js
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
