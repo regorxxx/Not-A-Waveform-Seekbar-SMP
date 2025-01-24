@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/06/24
+//23/01/25
 
 /* exported _background */
 
@@ -30,10 +30,13 @@ function _background({
 			offsetH: _scale(1),
 			timer: 60,
 			coverMode: 'none', // none | front | back | disc | icon | artist | path
-			coverModeOptions: { blur: 10, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true },
+			coverModeOptions: { blur: 50, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true },
 			colorMode: 'none', // none | single | gradient | bigradient
 			colorModeOptions: { bDither: true, angle: 91, color: [] },
-			callbacks: { change: null  /* (config, arguments, callbackArgs) => void(0) */ },
+			callbacks: {
+				change: null, /* (config, arguments, callbackArgs) => void(0) */
+				artColors: null /* (colArray) => void(0) */
+			},
 		};
 	};
 
@@ -73,12 +76,15 @@ function _background({
 				this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
 			}
 			if (this.coverImg.art.image) {
-				this.coverImg.art.colors = JSON.parse(this.coverImg.art.image.GetColourSchemeJSON(4));
+				this.coverImg.art.colors = this.coverImg.art.image.GetColourScheme(6);
 			}
-			return this.repaint();
 		}).catch(() => {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
+		}).finally(() => {
+			if (this.callbacks.artColors) {
+				this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
+			}
 			return this.repaint();
 		});
 	}, 250);
@@ -225,6 +231,11 @@ function _background({
 			timer: this.timer
 		};
 	};
+	this.getArtColors = () => {
+		return this.coverMode.toLowerCase() === 'none'
+			? null
+			: this.coverImg.art.image ? [...this.coverImg.art.colors] : null;
+	};
 	this.getColors = () => {
 		switch (this.coverMode.toLowerCase()) {
 			case 'front':
@@ -234,7 +245,7 @@ function _background({
 			case 'artist':
 			case 'path':
 				return this.coverImg.art.image
-					? this.coverImg.art.image.GetColourScheme(2)
+					? this.coverImg.art.colors.slice(0, 2)
 					: [this.colorModeOptions.color[0], this.colorModeOptions.color[1] || this.colorModeOptions.color[0]];
 			case 'none':
 			default:
@@ -251,7 +262,7 @@ function _background({
 		this.updateImageBg();
 	};
 	this.colorImg = null;
-	this.coverImg = { art: { path: '', image: null, colors: null}, handle: null, id: null };
+	this.coverImg = { art: { path: '', image: null, colors: null }, handle: null, id: null };
 	/** @type {Number} */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} */
@@ -266,7 +277,7 @@ function _background({
 	this.colorModeOptions = {};
 	/** @type {Number} */
 	this.timer = 0;
-	/** @type {{ change: function(config, arguments, callbackArgs) }} */
+	/** @type {{ change: function(config, arguments, callbackArgs), artColors: function() }} */
 	this.callbacks = {};
 
 	this.init();

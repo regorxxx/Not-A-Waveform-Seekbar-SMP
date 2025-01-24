@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/24
+//23/01/25
 
 /* exported createBackgroundMenu */
 
@@ -21,7 +21,10 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	const mainMenuName = appendTo.menuName || menu.getMainMenuName();
 	// helper
 	const getColorName = (val) => {
-		return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
+		return (val !== -1 && (val || val === 0)
+			? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown'
+			: '-none-'
+		);
 	};
 	const createMenuOption = (key, subKey, menuName = mainMenuName, bCheck = true, addFunc = null) => {
 		return function (option) {
@@ -108,7 +111,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
 			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)' },
-			{ key: 'alpha', entryText: 'Transparency...', checks: [(num) => num > 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
+			{ key: 'alpha', entryText: 'Transparency...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
 		].forEach((option) => {
 			const prevVal = option.key === 'alpha' ? Math.round(this.coverModeOptions[option.key] * 100 / 255) : this.coverModeOptions[option.key];
 			menu.newEntry({

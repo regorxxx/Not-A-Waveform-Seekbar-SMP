@@ -1,7 +1,7 @@
 ﻿'use strict';
-//06/10/24
+//23/01/25
 
-/* exported fso, debounce, _tt, blendColours, lightenColor, darkenColor, tintColor, _gdiFont, _textWidth, clone, getNested, setNested, */
+/* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, */
 
 /*
 	Global Variables
@@ -123,7 +123,7 @@ function toRGB(col) { // returns an array like [192, 0, 0]
 	return [a >> 16, a >> 8 & 0xFF, a & 0xFF];
 }
 
-function blendColours(c1, c2, f) {
+function blendColors(c1, c2, f) {
 	// When factor is 0, result is 100% color1, when factor is 1, result is 100% color2.
 	c1 = toRGB(c1);
 	c2 = toRGB(c2);
@@ -174,6 +174,10 @@ function darkenColorVal(color, percent) {
 function lightenColorVal(color, percent) {
 	const val = Math.round(color + ((255 - color) * (percent / 100)));
 	return Math.min(val, 255);
+}
+
+function opaqueColor(color, percent) {
+	return RGBA(...toRGB(color), Math.min(255, 255 * (percent / 100)));
 }
 
 function getBrightness(r, g, b) { // https://www.w3.org/TR/AERT/#color-contrast
