@@ -15,45 +15,45 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @name _seekbar
  * @constructor
  * @param {object} o - argument
- * @param {string?} o.matchPattern - [='$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)'] Match pattern used to create analysis file path.
- * @param {boolean} o.bDebug - Enable debug logging.
- * @param {boolean} o.bProfile - Enable profiling logging.
- * @param {{ffprobe: string?, audiowaveform: string?, visualizer: string?}} o.binaries - Paths to binaries.
- * @param {object} o.preset - Waveform display related settings.
- * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} o.preset.waveMode - Waveform display design.
- * @param {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} o.preset.analysisMode - Data analysis mode (only available using ffprobe).
- * @param {'full'|'partial'} o.preset.paintMode - Displays entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link o.preset.bPrePaint}
- * @param {boolean} o.preset.bPrePaint - Displays the region after the current time. How many seconds are shown is set by {@link o.preset.futureSecs}
- * @param {boolean} o.preset.bPaintCurrent - Paint current time indicator.
- * @param {boolean} o.preset.bAnimate - Adds animation to displayed waveform.
- * @param {boolean} o.preset.bUseBPM - Sync animation with %BPM% tag.
- * @param {number} o.preset.futureSecs - Sets the length (in seconds) to show after the current time. Requires {@link o.preset.paintMode} set to 'partial' and {@link o.preset.bPrePaint} to true.
- * @param {boolean} o.preset.bHalfBarsShowNeg - Show (and invert) negative data values if using 'halfbars' {@link o.preset.waveMode}.
- * @param {Number[]?} o.preset.displayChannels - [=[]] Set channels which will be displayed vertically stacked, 0-based. An empty array will display all.
- * @param {boolean} o.preset.bDownMixToMono - Downmix selected display channels into a single channel. May be used to mimic non-multichannel output with multichannel analysis files.
- * @param {object} o.ui - Panel display related settings.
- * @param {GdiFont} o.ui.gFont - [=_gdiFont('Segoe UI', _scale(15))] Font used in panel
- * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos:number}} o.ui.colors - Color settings for background (bg), waveform (main|alt) and current time indicator (currPos). Additionally colors for the region after current time (future) and alternate accent (alt) may be set.
- * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos:number}} o.ui.transparency - Transparency settings (see colors for key meanings).
- * @param {{x:number, y:number, w:number, h:number, scaleH:number, marginW:number}} o.ui.pos - Window related position
- * @param {{unit:('s'|'ms'|'%'), step:number, bReversed:boolean}} o.ui.wheel - Mouse wheel settings to control playback seeking
- * @param {number} o.ui.refreshRate - [=200] ms when using animations of any type. 100 is smooth enough but the performance hit is high
- * @param {boolean} o.ui.bVariableRefreshRate - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
- * @param {boolean} o.ui.bNormalizeWidth - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
- * @param {number} o.ui.normalizeWidth - [=_scale(4)] Size unit for normalization.
- * @param {boolean} o.ui.bLogScale - [=true] Wether to display VU Meter scale in log (dBs) or linear scale
- * @param {Object} o.analysis - Analysis related settings.
- * @param {'ffprobe'|'audiowaveform'|'visualizer'} o.analysis.binaryMode - [='audiowaveform'] Binary to use. Visualizer is processed internally.
- * @param {number} o.analysis.resolution - [=1] Pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
- * @param {'none'|'utf-8'|'utf-16'} o.analysis.compressionMode - [='utf-16'] Set to anything but 'none' to apply compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70% compression) and 7zip (~80% compression).
- * @param {'library'|'all'|'none'} o.analysis.storeMode - [='library'] Controls wether analysis data files are saved to disk, for library items only, any item or none.
- * @param {boolean} o.analysis.bAutoAnalysis - [=true] Wether automatically analyze tracks on playback or on demand. For usual seekbar usage it should be true, but may be set to false if the parent panel exposes some way to do it manually (for ex. for track analysis).
- * @param {boolean} o.analysis.bAutoRemove - [=true] Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate them).
- * @param {boolean} o.analysis.bVisualizerFallback - [=true] Uses visualizer mode when file can not be processed (not compatible format).
- * @param {boolean} o.analysis.bVisualizerFallbackAnalysis - [=true] Uses visualizer mode while analyzing files.
- * @param {boolean} o.analysis.bMultiChannel - [=false] Wether output analysis data files are combined into a single waveform or not. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via o.preset.bDownMixToMono without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to track channels).
- * @param {object} o.callbacks - Panel callbacks related settings.
- * @param {() => number} o.callbacks.backgroundColor - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
+ * @param {string} [o.matchPattern] - [='$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)'] Match pattern used to create analysis file path.
+ * @param {boolean} [o.bDebug] - [=false] Enable debug logging.
+ * @param {boolean} [o.bProfile] - [=false] Enable profiling logging.
+ * @param {{ffprobe: string?, audiowaveform: string?, visualizer: string?}} [o.binaries] - Paths to binaries.
+ * @param {object} [o.preset] - Waveform display related settings.
+ * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} [o.preset.waveMode] - [='waveform'] Waveform display design.
+ * @param {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} [o.preset.analysisMode] - [='peak_level'] Data analysis mode (only available using ffprobe).
+ * @param {'full'|'partial'} [o.preset.paintMode] - [='full'] Displays entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link o.preset.bPrePaint}
+ * @param {boolean} [o.preset.bPrePaint] - [=false] Displays the region after the current time. How many seconds are shown is set by {@link o.preset.futureSecs}
+ * @param {boolean} [o.preset.bPaintCurrent] - [=true] Paint current time indicator.
+ * @param {boolean} [o.preset.bAnimate] - [=true] Adds animation to displayed waveform.
+ * @param {boolean} [o.preset.bUseBPM] - [=true] Sync animation with %BPM% tag.
+ * @param {number} [o.preset.futureSecs] - [=Infinity] Sets the length (in seconds) to show after the current time. Requires {@link o.preset.paintMode} set to 'partial' and {@link o.preset.bPrePaint} to true.
+ * @param {boolean} [o.preset.bHalfBarsShowNeg] - [=true] Show (and invert) negative data values if using 'halfbars' {@link o.preset.waveMode}.
+ * @param {Number[]} [o.preset.displayChannels] - [=[]] Set channels which will be displayed vertically stacked, 0-based. An empty array will display all.
+ * @param {boolean} [o.preset.bDownMixToMono] - [=false] Downmix selected display channels into a single channel. May be used to mimic non-multichannel output with multichannel analysis files.
+ * @param {object} [o.ui] - Panel display related settings.
+ * @param {GdiFont} [o.ui.gFont] - [=_gdiFont('Segoe UI', _scale(15))] Font used in panel
+ * @param {{bg?:number, main?:number, alt?:number, bgFuture?:number, mainFuture?:number, altFuture?:number, currPos?:number}} [o.ui.colors] - Color settings for background (bg), waveform (main|alt) and current time indicator (currPos). Additionally colors for the region after current time (future) and alternate accent (alt) may be set.
+ * @param {{bg?:number, main?:number, alt?:number, bgFuture?:number, mainFuture?:number, altFuture?:number, currPos?:number}} [o.ui.transparency] - Transparency settings (see colors for key meanings).
+ * @param {{x?:number, y?:number, w?:number, h?:number, scaleH?:number, marginW?:number}} o.ui.pos - Window related position
+ * @param {{unit?:('s'|'ms'|'%'), step?:number, bReversed?:boolean}} [o.ui.wheel] - Mouse wheel settings to control playback seeking
+ * @param {number} [o.ui.refreshRate] - [=200] ms when using animations of any type. 100 is smooth enough but the performance hit is high
+ * @param {boolean} [o.ui.bVariableRefreshRate] - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
+ * @param {boolean} [o.ui.bNormalizeWidth] - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
+ * @param {number} [o.ui.normalizeWidth] - [=_scale(4)] Size unit for normalization.
+ * @param {boolean} [o.ui.bLogScale ]- [=true] Wether to display VU Meter scale in log (dBs) or linear scale
+ * @param {Object} [o.analysis] - Analysis related settings.
+ * @param {'ffprobe'|'audiowaveform'|'visualizer'} [o.analysis.binaryMode] - [='audiowaveform'] Binary to use. Visualizer is processed internally.
+ * @param {number} [o.analysis.resolution] - [=1] Pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
+ * @param {'none'|'utf-8'|'utf-16'} [o.analysis.compressionMode] - [='utf-16'] Set to anything but 'none' to apply compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70% compression) and 7zip (~80% compression).
+ * @param {'library'|'all'|'none'} [o.analysis.storeMode] - [='library'] Controls wether analysis data files are saved to disk, for library items only, any item or none.
+ * @param {boolean} [o.analysis.bAutoAnalysis] - [=true] Wether automatically analyze tracks on playback or on demand. For usual seekbar usage it should be true, but may be set to false if the parent panel exposes some way to do it manually (for ex. for track analysis).
+ * @param {boolean} [o.analysis.bAutoRemove] - [=true] Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate them).
+ * @param {boolean} [o.analysis.bVisualizerFallback] - [=true] Uses visualizer mode when file can not be processed (not compatible format).
+ * @param {boolean} [o.analysis.bVisualizerFallbackAnalysis] - [=true] Uses visualizer mode while analyzing files.
+ * @param {boolean} [o.analysis.bMultiChannel] - [=false] Wether output analysis data files are combined into a single waveform or not. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via o.preset.bDownMixToMono without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to track channels).
+ * @param {object} [o.callbacks] - Panel callbacks related settings.
+ * @param {() => number} [o.callbacks.backgroundColor] - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
  */
 function _seekbar({
 	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,,/,))), ?,,= ,,?,)',
@@ -404,7 +404,17 @@ function _seekbar({
 	this.checkConfig();
 	if (!_isFolder(this.folder)) { _createFolder(this.folder); }
 
-	this.updateConfig = (newConfig) => { // Ensures the UI is updated properly after changing settings
+	/**
+	 * Updates all panel related settings. Use this instead of changing settings directly to ensure the UI and variables are updated properly.
+	 *
+	 * @property
+	 * @name updateConfig
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {{binaries?: Binaries, ui?: UI, preset?: Preset, analysis?: Analysis, callbacks?: Callbacks}} newConfig - Config object, which is applied over current settings. Only include the variables needed.
+	 * @returns {void}
+	*/
+	this.updateConfig = (newConfig) => {
 		if (newConfig) { deepAssign()(this, newConfig); }
 		this.checkConfig();
 		let bRecalculate = false;
@@ -441,7 +451,16 @@ function _seekbar({
 		if (bRecalculate) { this.newTrack(); }
 		else { throttlePaint(); }
 	};
-
+	/**
+	 * Retrieves JSON-compatible panel settings
+	 *
+	 * @property
+	 * @name exportConfig
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {boolean} bSkipPanelDependent - Flag to skip host-UI related settings, like coordinates
+	 * @returns {void}
+	*/
 	this.exportConfig = (bSkipPanelDependent = true) => {
 		const config = {};
 		let notAllowed;
@@ -462,7 +481,17 @@ function _seekbar({
 		config.analysis = clone(this.analysis);
 		return config;
 	};
-
+	/**
+	 * Loads a JSON data file
+	 *
+	 * @property
+	 * @name loadDataFile
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {string} file - File path without extension
+	 * @param {string} ext - Extension
+	 * @returns {number[][]}
+	*/
 	this.loadDataFile = (file, ext) => {
 		let data = [];
 		console.log('Seekbar: Analysis file path -> ' + file.replace(fb.ProfilePath, '.\\') + ext);
@@ -483,7 +512,16 @@ function _seekbar({
 		}
 		return data;
 	};
-
+	/**
+	 * Switches panel functionality
+	 *
+	 * @property
+	 * @name switch
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {boolean} bEnable - [=!this.active] New State. If not provided, switches previous one.
+	 * @returns {boolean} New state
+	*/
 	this.switch = (bEnable = !this.active) => {
 		const wasActive = this.active;
 		this.active = bEnable;
@@ -495,13 +533,32 @@ function _seekbar({
 				this.stop(-1);
 			}
 		}
+		return this.active;
 	};
-
+	/**
+	 * Adds new track to queue to be processed after some ms. This avoids filling the call stack when changing selection too fast. See .newTrack()
+	 *
+	 * @property
+	 * @name newTrackQueue
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.newTrackQueue = function () {
 		if (this.queueId) { clearTimeout(this.queueId); }
 		this.queueId = setTimeout(() => { this.newTrack(...arguments); }, this.queueMs); // Arguments points to the first non arrow func
 	};
-
+	/**
+	 * Process a track to get its data and use it to paint the panel afterwards.
+	 *
+	 * @property
+	 * @name newTrack
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} [handle] - [=fb.GetNowPlaying()] Handle to get data for.
+	 * @param {boolean} [bIsRetry] - [=false] If false, will retry analysis a second time.
+	 * @returns {boolean} New state
+	*/
 	this.newTrack = async (handle = fb.GetNowPlaying(), bIsRetry = false) => {
 		if (!this.active) { return; }
 		this.reset();
@@ -579,7 +636,16 @@ function _seekbar({
 		// And paint
 		throttlePaint();
 	};
-
+	/**
+	 * Normalize data to have amplitudes between [0, 1]. Alternatively, it may also normalize quantity of points according to panel width.
+	 *
+	 * @property
+	 * @name normalizePoints
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {boolean} [bNormalizeWidth] - [=false] Flag to also normalize in X-Axis.
+	 * @returns {void}
+	*/
 	this.normalizePoints = (bNormalizeWidth = false) => {
 		this.frames = this.current[0].length;
 		if (this.frames) {
@@ -728,7 +794,15 @@ function _seekbar({
 			}
 		}
 	};
-
+	/**
+	 * Downmix data to a single channel.
+	 *
+	 * @property
+	 * @name downMixToMono
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.downMixToMono = () => {
 		if (this.channels <= 1) { return; }
 		this.frames = this.current[0].length;
@@ -744,7 +818,16 @@ function _seekbar({
 		this.channels = 1;
 		this.current = [monoData];
 	};
-
+	/**
+	 *  Checks if data is valid for a given track.
+	 *
+	 * @property
+	 * @name isDataValid
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle - Track from which data was sourced
+	 * @returns {boolean}
+	*/
 	this.isDataValid = (handle) => {
 		// When iterating too many tracks in a short amount of time weird things may happen without this check
 		if (!Array.isArray(this.current) || !this.current.length || this.current.some((channel) => !Array.isArray(channel) || !channel.length)) { return false; }
@@ -770,7 +853,18 @@ function _seekbar({
 			}
 		}
 	};
-
+	/**
+	 * Checks if data is valid for a given track, sets associated flags and handles errors.
+	 *
+	 * @property
+	 * @name verifyData
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle - Track from which data was sourced
+	 * @param {string} file - Data file path
+	 * @param {boolean} bIsRetry - [=false] Flag to retry analysis if there are errors
+	 * @returns {boolean}
+	*/
 	this.verifyData = (handle, file, bIsRetry = false) => {
 		if (!this.isDataValid(handle)) {
 			if (bIsRetry) {
@@ -791,7 +885,16 @@ function _seekbar({
 		}
 		return true;
 	};
-
+	/**
+	 * Checks if track can be analyzed.
+	 *
+	 * @property
+	 * @name checkAllowedFile
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle - [=fb.GetNowPlaying()] Track
+	 * @returns {void}
+	*/
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
 		if (!handle) { throw new Error('No handle argument'); }
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
@@ -806,7 +909,17 @@ function _seekbar({
 			? Number(new FbTitleFormat('$info(channels)').EvalWithMetadb(handle))
 			: 1;
 	};
-
+	/**
+	 * Checks if track is compatible with analysis according to extension and binary mode.
+	 *
+	 * @property
+	 * @name isCompatibleFileExtension
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle - [=fb.GetNowPlaying()] Track
+	 * @param {string} mode - [=this.analysis.binaryMode] Binary mode
+	 * @returns {boolean}
+	*/
 	this.isCompatibleFileExtension = (handle = fb.GetNowPlaying(), mode = this.analysis.binaryMode) => {
 		return mode === 'visualizer'
 			? true
@@ -814,11 +927,29 @@ function _seekbar({
 				? compatibleFiles[mode].test(handle.Path)
 				: false;
 	};
-
+	/**
+	 * Gets the compatible extensions for a given binary mode.
+	 *
+	 * @property
+	 * @name reportCompatibleFileExtension
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {string} mode - [=this.analysis.binaryMode] Binary mode
+	 * @returns {string[]}
+	*/
 	this.reportCompatibleFileExtension = (mode = this.analysis.binaryMode) => {
 		return [...compatibleFiles[mode + 'List']];
 	};
-
+	/**
+	 * Sets the steps required to draw the animation for the track's BPM. By default BPM is considered 100 if not available.
+	 *
+	 * @property
+	 * @name bpmSteps
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle - [=fb.GetNowPlaying()] Track
+	 * @returns {number} Max steps for a given BPM
+	*/
 	this.bpmSteps = (handle = fb.GetNowPlaying()) => {
 		// Don't allow anything faster than 2 steps or slower than 10 (scaled to 200 ms refresh rate) and consider all tracks have 100 BPM as default
 		if (!handle) { return this.defaultSteps(); }
@@ -826,13 +957,30 @@ function _seekbar({
 		this.maxStep = Math.round(Math.min(Math.max(200 / (BPM || 100) * 2, 2), 10) * (200 / this.ui.refreshRate) ** (1 / 2));
 		return this.maxStep;
 	};
-
+	/**
+	 * Sets the steps required to draw an animation if no track is provided.
+	 *
+	 * @property
+	 * @name defaultSteps
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {number}
+	*/
 	this.defaultSteps = () => {
 		this.maxStep = Math.round(4 * (200 / this.ui.refreshRate) ** (1 / 2));
 		return this.maxStep;
 	};
 	this.defaultSteps();
-
+	/**
+	 * Sets the current playback time in panel and repaints if needed.
+	 *
+	 * @property
+	 * @name updateTime
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} time
+	 * @returns {void}
+	*/
 	this.updateTime = (time) => {
 		if (!this.active) { return; }
 		this.time = time;
@@ -858,7 +1006,15 @@ function _seekbar({
 			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
 		}
 	};
-
+	/**
+	 * Resets panel internal variables.
+	 *
+	 * @property
+	 * @name reset
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.reset = () => {
 		this.current = [];
 		this.channels = 0;
@@ -876,13 +1032,20 @@ function _seekbar({
 		this.resetAnimation();
 		if (this.queueId) { clearTimeout(this.queueId); }
 	};
-
+	/**
+	 * Resets animation variables.
+	 *
+	 * @property
+	 * @name resetAnimation
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.resetAnimation = () => {
 		this.step = 0;
 		this.offset = [];
 		this.defaultSteps();
 	};
-
 	/**
 	 * Called on_playback_stop. Resets data and painting.
 	 *
@@ -890,7 +1053,7 @@ function _seekbar({
 	 * @name stop
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {(-1|0|1|2|3)} reason - -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
+	 * @param {(-1|0|1|2|3)} [reason] - [=-1] -1 Invoked by JS | 0 Invoked by user | 1 End of file | 2 Starting another track | 3 Fb2k is shutting down
 	 * @returns {void}
 	*/
 	this.stop = (reason = -1) => {
@@ -912,7 +1075,15 @@ function _seekbar({
 		if (!state) { this.resetAnimation(); }
 		throttlePaint(true);
 	};
-
+	/**
+	 * Retrieves current panel colors with transparency applied
+	 *
+	 * @property
+	 * @name getColors
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {Object<string,number>} Dictionary of available colors
+	*/
 	this.getColors = () => {
 		return Object.fromEntries(
 			Object.keys(this.ui.transparency).map((key) => {
@@ -927,7 +1098,15 @@ function _seekbar({
 			})
 		);
 	};
-
+	/**
+	 * Retrieves current channels to display downmixing and/or user selected channels filering
+	 *
+	 * @property
+	 * @name getDisplayChannels
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {number[]} List of available channels to display
+	*/
 	this.getDisplayChannels = (bDownMix = this.preset.bDownMixToMono) => {
 		return this.preset.displayChannels.length
 			? bDownMix
@@ -935,7 +1114,6 @@ function _seekbar({
 				: this.preset.displayChannels.filter((c) => c < this.channels)
 			: Array.from({ length: this.channels }, (x, i) => i);
 	};
-
 	/**
 	 * Draws the waveform bar with various designs based on the current settings.
 	 *
@@ -1039,14 +1217,44 @@ function _seekbar({
 			}
 		}
 	};
-
+	/**
+	 * Draws current time indicator.
+	 *
+	 * @property
+	 * @name paintCurrentPos
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} currX - Current time position
+	 * @param {number} barW - Point size
+	 * @param {{currPos: number}} colors - Colors used
+	 * @returns {void}
+	*/
 	this.paintCurrentPos = (gr, currX, barW, colors) => {
 		if (colors.currPos !== -1 && (this.preset.bPaintCurrent || this.mouseDown)) {
 			const minBarW = Math.round(Math.max(barW, _scale(1)));
 			gr.DrawLine(currX, this.y, currX, this.y + this.h, minBarW, colors.currPos);
 		}
 	};
-
+	/**
+	 * Draws waveform wave mode.
+	 *
+	 * @property
+	 * @name paintWave
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsfuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
 	this.paintWave = (gr, n, x, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -1071,7 +1279,27 @@ function _seekbar({
 			} else if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY, 1, - z, color); }
 		}
 	};
-
+	/**
+	 * Draws half bars wave mode.
+	 *
+	 * @property
+	 * @name paintHalfBars
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsfuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos: number}} colors - Colors used
+	 * @returns {void}
+	*/
 	this.paintHalfBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -1093,7 +1321,27 @@ function _seekbar({
 			} else if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY + size / 2 - 2 * y, barW, 2 * y, 1, color); }
 		}
 	};
-
+	/**
+	 * Draws bars wave mode.
+	 *
+	 * @property
+	 * @name paintBars
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsfuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos: number}} colors - Colors used
+	 * @returns {void}
+	*/
 	this.paintBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += (bPrePaint && bIsfuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -1124,7 +1372,25 @@ function _seekbar({
 			} else if (color !== -1) { gr.DrawRect(x, this.h / 2 - offsetY, barW, - z, 1, color); }
 		}
 	};
-
+	/**
+	 * Draws points wave mode.
+	 *
+	 * @property
+	 * @name paintPoints
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsfuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
 	this.paintPoints = (gr, n, x, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		const y = scaledSize > 0
@@ -1171,12 +1437,15 @@ function _seekbar({
 	 * @name paintVU
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {GdiGraphics} gr
-	 * @param {number} n
-	 * @param {number} x
-	 * @param {number} offsetY
-	 * @param {number} size
-	 * @param {boolean} bVisualizer
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} current - Point time
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{main: number, alt:number}} colors - Colors used
 	 * @returns {boolean}
 	*/
 	this.paintVuMeter = (gr, n, x, offsetY, current, size, scale, bVisualizer, colors) => { // NOSONAR
@@ -1192,6 +1461,17 @@ function _seekbar({
 		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * barSize, size, 1, color, altColor);
 		return true;
 	};
+	/**
+	 * Draws fallback text if required
+	 *
+	 * @property
+	 * @name paintPlaybackText
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {{bg: number}} colors - Colors used
+	 * @returns {void}
+	*/
 	this.paintPlaybackText = (gr, colors) => {
 		const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
 		const textColor = colors.bg !== -1
@@ -1211,7 +1491,24 @@ function _seekbar({
 			gr.GdiDrawText('Analyzing track...', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		}
 	};
-
+	/**
+	 * Handles the different steps of animations and refresh the panel if needed
+	 *
+	 * @property
+	 * @name paintAnimation
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} frames - Total number of data points
+	 * @param {number} currX - Current time position
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bPartial - Flag used when paint mode is partial
+	 * @param {boolean} bBars - Flag used when wave mode is bars
+	 * @param {boolean} bHalfBars - Flag used when wave mode is half bars
+	 * @param {boolean} bVuMeter - Flag used when wave mode is VU meter
+	 * @returns {void}
+	*/
 	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter) => { // NOSONAR
 		// Incrementally draw animation on small steps
 		if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
@@ -1240,11 +1537,32 @@ function _seekbar({
 			else if (profilerPaint.Time < this.ui.refreshRate && profilerPaint.Time >= this.ui.refreshRateOpt) { this.updateConfig({ ui: { refreshRate: this.ui.refreshRate - 25 } }); }
 		}
 	};
-
+	/**
+	 * Checks if position is over panel
+	 *
+	 * @property
+	 * @name trace
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {boolean}
+	*/
 	this.trace = (x, y) => {
 		return (x >= this.x && y >= this.y && x <= this.x + this.w && y <= this.y + this.h);
 	};
-
+	/**
+	 * Called on on_mouse_lbtn_up
+	 *
+	 * @property
+	 * @name lbtnUp
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} mask - keyboard mask
+	 * @returns {boolean} True if click was processed
+	*/
 	this.lbtnUp = (x, y, mask) => { // eslint-disable-line no-unused-vars
 		this.mouseDown = false;
 		if (!this.active) { return; }
@@ -1264,7 +1582,16 @@ function _seekbar({
 		}
 		return false;
 	};
-
+	/**
+	 * Called on on_mouse_wheel or on_mouse_wheel_h
+	 *
+	 * @property
+	 * @name wheel
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} step
+	 * @returns {boolean}
+	*/
 	this.wheel = (step) => { // eslint-disable-line no-unused-vars
 		if (!this.active) { return; }
 		const handle = fb.GetSelection();
@@ -1288,32 +1615,87 @@ function _seekbar({
 		}
 		return false;
 	};
-
+	/**
+	 * Called on on_mouse_move
+	 *
+	 * @property
+	 * @name move
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} mask - keyboard mask
+	 * @returns {void}
+	*/
 	this.move = (x, y, mask) => {
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}
 	};
-
+	/**
+	 * Called on on_size. Resizes panel.
+	 *
+	 * @property
+	 * @name resize
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} w
+	 * @param {number} h
+	 * @returns {void}
+	*/
 	this.resize = (w, h) => {
 		this.w = w;
 		this.h = h;
 	};
-
+	/**
+	 * Called on on_script_unload. Removes data files if such setting is enabled.
+	 *
+	 * @property
+	 * @name unload
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.unload = () => {
 		if (this.analysis.bAutoRemove) {
 			this.removeData();
 		}
 	};
-
+	/**
+	 * Checks if data file is allowed to be saved for a given track.
+	 *
+	 * @property
+	 * @name allowedSaveData
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle
+	 * @returns {boolean}
+	*/
 	this.allowedSaveData = (handle) => {
 		return this.analysis.storeMode === 'all' || this.analysis.storeMode === 'library' && handle && fb.IsMetadbInMediaLibrary(handle);
 	};
-
+	/**
+	 * Removes all data files
+	 *
+	 * @property
+	 * @name removeData
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {boolean} True on success
+	*/
 	this.removeData = () => {
-		_deleteFolder(this.folder);
+		return _deleteFolder(this.folder);
 	};
-
+	/**
+	 * Retrieves associated data paths by TF for a given track
+	 *
+	 * @property
+	 * @name move
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle
+	 * @returns {{seekbarFolder: string, seekbarFile: string, sourceFile: string}} Track data folder, track data filename and track source path
+	*/
 	this.getPaths = (handle) => {
 		const id = sanitizePath(this.Tf.EvalWithMetadb(handle)); // Ensure paths are valid!
 		const fileName = id.split('\\').pop();
@@ -1322,7 +1704,21 @@ function _seekbar({
 		const sourceFile = this.isZippedFile ? handle.Path.split('|')[0] : handle.Path;
 		return { seekbarFolder, seekbarFile, sourceFile };
 	};
-
+	/**
+	 * Analyzes a track, saves data file if needed and sets current data for panel.
+	 *
+	 * @property
+	 * @name analyze
+	 * @kind method
+	 * @async
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle
+	 * @param {string} seekbarFolder - Track data folder
+	 * @param {string} seekbarFile - Track data filename
+	 * @param {string} [sourceFile] - [=handle.Path] track source path
+	 * @param {number} mask - keyboard mask
+	 * @returns {void}
+	*/
 	this.analyze = async (handle, seekbarFolder, seekbarFile, sourceFile = handle.Path) => {
 		if (!_isFolder(seekbarFolder)) { _createFolder(seekbarFolder); }
 		let profiler, cmd;
@@ -1481,7 +1877,18 @@ function _seekbar({
 			}
 		}
 	};
-
+	/**
+	 * Creates fake data based on a visualizer preset to feed any of the wave modes.
+	 *
+	 * @property
+	 * @name visualizerData
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle
+	 * @param {'classic spectrum analyzer'} preset - Visualizer preset to use
+	 * @param {Boolean} bVariableLen - Flag to use track length (true) or panel size (false)
+	 * @returns {Number[][]}
+	*/
 	this.visualizerData = (handle, preset = 'classic spectrum analyzer', bVariableLen = false) => {
 		const samples = bVariableLen
 			? handle.Length * (this.analysis.resolution || 1)
@@ -1507,7 +1914,17 @@ function _seekbar({
 		}
 		return data;
 	};
-
+	/**
+	 * Applies transparency to a color. Uses a lookup table to be as efficient as possible.
+	 *
+	 * @property
+	 * @name applyAlpha
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} color
+	 * @param {number} percent - Range [0, 100]
+	 * @returns {void}
+	*/
 	this.applyAlpha = (color, percent) => {
 		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
 	};
