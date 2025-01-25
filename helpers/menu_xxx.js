@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/25
+//25/01/25
 
 /* exported _menu, _attachedMenu */
 
@@ -162,7 +162,6 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @kind method
 	 * @memberof _menu
 	 * @name getEntriesAll
-	 * @type {function}
 	 * @param {Object} object - Specifying an object or array of objects (like another menu instances), lets you concatenate multiple menus. Uses object.btn_up() and object.btn_up_done() on manually added entries.
 	 * @param {{pos:number, args?:any?}?} [bindArgs] - [=null] Arguments to pass -as is- to conditional menus on init. 'pos' >=1 may be set to specify the position of the argument.
 	 * @returns {MenuEntry[]}
@@ -220,7 +219,8 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	/**
 	 * Gets the key of the main menu (root). Useful to concatenate multiple menus.
 	 *
-	 * @Function
+	 * @kind method
+	 * @memberof _menu
 	 * @name getMainMenuName
 	 * @returns {string?}
 	 */
@@ -228,7 +228,8 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	/**
 	 * Checks if a menu name exists at an specific parent or globally.
 	 *
-	 * @Function
+	 * @kind method
+	 * @memberof _menu
 	 * @name hasMenu
 	 * @param {string} menuName - Name for lookup
 	 * @param {string} [subMenuFrom] - If not set, performs a global lookup.
@@ -238,14 +239,17 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	/**
 	 * Gets the key of the main menu (root). Useful to concatenate multiple menus.
 	 *
-	 * @Function
+	 * @kind method
+	 * @memberof _menu
 	 * @name getMenuNameFrom
 	 * @param {string} menuName - Menu name for lookup.
 	 * @param {string} [subMenuFrom] - [=this.getMainMenuName()] Parent menu. Uses the main menu, unless provided another value.
 	 * @returns {string}
 	 */
 	this.getMenuNameFrom = (menuName, subMenuFrom = this.getMainMenuName() || '') => {
-		const found = menuArr.find((menu) => menu.menuName.replace(hiddenCharsRegEx, '') === menuName && menu.subMenuFrom.replace(hiddenCharsRegEx, '') === subMenuFrom);
+		menuName = menuName.replace(hiddenCharsRegEx, '');
+		subMenuFrom = subMenuFrom.replace(hiddenCharsRegEx, '');
+		const found = menuArr.find((entry) => entry.menuName.replace(hiddenCharsRegEx, '') === menuName && entry.subMenuFrom.replace(hiddenCharsRegEx, '') === subMenuFrom);
 		return found ? found.menuName : null;
 	};
 	/**
@@ -264,7 +268,6 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @property
 	 * @kind method
 	 * @memberof _menu
-	 * @type {function}
 	 * @name newMenu
 	 * @param {stringLike|() => String} [menuName] - [='main'] Menu name.
 	 * @param {stringLike|() => String} [subMenuFrom] - [=this.getMainMenuName()] Every menu created will be appended to the main menu, unless provided another value.

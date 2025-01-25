@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/01/25
+//25/01/25
 
 /* exported createBackgroundMenu */
 
@@ -17,8 +17,9 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	// Constants
 	if (Object.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
 	const menu = parentMenu || new _menu();
-	if (appendTo) { menu.findOrNewMenu(appendTo.menuName, appendTo.subMenuFrom, appendTo.flags); }
-	const mainMenuName = appendTo.menuName || menu.getMainMenuName();
+	const mainMenuName = appendTo
+		? menu.findOrNewMenu(appendTo.menuName, appendTo.subMenuFrom, appendTo.flags)
+		: menu.getMainMenuName();
 	// helper
 	const getColorName = (val) => {
 		return (val !== -1 && (val || val === 0)
