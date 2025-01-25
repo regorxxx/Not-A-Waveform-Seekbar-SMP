@@ -368,14 +368,6 @@ function createSeekbarMenu(bClear = true) {
 		});
 	}
 	menu.newSeparator();
-	{ // NOSONAR [menu block]
-		createBackgroundMenu.call(
-			background,
-			{ menuName: menu.newMenu('Background') },
-			menu,
-			{ nameColors: true }
-		);
-	}
 	{
 		const subMenu = menu.newMenu('Colors');
 		{
@@ -566,6 +558,14 @@ function createSeekbarMenu(bClear = true) {
 				}
 			});
 		}
+	}
+	{ // NOSONAR [menu block]
+		createBackgroundMenu.call(
+			background,
+			{ menuName: 'Background' },
+			menu,
+			{ nameColors: true }
+		);
 	}
 	menu.newSeparator();
 	{
