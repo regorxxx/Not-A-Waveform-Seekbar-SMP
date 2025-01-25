@@ -13,7 +13,7 @@ include('..\\window\\window_xxx_background_menu.js');
 /* global _menu:readable, _attachedMenu:readable, createBackgroundMenu:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
-const Chroma = require('..\\helpers-external\\chroma.js\\chroma-ultra-light.min'); // Relative to helpers folder
+const Chroma = require('..\\helpers-external\\chroma.js\\chroma.min'); // Relative to helpers folder
 
 function bindMenu(parent) {
 	return _attachedMenu.call(parent, { rMenu: createSeekbarMenu.bind(parent), popup: parent.pop });
@@ -558,6 +558,25 @@ function createSeekbarMenu(bClear = true) {
 				}
 			});
 		}
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Dynamic (background cover mode)', func: () => {
+				seekbarProperties.bDynamicColors[1] = !seekbarProperties.bDynamicColors[1];
+				if (seekbarProperties.bDynamicColors[1]) {
+					this.saveProperties();
+					// Ensure it's applied with compatible settings
+					if (background.coverMode === 'none') {
+						background.coverModeOptions.alpha = 0;
+						background.coverMode = 'front';
+					}
+					background.updateImageBg(true);
+				} else {
+					const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
+					this.updateConfig({ ui: { colors: defColors } });
+					this.saveProperties();
+				}
+			}
+		});
+		menu.newCheckMenuLast(() => seekbarProperties.bDynamicColors[1]);
 	}
 	{ // NOSONAR [menu block]
 		createBackgroundMenu.call(

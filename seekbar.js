@@ -23,6 +23,8 @@ include('main\\seekbar\\seekbar_xxx_menu.js');
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
+include('main\\window\\window_xxx_dynamic_colors.js');
+/* global dynamicColors:readable */
 
 globProfiler.Print('helpers');
 
@@ -85,11 +87,12 @@ let seekbarProperties = {
 		}), { func: isJSON }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
 	matchPattern: ['File name TF format', '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,,/,))), ?,,= ,,?,)', { func: isString }],
-	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	background: ['Background options', JSON.stringify(deepAssign()(
 		(new _background).defaults(),
 		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }
 	)), { func: isJSON }],
+	bDynamicColors: ['Adjust colors to artwork', false, { func: isBoolean }],
+	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	firstPopup: ['Seekbar: Fired once', false, { func: isBoolean }, false],
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
@@ -136,6 +139,26 @@ const background = new _background({
 				overwriteProperties(seekbarProperties);
 			}
 		},
+		artColors: (colArray) => {
+			if (!seekbarProperties.bDynamicColors[1]) { return; }
+			if (colArray) {
+				const { main, sec, note, mainAlt, secAlt } = dynamicColors(
+					colArray,
+					seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getColors()[0],
+					seekbar.preset.waveMode !== 'vumeter'
+				);
+				if (seekbar.ui.colors.main !== -1) { seekbar.ui.colors.main = main; }
+				if (seekbar.ui.colors.alt !== -1) { seekbar.ui.colors.alt = sec; }
+				if (seekbar.ui.colors.currPos !== -1) { seekbar.ui.colors.currPos = note; }
+				if (seekbar.ui.colors.mainFuture !== -1) { seekbar.ui.colors.mainFuture = mainAlt; }
+				if (seekbar.ui.colors.altFuture !== -1) { seekbar.ui.colors.altFuture = secAlt; }
+			} else {
+				const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
+				for (const key in seekbar.ui.colors.colors) {
+					seekbar.ui.colors[key] = defColors[key];
+				}
+			}
+		}
 	},
 });
 

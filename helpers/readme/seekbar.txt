@@ -54,14 +54,26 @@ FAQ:
 
 - Some tracks are not analyzed:
 	+ Check 'Mode\Show Compatible extensions'. The list
-of compatible files depends on the mode (binary) used. You
-can convert them to a compatible format, analyze them and
-delete the converted tracks afterwards though. Analyis
+	of compatible files depends on the mode (binary) used. You
+	can convert them to a compatible format, analyze them and
+	delete the converted tracks afterwards though. Analyis
 
 	+ if tracks are within a compressed file. This is
-not supported, although if associated analysis files are
-found, they will be used.
+	not supported, although if associated analysis files are
+	found, they will be used.
 
 	+ Otherwise check the analysis files TF path at
-'Analysis\File name format...'. Exotic paths, chars, artist
-names or setups should be handled by the user.
+	'Analysis\File name format...'. Exotic paths, chars, artist
+	names or setups should be handled by the user.
+
+- How to control dynamic colors artwork source:
+	+ It can be set at the background 'cover mode' sub-menu.
+
+	+ Selection/now playing source can be set at same sub-menu.
+
+- How to show the artwork as background instead of a solid color:
+	+ Cover mode transparency must be non-zero, and slider background
+	color must be disabled (-none-) too. In such case the background
+	ill be governed only by the background sub-menu settings.
+	Adjusting the transparency and color mode, different overlays
+	may be drawn too.
