@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/01/25
+//26/01/25
 
 /* exported createBackgroundMenu */
 
@@ -137,9 +137,12 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 				let input;
 				if (option.newValue === 'single') {
 					input = [utils.ColourPicker(0, this.colorModeOptions.color[0]), this.colorModeOptions.color[1]];
+					console.log('Background (' + window.Name + '): Selected color ->\n\t Android: ' + input[0] + ' - RGB: ' + Chroma(input[0]).rgb());
 				} else {
 					input = this.colorModeOptions.color.map((color) => utils.ColourPicker(0, color));
+					console.log('Background (' + window.Name + '): Selected color ->' + input.map((col) => '\n\t Android: ' + col + ' - RGB: ' + Chroma(col).rgb()).join(''));
 				}
+
 				this.changeConfig({ config: { colorModeOptions: { color: input } }, callbackArgs: { bSaveProperties: true } });
 			}
 		}));
