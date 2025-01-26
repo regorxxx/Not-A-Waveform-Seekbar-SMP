@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/01/25
+//26/01/25
 
 /* exported bindMenu */
 
@@ -417,6 +417,7 @@ function createSeekbarMenu(bClear = true) {
 									}
 								});
 								this.saveProperties();
+								console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors[o.key] + ' - RGB: ' + Chroma(this.ui.colors[o.key]).rgb());
 							}, flags: bEnabled ? MF_STRING : MF_GRAYED
 						});
 					}
@@ -473,6 +474,7 @@ function createSeekbarMenu(bClear = true) {
 									}
 								});
 								this.saveProperties();
+								console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors[o.key] + ' - RGB: ' + Chroma(this.ui.colors[o.key]).rgb());
 							}, flags: bEnabled ? MF_STRING : MF_GRAYED
 						});
 					}
@@ -519,6 +521,7 @@ function createSeekbarMenu(bClear = true) {
 						}
 					});
 					this.saveProperties();
+					console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors.currPos + ' - RGB: ' + Chroma(this.ui.colors.currPos).rgb());
 				}
 			});
 		}
