@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/01/25
+//27/01/25
 
 /* exported dynamicColors */
 
@@ -7,15 +7,17 @@
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global RGB:readable, blendColors:readable */
 
+function mostContrastColor(refColor, palette = [RGB(255, 255, 255), RGB(0, 0, 0)]) {
+	return palette.reduce((prev, color) => {
+		if (color === -1) { color = 4294967295; } // 32 to 64 bit color
+		const contrast = Chroma.contrast(color, refColor);
+		return prev.contrast <= contrast
+			? { color, contrast }
+			: prev;
+	}, { contrast: 0 });
+}
+
 function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
-	const mostContrastColor = (refColor, palette = [RGB(255, 255, 255), RGB(0, 0, 0)]) => {
-		return palette.reduce((prev, color) => {
-			const contrast = Chroma.contrast(color, refColor);
-			return prev.contrast <= contrast
-				? { color, contrast }
-				: prev;
-		}, { contrast: 0 });
-	};
 	let main = mostContrastColor(bgColor, colorScheme).color;
 	const tint = mostContrastColor(main, colorScheme).color;
 	const note = Chroma.contrast(tint, bgColor) > 2
@@ -53,9 +55,9 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 			}
 		}
 		main = cMain.android();
-		if (main === -1) {main = 4294967295;}
+		if (main === -1) { main = 4294967295; }
 		sec = cSec.android();
-		if (sec === -1) {sec = 4294967295;}
+		if (sec === -1) { sec = 4294967295; }
 	}
 	return {
 		main,
