@@ -1,5 +1,5 @@
 'use strict';
-//24/01/25
+//27/01/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -1730,7 +1730,7 @@ function _seekbar({
 		const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 		if (this.isAllowedFile && !bFallbackMode.analysis && bAuWav) {
 			if (this.bProfile) { profiler = new FbProfiler('audiowaveform'); }
-			const extension = handleFileName.match(/(?:\.)(\w+$)/i)[1];
+			const extension = RegExp(/(?:\.)(\w+$)/i).exec(handleFileName)[1];
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
 				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) +
@@ -1926,7 +1926,7 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.applyAlpha = (color, percent) => {
-		if (color > 4294967296) { color -= 4294967296;}
+		// 64/32 bit color
 		if (color < 4294967296) { color += 4294967296;}
 		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
 	};
