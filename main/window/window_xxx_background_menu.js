@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/01/25
+//27/01/25
 
 /* exported createBackgroundMenu */
 
@@ -164,7 +164,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		});
 	}
 
-	if (options.onInit) {options.onInit(menu); }
+	if (options.onInit) { options.onInit(menu); }
 
 	return menu;
 }

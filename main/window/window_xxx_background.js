@@ -244,7 +244,7 @@ function _background({
 			case 'icon':
 			case 'artist':
 			case 'path':
-				return this.coverImg.art.image
+				return this.coverImg.art.image && this.coverImg.art.colors.length && this.coverModeOptions.alpha !== 0
 					? this.coverImg.art.colors.slice(0, 2)
 					: [this.colorModeOptions.color[0], this.colorModeOptions.color[1] || this.colorModeOptions.color[0]];
 			case 'none':
