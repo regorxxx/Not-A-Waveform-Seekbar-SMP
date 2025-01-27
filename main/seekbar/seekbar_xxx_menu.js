@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/01/25
+//27/01/25
 
 /* exported bindMenu */
 
@@ -417,7 +417,7 @@ function createSeekbarMenu(bClear = true) {
 									}
 								});
 								this.saveProperties();
-								console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors[o.key] + ' - RGB: ' + Chroma(this.ui.colors[o.key]).rgb());
+								if (this.ui.colors[o.key] !== -1) { console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors[o.key] + ' - RGB: ' + Chroma(this.ui.colors[o.key]).rgb()); }
 							}, flags: bEnabled ? MF_STRING : MF_GRAYED
 						});
 					}
@@ -474,7 +474,7 @@ function createSeekbarMenu(bClear = true) {
 									}
 								});
 								this.saveProperties();
-								console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors[o.key] + ' - RGB: ' + Chroma(this.ui.colors[o.key]).rgb());
+								if (this.ui.colors[o.key] !== -1) { console.log('Seekbar: Selected color ->\n\t Android: ' + this.ui.colors[o.key] + ' - RGB: ' + Chroma(this.ui.colors[o.key]).rgb()); }
 							}, flags: bEnabled ? MF_STRING : MF_GRAYED
 						});
 					}
@@ -688,7 +688,7 @@ function createSeekbarMenu(bClear = true) {
 			entryText: 'Open readme...', func: () => {
 				const readme = _open(path, utf8);
 				if (readme.length) { fb.ShowPopupMessage(readme, 'Not-A-Waveform-seekbar-SMP'); }
-				else { console.log('Readme not found: ' + path); }
+				else { console.log('Seekbar: Readme not found\n\t ' + path); }
 			}
 		});
 	}
