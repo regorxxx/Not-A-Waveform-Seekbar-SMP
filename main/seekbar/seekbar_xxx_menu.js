@@ -1,7 +1,7 @@
 ﻿'use strict';
-//27/01/25
+//31/01/25
 
-/* exported bindMenu */
+/* exported createSeekbarMenu */
 
 /* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable, background:readable, folders:readable */
 
@@ -10,14 +10,10 @@ include('..\\..\\helpers\\helpers_xxx_file.js');
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
 include('..\\window\\window_xxx_background_menu.js');
-/* global _menu:readable, _attachedMenu:readable, createBackgroundMenu:readable */
+/* global _menu:readable, createBackgroundMenu:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma.min'); // Relative to helpers folder
-
-function bindMenu(parent) {
-	return _attachedMenu.call(parent, { rMenu: createSeekbarMenu.bind(parent), popup: parent.pop });
-}
 
 // Generic menu for config
 function createSeekbarMenu(bClear = true) {

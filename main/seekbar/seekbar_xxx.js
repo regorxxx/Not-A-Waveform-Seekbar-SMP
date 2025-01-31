@@ -44,7 +44,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} [o.ui.bLogScale ]- [=true] Wether to display VU Meter scale in log (dBs) or linear scale
  * @param {Object} [o.analysis] - Analysis related settings.
  * @param {'ffprobe'|'audiowaveform'|'visualizer'} [o.analysis.binaryMode] - [='audiowaveform'] Binary to use. Visualizer is processed internally.
- * @param {number} [o.analysis.resolution] - [=1] Pixels per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
+ * @param {number} [o.analysis.resolution] - [=1] Points per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
  * @param {'none'|'utf-8'|'utf-16'} [o.analysis.compressionMode] - [='utf-16'] Set to anything but 'none' to apply compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70% compression) and 7zip (~80% compression).
  * @param {'library'|'all'|'none'} [o.analysis.storeMode] - [='library'] Controls wether analysis data files are saved to disk, for library items only, any item or none.
  * @param {boolean} [o.analysis.bAutoAnalysis] - [=true] Wether automatically analyze tracks on playback or on demand. For usual seekbar usage it should be true, but may be set to false if the parent panel exposes some way to do it manually (for ex. for track analysis).
@@ -601,7 +601,9 @@ function _seekbar({
 			} else if (this.analysis.bAutoAnalysis && (this.isFile || this.isLink) && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
+					console.log(Date.now());
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
+					console.log(Date.now());
 					const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
 					if (!nowPlaying || !handle.Compare(nowPlaying)) { return; }
 					// Calculate waveform on the fly
@@ -1741,20 +1743,28 @@ function _seekbar({
 			if (this.bProfile) { profiler = new FbProfiler('ffprobe'); }
 			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&')
 				.replace(/'/g, '\\\\\\\''); // And here we go again...
+			// cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
+			// 	_q(this.binaries.ffprobe) +
+			// 	' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
+			// 	(this.analysis.resolution > 1
+			// 		? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
+			// 		',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
+			// 		: ''
+			// 	) +
+			// 	',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
+			// 	' -print_format json > ' + _q(seekbarFolder + 'data.json');
+			const sampleRate = fb.TitleFormat('%SAMPLERATE%').EvalWithMetadb(handle);
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.ffprobe) +
 				' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
-				(this.analysis.resolution > 1
-					? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
-					',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
-					: ''
-				) +
+				',asetnsamples=' + (sampleRate / this.analysis.resolution) +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
 				' -print_format json > ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isFallback || bVisualizer || bFallbackMode.analysis) {
 			profiler = new FbProfiler('visualizer');
 		}
 		if (cmd) {
+			console.log(cmd);
 			console.log('Seekbar: Scanning -> ' + sourceFile);
 			if (this.bDebug) { console.log(cmd); }
 		} else if (!this.isAllowedFile && !bVisualizer && !bFallbackMode.analysis) {

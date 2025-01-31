@@ -1,5 +1,5 @@
 'use strict';
-//19/01/25
+//31/01/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -16,10 +16,11 @@ include('helpers\\helpers_xxx_prototypes_smp.js');
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable */
 include('helpers\\menu_xxx.js');
-/* global bindMenu:readable */
+/* global _menu:readable */
 include('main\\seekbar\\seekbar_xxx.js');
 /* global _seekbar:readable */
 include('main\\seekbar\\seekbar_xxx_menu.js');
+/* global createSeekbarMenu:readable */
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
@@ -176,7 +177,7 @@ const seekbar = new _seekbar({
 	callbacks: { backgroundColor: () => background.getColors()[0] }
 });
 if (!seekbarProperties.bEnabled[1]) { seekbar.switch(); }
-bindMenu(seekbar);
+_menu.bindInstance(seekbar, createSeekbarMenu);
 
 // Helpers
 seekbar.saveProperties = function () {
