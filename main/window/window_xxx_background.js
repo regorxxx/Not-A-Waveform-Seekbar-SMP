@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/01/25
+//31/01/25
 
 /* exported _background */
 
@@ -237,20 +237,19 @@ function _background({
 			: this.coverImg.art.image ? [...this.coverImg.art.colors] : null;
 	};
 	this.getColors = () => {
-		switch (this.coverMode.toLowerCase()) {
-			case 'front':
-			case 'back':
-			case 'disc':
-			case 'icon':
-			case 'artist':
-			case 'path':
-				return this.coverImg.art.image && this.coverImg.art.colors.length && this.coverModeOptions.alpha !== 0
-					? this.coverImg.art.colors.slice(0, 2)
-					: [this.colorModeOptions.color[0], this.colorModeOptions.color[1] || this.colorModeOptions.color[0]];
-			case 'none':
-			default:
-				return [this.colorModeOptions.color[0], this.colorModeOptions.color[1] || this.colorModeOptions.color[0]];
+		if (['front', 'back', 'disc', 'icon', 'artist', 'path'].includes(this.coverMode.toLowerCase())) {
+			if (this.coverImg.art.image && this.coverImg.art.colors.length && this.coverModeOptions.alpha !== 0) {
+				return this.coverImg.art.colors.slice(0, 2);
+			}
 		}
+		return this.colorModeOptions.color.filter(Boolean).length
+			? [
+				this.colorModeOptions.color[0],
+				this.colorModeOptions.color[1] || this.colorModeOptions.color[0]
+			]
+			: [-1, -1].fill(
+				window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1)
+			);
 	};
 	this.init = () => {
 		Object.entries(this.defaults()).forEach((pair) => {
