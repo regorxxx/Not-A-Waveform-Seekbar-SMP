@@ -37,6 +37,8 @@
 - Storage: added 3 storage modes to control if data files are saved for any track, only tracks from library or nothing.
 - Readme: readme is shown as popup on first installation and available at the settings menu.
 ### Changed
+- Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
+- Installation: multiple improvements to path handling for portable and non-portable installations. By default scripts will always try to use only relative paths to the profile folder, so scripts will work without any change when exporting the profile to any other installation. This change obviously doesn't apply to already existing installations unless restoring defaults.
 - Analysis: default TF path pattern for analysis files changed to better handle track with multiple artists, slashes and some errors with unwanted spaces. Use this on existing installations (without quotes): '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\,,/,)]\[$replace(%ALBUM%,\,,/,)][ {$if2($replace(%COMMENT%,\,,/,),%MUSICBRAINZ_ALBUMID%)}]\%TRACKNUMBER% - $replace(%TITLE%,\,,/,))), ?,,= ,,?,)'
 - UI: renamed some settings to better show which ones affect the 'unplayed' section. They should be more familiar now to people using [foo_wave_minibar_mod](https://www.foobar2000.org/components/view/foo_wave_minibar_mod) component.
 - UI: dead items now show a 'Dead or not found item.' message instead of non compatible or being stuck on analyzing. URLs still show the non compatible format.
