@@ -1,5 +1,5 @@
 'use strict';
-//27/01/25
+//08/03/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -41,7 +41,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} [o.ui.bVariableRefreshRate] - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
  * @param {boolean} [o.ui.bNormalizeWidth] - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
  * @param {number} [o.ui.normalizeWidth] - [=_scale(4)] Size unit for normalization.
- * @param {boolean} [o.ui.bLogScale ]- [=true] Wether to display VU Meter scale in log (dBs) or linear scale
+ * @param {boolean} [o.ui.bLogScale ]- [=true] Wether to display VU Meter scale in log (dB) or linear scale
  * @param {Object} [o.analysis] - Analysis related settings.
  * @param {'ffprobe'|'audiowaveform'|'visualizer'} [o.analysis.binaryMode] - [='audiowaveform'] Binary to use. Visualizer is processed internally.
  * @param {number} [o.analysis.resolution] - [=1] Points per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
@@ -262,7 +262,7 @@ function _seekbar({
 	 * @property {Boolean} bVariableRefreshRate - Flag to change refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
 	 * @property {Boolean} bNormalizeWidth - Flag to use data interpolation to display it normalized to the window width adjusted by normalizeWidth param (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
 	 * @property {number} normalizeWidth - Size unit for normalization.
-	 * @property {Boolean} bLogScale - Flag to display VU Meter scale in log (dBs) or linear scale.
+	 * @property {Boolean} bLogScale - Flag to display VU Meter scale in log (dB) or linear scale.
 	 * @property {number} refreshRate - Size unit for normalization.
 	 */
 	/** @type {UI} - Panel UI related settings */
