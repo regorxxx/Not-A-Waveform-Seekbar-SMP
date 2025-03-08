@@ -601,9 +601,7 @@ function _seekbar({
 			} else if (this.analysis.bAutoAnalysis && (this.isFile || this.isLink) && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
-					console.log(Date.now());
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
-					console.log(Date.now());
 					const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
 					if (!nowPlaying || !handle.Compare(nowPlaying)) { return; }
 					// Calculate waveform on the fly
@@ -1743,28 +1741,20 @@ function _seekbar({
 			if (this.bProfile) { profiler = new FbProfiler('ffprobe'); }
 			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&')
 				.replace(/'/g, '\\\\\\\''); // And here we go again...
-			// cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-			// 	_q(this.binaries.ffprobe) +
-			// 	' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
-			// 	(this.analysis.resolution > 1
-			// 		? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
-			// 		',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
-			// 		: ''
-			// 	) +
-			// 	',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
-			// 	' -print_format json > ' + _q(seekbarFolder + 'data.json');
-			const sampleRate = fb.TitleFormat('%SAMPLERATE%').EvalWithMetadb(handle);
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(this.binaries.ffprobe) +
 				' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
-				',asetnsamples=' + (sampleRate / this.analysis.resolution) +
+				(this.analysis.resolution > 1
+					? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
+					',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
+					: ''
+				) +
 				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
 				' -print_format json > ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isFallback || bVisualizer || bFallbackMode.analysis) {
 			profiler = new FbProfiler('visualizer');
 		}
 		if (cmd) {
-			console.log(cmd);
 			console.log('Seekbar: Scanning -> ' + sourceFile);
 			if (this.bDebug) { console.log(cmd); }
 		} else if (!this.isAllowedFile && !bVisualizer && !bFallbackMode.analysis) {
