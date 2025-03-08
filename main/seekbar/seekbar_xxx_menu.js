@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/25
+//08/03/25
 
 /* exported createSeekbarMenu */
 
@@ -21,9 +21,9 @@ function createSeekbarMenu(bClear = true) {
 	const menu = this.menu;
 	if (bClear) { menu.clear(true); } // Reset on every call
 	// helper
-	const getColorName = (val) => {
-		return (val !== -1 ? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown' : '-none-');
-	};
+	const getColorName = (val) => val !== -1 && val !== null && typeof val !== 'undefined'
+		? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown'
+		: '-none-';
 	menu.newEntry({ entryText: 'Configure the seekbar:', flags: MF_GRAYED });
 	menu.newSeparator();
 	{ // NOSONAR [menu block]
@@ -271,7 +271,7 @@ function createSeekbarMenu(bClear = true) {
 		}
 		if (this.preset.waveMode === 'vumeter') {
 			menu.newEntry({
-				menuName: subMenu, entryText: 'Logarithmic scale (dBs)', func: () => {
+				menuName: subMenu, entryText: 'Logarithmic scale (dB)', func: () => {
 					this.updateConfig({ ui: { bLogScale: !this.ui.bLogScale } });
 					this.saveProperties();
 				}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/01/25
+//21/02/25
 
 /* exported createBackgroundMenu */
 
@@ -21,12 +21,9 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		? menu.findOrNewMenu(appendTo.menuName, appendTo.subMenuFrom, appendTo.flags)
 		: menu.getMainMenuName();
 	// helper
-	const getColorName = (val) => {
-		return (val !== -1 && (val || val === 0)
-			? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown'
-			: '-none-'
-		);
-	};
+	const getColorName = (val) => val !== -1 && val !== null && typeof val !== 'undefined'
+		? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown'
+		: '-none-';
 	const createMenuOption = (key, subKey, menuName = mainMenuName, bCheck = true, addFunc = null) => {
 		return function (option) {
 			if (menu.isSeparator(option) && !menu.isSeparator(menu.getEntries().pop())) { menu.newSeparator(menuName); return; } // Add sep only if any entry has been added
