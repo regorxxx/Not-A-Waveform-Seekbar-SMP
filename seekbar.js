@@ -1,10 +1,10 @@
 'use strict';
-//31/01/25
+//08/03/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, soFeat:readable, globFonts:readable, globProfiler:readable */
+/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable */
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable */
 include('helpers\\helpers_xxx_file.js');
@@ -87,7 +87,10 @@ let seekbarProperties = {
 			bLogScale: true
 		}), { func: isJSON }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
-	matchPattern: ['File name TF format', '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,,/,))), ?,,= ,,?,)', { func: isString }],
+	matchPattern: ['File name TF format', '$lower(' +
+		globTags.artistAlbumTrackTitleSanitize
+			.replace(/(\[\$replace\(%ALBUM%,\$char\(92\),-\)\])/i, '$1[ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]')
+		+ ')', { func: isString }],
 	background: ['Background options', JSON.stringify(deepAssign()(
 		(new _background).defaults(),
 		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }

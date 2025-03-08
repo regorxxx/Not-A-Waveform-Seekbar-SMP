@@ -116,8 +116,9 @@ function createSeekbarMenu(bClear = true) {
 			menu.newSeparator(subMenuTwo);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'File match pattern...', func: () => {
-					const tf = Input.string('string', this.Tf.Expression || '', 'File name format for data files:\n(TF expression)\n\nUsed for track identification, default string uses same data for all encodes of a track.', window.Name, '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))');
+					let tf = Input.string('string', this.Tf.Expression || '', 'File name format for data files:\n(TF expression)\n\nUsed for track identification, default string uses same data for all encodes of a track. Leave it empty to restore default.', window.Name, '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))');
 					if (tf === null) { return; }
+					if (!tf.length) { tf = seekbarProperties.matchPattern[1]; }
 					this.Tf = fb.TitleFormat(tf);
 					seekbarProperties.matchPattern[1] = tf;
 					this.saveProperties();

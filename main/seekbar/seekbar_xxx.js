@@ -56,7 +56,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {() => number} [o.callbacks.backgroundColor] - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
  */
 function _seekbar({
-	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,,/,))), ?,,= ,,?,)',
+	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\[%TRACKNUMBER% - ][$replace(%TITLE%,$char(92),-,/,-,$char(41),,$char(40),,:,, ?$char(92),,?,,¿,,/,-,$char(36),,$char(37),,# ,,#,,*,,!,,¡,,|,-,",$char(39)$char(39),<,,>,,^,,... ,,...,,.,)])), ?,,= ,,?,)',
 	bDebug = false,
 	bProfile = false,
 	binaries = {
