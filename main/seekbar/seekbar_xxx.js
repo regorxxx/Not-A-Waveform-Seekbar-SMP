@@ -1,5 +1,5 @@
 'use strict';
-//08/03/25
+//09/03/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
@@ -898,7 +898,7 @@ function _seekbar({
 	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
 		if (!handle) { throw new Error('No handle argument'); }
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
-		const bNoSubSong = handle.SubSong === 0;
+		const bNoSubSong = !this.isSubSong(handle);
 		const bValidExt = this.isCompatibleFileExtension(handle);
 		this.isFile = _isFile(handle.Path);
 		this.isLink = _isLink(handle.Path);
@@ -926,6 +926,21 @@ function _seekbar({
 			: handle
 				? compatibleFiles[mode].test(handle.Path)
 				: false;
+	};
+	/**
+	 * Checks if a track references a container with subsongs
+	 *
+	 * @property
+	 * @name isSubSong
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle - Track
+	 * @param {string} ext - [=''] Track extension (provide it if already known)
+	 * @returns {boolean}
+	*/
+	this.isSubSong = (handle, ext = '') => {
+		const blackList = new Set(['dsf']);
+		return handle.SubSong !== 0 && !blackList.has(ext || handle.Path.split('.').pop());
 	};
 	/**
 	 * Gets the compatible extensions for a given binary mode.
