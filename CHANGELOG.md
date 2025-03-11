@@ -34,6 +34,7 @@
 - Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy depends on the mode (ffprobe > audiowaveform) and analysis setting (RMS, peak, etc.). It also has multi-channel support (see above) and linear of logarithmic scaling.
 - UI: added dynamic colors support based on track's artwork. It follows the background cover mode settings and must be enabled on 'colors' submenu.
 - UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
+- UI: exposed background gradient focus setting, i.e. where the center color will be at its highest intensity.
 - Storage: added 3 storage modes to control if data files are saved for any track, only tracks from library or nothing.
 - Readme: readme is shown as popup on first installation and available at the settings menu.
 ### Changed

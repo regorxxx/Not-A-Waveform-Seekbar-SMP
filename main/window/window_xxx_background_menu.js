@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/02/25
+//11/03/25
 
 /* exported createBackgroundMenu */
 
@@ -149,14 +149,15 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		].forEach(createMenuOption('colorModeOptions', 'bDither', subMenu, true));
 		menu.newSeparator(subMenu);
 		[
-			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num > 0 && num < 360], inputHint: '\nClockwise.\n(0 to 360)' },
+			{ key: 'angle', entryText: 'Gradient angle...', type: 'int positive', checks: [(num) => num > 0 && num < 360], inputHint: '\nClockwise.\n(0 to 360)' },
+			{ key: 'focus', entryText: 'Gradient focus...', type: 'real positive', checks: [(num) => num >= 0 && num <= 1], inputHint: '\nWhere the centred color will be at its highest intensity.\n(0 to 1)' },
 		].forEach((option) => {
 			menu.newEntry({
 				menuName: subMenu, entryText: option.entryText + '\t[' + this.colorModeOptions[option.key] + ']', func: () => {
-					const input = Input.number('int positive', this.colorModeOptions[option.key], 'Enter number:' + option.inputHint, window.Name, 100, option.checks);
+					const input = Input.number(option.type, this.colorModeOptions[option.key], 'Enter number:' + option.inputHint, window.Name, 100, option.checks);
 					if (input === null) { return; }
 					this.changeConfig({ config: { colorModeOptions: { [option.key]: input } }, callbackArgs: { bSaveProperties: true } });
-				}
+				}, flags: ['gradient', 'bigradient'].includes(this.colorMode.toLowerCase()) ? MF_STRING : MF_GRAYED
 			});
 		});
 	}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/01/25
+//11/03/25
 
 /* exported _background */
 
@@ -32,7 +32,7 @@ function _background({
 			coverMode: 'none', // none | front | back | disc | icon | artist | path
 			coverModeOptions: { blur: 50, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true },
 			colorMode: 'none', // none | single | gradient | bigradient
-			colorModeOptions: { bDither: true, angle: 91, color: [] },
+			colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [] },
 			callbacks: {
 				change: null, /* (config, arguments, callbackArgs) => void(0) */
 				artColors: null /* (colArray) => void(0) */
@@ -135,8 +135,8 @@ function _background({
 			}
 			case 'bigradient': {
 				if (bCreateImg || !this.colorModeOptions.bDither) {
-					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), color[0], color[1] || color[0]);
-					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h / 2, this.colorModeOptions.angle, color[0], color[1] || color[0]);
+					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), color[0], color[1] || color[0], this.colorModeOptions.focus);
+					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h / 2, this.colorModeOptions.angle, color[0], color[1] || color[0], this.colorModeOptions.focus);
 				}
 				break;
 			}
@@ -277,7 +277,7 @@ function _background({
 	this.coverModeOptions = {};
 	/** @type {('single'|'gradient'|'bigradient'|'none')} */
 	this.colorMode = '';
-	/** @type {{ bDither:Boolean, angle:Number, color:Number[] }} */
+	/** @type {{ bDither:Boolean, angle:Number, focus:Number, color:Number[] }} */
 	this.colorModeOptions = {};
 	/** @type {Number} */
 	this.timer = 0;
