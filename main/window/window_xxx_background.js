@@ -4,7 +4,7 @@
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable */
 
 /**
  * Background for panel with different cover options
@@ -41,14 +41,15 @@ function _background({
 	};
 
 	this.updateImageBg = debounce((bForce = false) => {
-		const bPath = this.coverMode.toLowerCase() === 'path';
+		const path = _resolvePath(this.coverModeOptions.path || '');
+		const bPath = this.coverMode.toLowerCase() === 'path' && path.length;
 		if (this.coverMode.toLowerCase() === 'none') {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}
 		if (this.colorMode.toLowerCase() === 'none') { this.colorImg = null; }
 		const handle = (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null) || fb.GetFocusItem(true);
-		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === this.coverModeOptions.path)) { return; }
+		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === path)) { return; }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
@@ -56,15 +57,15 @@ function _background({
 			if (!bForce && id === this.coverImg.id) { return; }
 		}
 		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
-		const promise = bPath && this.coverModeOptions.path.length
-			? gdi.LoadImageAsyncV2('', this.coverModeOptions.path)
+		const promise = bPath
+			? gdi.LoadImageAsyncV2('', path)
 			: handle
 				? utils.GetAlbumArtAsyncV2(void (0), handle, AlbumArtId[this.coverMode] || 0, true, false, false)
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
 			if (bPath) {
 				this.coverImg.art.image = result;
-				this.coverImg.handle = this.coverImg.art.path = this.coverModeOptions.path;
+				this.coverImg.handle = this.coverImg.art.path = path;
 			} else {
 				if (!result.image) { throw new Error('Image not available'); }
 				this.coverImg.art.image = result.image;
@@ -122,13 +123,14 @@ function _background({
 
 	this.paint = (gr) => {
 		if (this.w <= 0 || this.h <= 0) { return; }
+		const colorMode = this.colorMode.toLowerCase();
 		let grImg, bCreateImg;
-		if (this.colorModeOptions.bDither && !['single', 'none'].includes(this.colorMode.toLowerCase())) {
+		if (this.colorModeOptions.bDither && !['single', 'none'].includes(colorMode)) {
 			if (!this.colorImg || this.colorImg.Width !== this.w || this.colorImg.Height !== this.h) { this.colorImg = gdi.CreateImage(this.w, this.h); bCreateImg = true; }
 			grImg = this.colorImg.GetGraphics();
 		}
 		const color = this.colorModeOptions.color;
-		switch (this.colorMode.toLowerCase()) {
+		switch (colorMode) {
 			case 'single': {
 				gr.FillSolidRect(this.x, this.y, this.w, this.h, color[0]);
 				break;
