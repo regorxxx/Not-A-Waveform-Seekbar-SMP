@@ -1,7 +1,7 @@
 ﻿'use strict';
-//23/01/25
+//11/03/25
 
-/* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, */
+/* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, _resolvePath */
 
 /*
 	Global Variables
@@ -35,7 +35,7 @@ function _scale(size) {
 	if (!scaleDPI[size]) {
 		let DPI;
 		try { DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); }
-		catch (e) { DPI = 96; } // Fix for linux
+		catch (e) { DPI = 96; } // eslint-disable-line no-unused-vars
 		scaleDPI[size] = Math.round(size * DPI / 72);
 	}
 	return scaleDPI[size];
@@ -55,6 +55,15 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 		return timerId;
 	};
 };
+
+/*
+	Files
+*/
+function _resolvePath(path) {
+	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
+	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
+	return path;
+}
 
 /*
 	Tooltip
