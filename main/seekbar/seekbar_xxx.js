@@ -1,8 +1,8 @@
 'use strict';
-//09/03/25
+//11/03/25
 
 /* exported _seekbar */
-/* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable */
+/* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
 
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 /* global LZUTF8:readable */
@@ -18,7 +18,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {string} [o.matchPattern] - [='$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)'] Match pattern used to create analysis file path.
  * @param {boolean} [o.bDebug] - [=false] Enable debug logging.
  * @param {boolean} [o.bProfile] - [=false] Enable profiling logging.
- * @param {{ffprobe: string?, audiowaveform: string?, visualizer: string?}} [o.binaries] - Paths to binaries.
+ * @param {{ffprobe: string?, audiowaveform: string?, visualizer: string?}} [o.binaries] - Paths to binaries. May be relative paths to profile folder (.//profile//) or foobar folder (.//), root will be replaced on execution.
  * @param {object} [o.preset] - Waveform display related settings.
  * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} [o.preset.waveMode] - [='waveform'] Waveform display design.
  * @param {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} [o.preset.analysisMode] - [='peak_level'] Data analysis mode (only available using ffprobe).
@@ -60,9 +60,9 @@ function _seekbar({
 	bDebug = false,
 	bProfile = false,
 	binaries = {
-		ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
-		audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
-		visualizer: fb.ProfilePath + 'running',
+		ffprobe: '.\\profile\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
+		audiowaveform: '.\\profile\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+		visualizer: '.\\profile\\running',
 	},
 	preset = {
 		waveMode: 'waveform',
@@ -1747,7 +1747,7 @@ function _seekbar({
 			if (this.bProfile) { profiler = new FbProfiler('audiowaveform'); }
 			const extension = RegExp(/(?:\.)(\w+$)/i).exec(handleFileName)[1];
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-				_q(this.binaries.audiowaveform) + ' -i ' + _q(handleFileName) +
+				_q(_resolvePath(this.binaries.audiowaveform)) + ' -i ' + _q(handleFileName) +
 				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) +
 				' --input-format ' + extension + ' --bits 8' +
 				(this.analysis.bMultiChannel ? ' --split-channels' : '') +
@@ -1757,7 +1757,7 @@ function _seekbar({
 			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&')
 				.replace(/'/g, '\\\\\\\''); // And here we go again...
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-				_q(this.binaries.ffprobe) +
+				_q(_resolvePath(this.binaries.ffprobe)) +
 				' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
 				(this.analysis.resolution > 1
 					? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +

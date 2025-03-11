@@ -3,7 +3,7 @@
 
 /* exported createBackgroundMenu */
 
-/* global Chroma:readable */
+/* global Chroma:readable, folders:readable */
 include('window_xxx_helpers.js');
 /* global MF_GRAYED:readable, MF_STRING:readable,  */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -89,7 +89,8 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'path', entryText: 'File...' },
 		].forEach(createMenuOption('coverMode', void (0), subMenu, true, (option) => {
 			if (option.newValue === 'path') {
-				const input = Input.string('string', this.coverModeOptions.path, 'Enter TF expression or File Path:\n\nFor example:\n$lower([$replace(%ALBUM ARTIST%,\\,)]).jpg', window.Name, '%FILENAME%.jpg');
+				const bLoadXXX = typeof folders !== 'undefined' && Object.hasOwn(folders, 'xxxRootName');
+				const input = Input.string('string', this.coverModeOptions.path, 'Enter TF expression or File Path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\nFor example:\n$lower([$replace(%ALBUM ARTIST%,\\,)]).jpg', window.Name, '%FILENAME%.jpg');
 				if (input === null) { return; }
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}
