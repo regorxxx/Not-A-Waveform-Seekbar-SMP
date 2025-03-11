@@ -1,5 +1,5 @@
 'use strict';
-//08/03/25
+//11/03/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
 
@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable */
 include('helpers\\helpers_xxx_file.js');
-/* global _isFile:readable, _open:readable, utf8:readable */
+/* global _open:readable, utf8:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
@@ -32,8 +32,8 @@ globProfiler.Print('helpers');
 let seekbarProperties = {
 	binaries: ['Binaries paths',
 		JSON.stringify({
-			ffprobe: folders.xxx + '\\helpers-external\\ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
-			audiowaveform: folders.xxx + '\\helpers-external\\audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
+			ffprobe: folders.xxxRootName + 'helpers-external\\ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
+			audiowaveform: folders.xxxRootName + 'helpers-external\\audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
 		}), { func: isJSON }],
 	analysis: ['Analysis config',
 		JSON.stringify({
@@ -109,23 +109,6 @@ seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 		console.log('Seekbar: Deleting "pos" property');
 		delete ui.pos;
 		seekbarProperties.ui[1] = JSON.stringify(ui);
-		overwriteProperties(seekbarProperties);
-	}
-}
-
-// Rename paths according to package folder (for portable installs)
-if (folders.JsPackageDirs || _isFile(fb.FoobarPath + 'portable_mode_enabled')) {
-	const binaries = JSON.parse(seekbarProperties.binaries[1]);
-	const defBinaries = JSON.parse(seekbarProperties.binaries[3]);
-	let bDone = false;
-	for (const key in binaries) {
-		if (!_isFile(binaries[key]) && _isFile(defBinaries[key])) {
-			binaries[key] = defBinaries[key];
-			bDone = true;
-		}
-	}
-	if (bDone) {
-		seekbarProperties.binaries[1] = JSON.stringify(binaries);
 		overwriteProperties(seekbarProperties);
 	}
 }
