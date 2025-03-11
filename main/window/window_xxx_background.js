@@ -136,7 +136,7 @@ function _background({
 			case 'bigradient': {
 				if (bCreateImg || !this.colorModeOptions.bDither) {
 					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), color[0], color[1] || color[0]);
-					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h, this.colorModeOptions.angle, color[0], color[1] || color[0]);
+					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h / 2, this.colorModeOptions.angle, color[0], color[1] || color[0]);
 				}
 				break;
 			}
@@ -171,14 +171,19 @@ function _background({
 		}
 	};
 	this.dither = (img, gr) => {
-		const color = this.colorModeOptions.color;
+		const color1 = RGBA(...toRGB(this.colorModeOptions.color[0]), 20);
+		const color2 = RGBA(...toRGB(this.colorModeOptions.color[1]), 10);
+		const scale = Math.round(img.Height / 300);
+		let rand;
 		for (let i = Math.randomNum(0, 6); i < img.Height; i += Math.randomNum(0, 6)) {
 			for (let j = Math.randomNum(0, 6); j < img.Width; j += Math.randomNum(0, 6)) {
-				const rand = Math.randomNum(0, 50);
-				gr.DrawEllipse(j + rand, i + rand, 1, 1, 1, RGBA(...toRGB(color[0]), 20));
+				rand = Math.randomNum(0, 50);
+				gr.DrawEllipse(j + rand, i + rand, 1, 1, scale, color1);
+				rand = Math.randomNum(0, 50);
+				gr.DrawEllipse(j - rand, i - rand, 1, 1, scale, color2);
 			}
 		}
-		img.StackBlur(6);
+		img.StackBlur(scale * 2);
 		return img;
 	};
 	const debounced = {
