@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/03/25
+//19/03/25
 
 /* exported createSeekbarMenu */
 
@@ -151,7 +151,7 @@ function createSeekbarMenu(bClear = true) {
 					menuName: subMenu, entryText: o.name, func: () => {
 						this.updateConfig({ analysis: { [o.key]: !this.analysis[o.key] } });
 						this.saveProperties();
-					}, flags: ['audiowaveform', 'visualizer'].some((m) => this.analysis.binaryMode === m) ? MF_STRING : MF_GRAYED
+					}
 				});
 				menu.newCheckMenuLast(() => this.analysis[o.key]);
 			});

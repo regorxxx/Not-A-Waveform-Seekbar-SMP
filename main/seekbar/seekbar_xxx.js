@@ -1,5 +1,5 @@
 'use strict';
-//11/03/25
+//19/03/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -443,9 +443,6 @@ function _seekbar({
 		}
 		if (newConfig.analysis) {
 			bRecalculate = true;
-			if (this.analysis.bMultiChannel && ['ffprobe'].some((m) => this.analysis.binaryMode === m)) {
-				this.analysis.bMultiChannel = false;
-			}
 		}
 		// Recalculate data points or repaint
 		if (bRecalculate) { this.newTrack(); }
@@ -571,15 +568,24 @@ function _seekbar({
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			const bMulti = this.analysis.bMultiChannel;
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
-			if (bFfProbe && _isFile(seekbarFile + '.ff.json')) {
+			if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.json')) {
 				this.current = this.loadDataFile(seekbarFile, '.ff.json');
 				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) { return; }
-			} else if (bFfProbe && _isFile(seekbarFile + '.ff.lz')) {
+			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz')) {
 				this.current = this.loadDataFile(seekbarFile, '.ff.lz');
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) { return; }
-			} else if (bFfProbe && _isFile(seekbarFile + '.ff.lz16')) {
+			} else if (bFfProbe&& !bMulti  && _isFile(seekbarFile + '.ff.lz16')) {
 				this.current = this.loadDataFile(seekbarFile, '.ff.lz16');
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) { return; }
+			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.json')) {
+				this.current = this.loadDataFile(seekbarFile, '.ff.m.json');
+				if (!this.verifyData(handle, seekbarFile + '.ff.m.json', bIsRetry)) { return; }
+			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.lz')) {
+				this.current = this.loadDataFile(seekbarFile, '.ff.m.lz');
+				if (!this.verifyData(handle, seekbarFile + '.ff.m.lz', bIsRetry)) { return; }
+			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.lz16')) {
+				this.current = this.loadDataFile(seekbarFile, '.ff.m.lz16');
+				if (!this.verifyData(handle, seekbarFile + '.ff.m.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.json')) {
 				this.current = this.loadDataFile(seekbarFile, '.aw.json');
 				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) { return; }
@@ -905,7 +911,7 @@ function _seekbar({
 		this.isZippedFile = handle.RawPath.includes('unpack://');
 		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
-		this.channels = this.analysis.bMultiChannel && ['audiowaveform', 'visualizer'].some((m) => this.analysis.binaryMode === m)
+		this.channels = this.analysis.bMultiChannel
 			? Number(new FbTitleFormat('$info(channels)').EvalWithMetadb(handle))
 			: 1;
 	};
@@ -1702,6 +1708,35 @@ function _seekbar({
 		return _deleteFolder(this.folder);
 	};
 	/**
+	 * Saves data file
+	 *
+	 * @property
+	 * @name saveData
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {object} processedData - Processed seekbar data
+	 * @param {string} seekbarFile - Track ID file path
+	 * @param {'.ff'|'.aw'} prefix - Binary mode prefix
+	 * @returns {boolean} True on success
+	*/
+	this.saveData = (processedData, seekbarFile, prefix) => {
+		const str = JSON.stringify(processedData);
+		if (this.analysis.bMultiChannel) { prefix += '.m'; }
+		if (this.analysis.compressionMode === 'utf-16') {
+			// To save UTF16-LE files, FSO is needed.
+			// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+			const compressed = LZString.compressToUTF16(str);
+			return _saveFSO(seekbarFile + prefix + '.lz16', compressed, true);
+		} else if (this.analysis.compressionMode === 'utf-8') {
+			// Only Base64 strings can be saved on UTF8 files...
+			// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
+			const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
+			return _save(seekbarFile + prefix + '.lz', compressed);
+		} else {
+			return _save(seekbarFile + prefix + '.json', str);
+		}
+	};
+	/**
 	 * Retrieves associated data paths by TF for a given track
 	 *
 	 * @property
@@ -1732,7 +1767,7 @@ function _seekbar({
 	 * @param {string} seekbarFile - Track data filename
 	 * @param {string} [sourceFile] - [=handle.Path] track source path
 	 * @param {number} mask - keyboard mask
-	 * @returns {void}
+	 * @returns {Promise<Boolean>}
 	*/
 	this.analyze = async (handle, seekbarFolder, seekbarFile, sourceFile = handle.Path) => {
 		if (!_isFolder(seekbarFolder)) { _createFolder(seekbarFolder); }
@@ -1756,16 +1791,31 @@ function _seekbar({
 			if (this.bProfile) { profiler = new FbProfiler('ffprobe'); }
 			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&')
 				.replace(/'/g, '\\\\\\\''); // And here we go again...
-			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-				_q(_resolvePath(this.binaries.ffprobe)) +
-				' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
-				(this.analysis.resolution > 1
-					? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
-					',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
-					: ''
-				) +
-				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
-				' -print_format json > ' + _q(seekbarFolder + 'data.json');
+			// https://ayosec.github.io/ffmpeg-filters-docs/3.0/Filters/Audio/astats.html
+			if (this.analysis.bMultiChannel) {
+				cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
+					_q(_resolvePath(this.binaries.ffprobe)) +
+					' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
+					(this.analysis.resolution > 1
+						? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
+						',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
+						: ''
+					) +
+					',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=' +
+					Array.from({ length: this.channels }, (_, i) => 'lavfi.astats.' + (i + 1) + '.Peak_level,lavfi.astats.' + (i + 1) + '.RMS_level,lavfi.astats.' + (i + 1) + '.RMS_peak').join(',') +
+					' -print_format json > ' + _q(seekbarFolder + 'data.json');
+			} else {
+				cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
+					_q(_resolvePath(this.binaries.ffprobe)) +
+					' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
+					(this.analysis.resolution > 1
+						? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
+						',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
+						: ''
+					) +
+					',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
+					' -print_format json > ' + _q(seekbarFolder + 'data.json');
+			}
 		} else if (this.isFallback || bVisualizer || bFallbackMode.analysis) {
 			profiler = new FbProfiler('visualizer');
 		}
@@ -1800,38 +1850,22 @@ function _seekbar({
 			const bPlayingSameHandle = !!nowPlaying && handle.Compare(nowPlaying);
 			if (data) {
 				if (!this.isFallback && !bFallbackMode.analysis && bFfProbe && data.frames && data.frames.length) {
-					const processedData = Array.from({ length: channels }, () => []); // Always 1 channel
-					data.frames.forEach((frame) => {
-						// Save values as array to compress file as much as possible, also round decimals...
-						const rms = frame.tags['lavfi.astats.Overall.RMS_level'] !== '-inf'
-							? round(Number(frame.tags['lavfi.astats.Overall.RMS_level']), 1)
-							: -Infinity;
-						const rmsPeak = frame.tags['lavfi.astats.Overall.RMS_peak'] !== '-inf'
-							? round(Number(frame.tags['lavfi.astats.Overall.RMS_peak']), 1)
-							: -Infinity;
-						const peak = frame.tags['lavfi.astats.Overall.Peak_level'] !== '-inf'
-							? round(Number(frame.tags['lavfi.astats.Overall.Peak_level']), 1)
-							: -Infinity;
-						const time = round(Number(frame.pkt_pts_time), 2);
-						processedData[0].push([time, rms, rmsPeak, peak]);
-					});
+					const processedData = Array.from({ length: channels }, () => []);
+					if (this.analysis.bMultiChannel) {
+						for (let i = 1; i <= channels; i++) {
+							data.frames.forEach((frame) => {
+								processedData[i - 1].push(this.processFfmpegFrame(frame, i));
+							});
+						}
+					} else {
+						data.frames.forEach((frame) => {
+							processedData[0].push(this.processFfmpegFrame(frame, 'Overall'));
+						});
+					}
 					if (bPlayingSameHandle) { this.current = processedData; }
 					// Save data and optionally compress it
 					if (this.allowedSaveData(handle)) {
-						const str = JSON.stringify(processedData);
-						if (this.analysis.compressionMode === 'utf-16') {
-							// To save UTF16-LE files, FSO is needed.
-							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-							const compressed = LZString.compressToUTF16(str);
-							_saveFSO(seekbarFile + '.ff.lz16', compressed, true);
-						} else if (this.analysis.compressionMode === 'utf-8') {
-							// Only Base64 strings can be saved on UTF8 files...
-							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-							const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
-							_save(seekbarFile + '.ff.lz', compressed);
-						} else {
-							_save(seekbarFile + '.ff.json', str);
-						}
+						this.saveData(processedData, seekbarFile, '.ff');
 					}
 				} else if (!this.isFallback && !bFallbackMode.analysis && bAuWav && data.data && data.data.length) {
 					const processedData = Array.from({ length: channels }, () => []);
@@ -1850,30 +1884,7 @@ function _seekbar({
 					}
 					if (bPlayingSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
-						const str = JSON.stringify(processedData);
-						if (this.analysis.compressionMode === 'utf-16') {
-							// To save UTF16-LE files, FSO is needed.
-							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-							const compressed = LZString.compressToUTF16(str);
-							_saveFSO(
-								seekbarFile + (this.analysis.bMultiChannel ? '.aw.m.lz16' : '.aw.lz16'),
-								compressed,
-								true
-							);
-						} else if (this.analysis.compressionMode === 'utf-8') {
-							// Only Base64 strings can be saved on UTF8 files...
-							// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
-							const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
-							_save(
-								seekbarFile + (this.analysis.bMultiChannel ? '.aw.m.lz' : '.aw.lz'),
-								compressed
-							);
-						} else {
-							_save(
-								seekbarFile + (this.analysis.bMultiChannel ? '.aw.m.json' : '.aw.json'),
-								str
-							);
-						}
+						this.saveData(processedData, seekbarFile, '.aw');
 					}
 				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && fb.IsPlaying) {
 					this.current = data;
@@ -1891,6 +1902,32 @@ function _seekbar({
 				else { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
 			}
 		}
+		return bDone;
+	};
+	/**
+	 * Extracts Time, RMS level, RMS peak and Peak level ffmpeg data for a given channel.
+	 *
+	 * @property
+	 * @name processFfmpegFrame
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {string} data - ffmpeg raw data frame
+	 * @param {number|'Overall'} channel - Channel to extract (1, 2, ... or Overall)
+	 * @returns {[number, number, number, number]} [Time, RMS level, RMS peak, Peak level]
+	*/
+	this.processFfmpegFrame = (frame, channel) => {
+		// Save values as array to compress file as much as possible, also round decimals...
+		const rms = frame.tags['lavfi.astats.' + channel + '.RMS_level'] !== '-inf'
+			? round(Number(frame.tags['lavfi.astats.' + channel + '.RMS_level']), 1)
+			: -Infinity;
+		const rmsPeak = frame.tags['lavfi.astats.' + channel + '.RMS_peak'] !== '-inf'
+			? round(Number(frame.tags['lavfi.astats.' + channel + '.RMS_peak']), 1)
+			: -Infinity;
+		const peak = frame.tags['lavfi.astats.' + channel + '.Peak_level'] !== '-inf'
+			? round(Number(frame.tags['lavfi.astats.' + channel + '.Peak_level']), 1)
+			: -Infinity;
+		const time = round(Number(frame.pkt_pts_time), 2);
+		return [time, rms, rmsPeak, peak];
 	};
 	/**
 	 * Creates fake data based on a visualizer preset to feed any of the wave modes.
@@ -1942,7 +1979,7 @@ function _seekbar({
 	*/
 	this.applyAlpha = (color, percent) => {
 		// 64/32 bit color
-		if (color < 4294967296) { color += 4294967296;}
+		if (color < 4294967296) { color += 4294967296; }
 		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
 	};
 	const hexTransparencies = { 100: 'FF', 99: 'FC', 98: 'FA', 97: 'F7', 96: 'F5', 95: 'F2', 94: 'F0', 93: 'ED', 92: 'EB', 91: 'E8', 90: 'E6', 89: 'E3', 88: 'E0', 87: 'DE', 86: 'DB', 85: 'D9', 84: 'D6', 83: 'D4', 82: 'D1', 81: 'CF', 80: 'CC', 79: 'C9', 78: 'C7', 77: 'C4', 76: 'C2', 75: 'BF', 74: 'BD', 73: 'BA', 72: 'B8', 71: 'B5', 70: 'B3', 69: 'B0', 68: 'AD', 67: 'AB', 66: 'A8', 65: 'A6', 64: 'A3', 63: 'A1', 62: '9E', 61: '9C', 60: '99', 59: '96', 58: '94', 57: '91', 56: '8F', 55: '8C', 54: '8A', 53: '87', 52: '85', 51: '82', 50: '80', 49: '7D', 48: '7A', 47: '78', 46: '75', 45: '73', 44: '70', 43: '6E', 42: '6B', 41: '69', 40: '66', 39: '63', 38: '61', 37: '5E', 36: '5C', 35: '59', 34: '57', 33: '54', 32: '52', 31: '4F', 30: '4D', 29: '4A', 28: '47', 27: '45', 26: '42', 25: '40', 24: '3D', 23: '3B', 22: '38', 21: '36', 20: '33', 19: '30', 18: '2E', 17: '2B', 16: '29', 15: '26', 14: '24', 13: '21', 12: '1F', 11: '1C', 10: '1A', 9: '17', 8: '14', 7: '12', 6: '0F', 5: '0D', 4: '0A', 3: '08', 2: '05', 1: '03', 0: '00' };
