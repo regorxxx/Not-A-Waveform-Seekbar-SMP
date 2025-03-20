@@ -51,8 +51,9 @@
 ### Removed
 ### Fixed
 - UI: '&' being displayed as '_' on tooltips.
-- Fixed some cases where stopping playback during analysis or changing the playing track affected shown data. Now files are analyzed (and saved) on the background, independently of what the panel shows (which depends on actual playback).
 - UI: wrong position on second background gradient using bigradient mode.
+- Fixed some cases where stopping playback during analysis or changing the playing track affected shown data. Now files are analyzed (and saved) on the background, independently of what the panel shows (which depends on actual playback).
+- Workaround for foobar2000 bug, the reported playback time was a non-safe value and could lead to crashes. See [here](https://hydrogenaud.io/index.php/topic,127620.msg1061036).
 
 ## [2.6.0] - 2024-10-09
 ### Added
@@ -67,7 +68,6 @@
 ### Fixed
 - UI: compressed files don't display neither an "incompatible format" nor the visualizer as fallback.
 - UI: 'Visualizer during analysis' setting was overriding the 'Visualizer for incompatible files' in some cases, displaying the visualizer indefinitely for incompatible files (and not just during the analysis).
-- Workaround for foobar2000 bug, the reported playback time was a non-safe value and could lead to crashes. See [here](https://hydrogenaud.io/index.php/topic,127620.msg1061036).
 
 ## [2.5.1] - 2024-08-13
 ### Added
