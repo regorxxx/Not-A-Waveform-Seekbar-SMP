@@ -157,6 +157,24 @@ function createSeekbarMenu(bClear = true) {
 				menu.newCheckMenuLast(() => this.analysis[o.key]);
 			});
 		}
+		menu.newSeparator(subMenu);
+		{ // NOSONAR [menu block]
+			[
+				{ name: 'Resolution (Points/Second)', key: 'resolution' }
+			].forEach((o) => {
+				if (menu.isSeparator(o)) { menu.newEntry({ menuName: subMenu, entryText: o.name }); return; }
+				menu.newEntry({
+					menuName: subMenu, entryText: o.name + '\t' + _b(Number.isFinite(this.analysis[o.key]) ? this.analysis[o.key] : '\u221E'), func: () => {
+						const input = utils.IsKeyPressed(VK_CONTROL)
+							? 1
+							: Input.number('int', this.analysis[o.key], 'Enter value:\n(1 to Infinity)\n\nThis is independent to display settings; it affects how many data points are available for painting (which can be changed later) but also the data file size (higher resolution, bigger sizes).\n\nNote any existing data analysis file will maintain the original resolution; delete them to re-analyze tracks using the new setting.', 'Seekbar: Resolution (Points/Second)', 1, [(n) => n >= 1]);
+						if (input === null) { return; }
+						this.updateConfig({ analysis: { [o.key]: input } });
+						this.saveProperties();
+					}
+				});
+			});
+		}
 	}
 	menu.newSeparator();
 	{

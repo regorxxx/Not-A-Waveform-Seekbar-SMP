@@ -44,7 +44,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} [o.ui.bLogScale ]- [=true] Wether to display VU Meter scale in log (dB) or linear scale
  * @param {Object} [o.analysis] - Analysis related settings.
  * @param {'ffprobe'|'audiowaveform'|'visualizer'} [o.analysis.binaryMode] - [='audiowaveform'] Binary to use. Visualizer is processed internally.
- * @param {number} [o.analysis.resolution] - [=1] Points per second on audiowaveform, per sample on ffmpeg (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
+ * @param {number} [o.analysis.resolution] - [=1] Data points per second (every point has 2 values, i.e. + and -). On visualizer mode is adjusted per window width. Changing this setting requires re-analysis of files to apply, but previous data files will be compatible too (just with different number of points).
  * @param {'none'|'utf-8'|'utf-16'} [o.analysis.compressionMode] - [='utf-16'] Set to anything but 'none' to apply compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70% compression) and 7zip (~80% compression).
  * @param {'library'|'all'|'none'} [o.analysis.storeMode] - [='library'] Controls wether analysis data files are saved to disk, for library items only, any item or none.
  * @param {boolean} [o.analysis.bAutoAnalysis] - [=true] Wether automatically analyze tracks on playback or on demand. For usual seekbar usage it should be true, but may be set to false if the parent panel exposes some way to do it manually (for ex. for track analysis).
@@ -286,7 +286,7 @@ function _seekbar({
 	/**
 	 * @typedef {object} Analysis - Analysis related settings.
 	 * @property {'ffprobe'|'audiowaveform'|'visualizer'} binaryMode - Binary used. Visualizer is processed internally.
-	 * @property {number} resolution - Points per second on audiowaveform, per sample on ffmpeg  (different than 1 requires resampling) . On visualizer mode is adjusted per window width.
+	 * @property {number} resolution - Data points per second (every point has 2 values, i.e. + and -). On visualizer mode is adjusted per window width. Changing this setting requires re-analysis of files to apply, but previous data files will be compatible too (just with different number of points).
 	 * @property {'none'|'utf-8'|'utf-16'} compressionMode - Anything but 'none' applies compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70%  compression) and 7zip (~80% compression).
 	 * @property {'library'|'all'|'none'} storeMode - Controls wether analysis data files are saved to disk, for library items only, any item or none.
 	 * @property {boolean} bAutoAnalysis - Flag to automatically analyze tracks on playback or on demand.
@@ -1783,12 +1783,16 @@ function _seekbar({
 		const bVisualizer = this.analysis.binaryMode === 'visualizer';
 		const bAuWav = this.analysis.binaryMode === 'audiowaveform';
 		const bFfProbe = this.analysis.binaryMode === 'ffprobe';
+		const sampleRate = fb.TitleFormat('%SAMPLERATE%').EvalWithMetadb(handle);
 		if (this.isAllowedFile && !bFallbackMode.analysis && bAuWav) {
 			if (this.bProfile) { profiler = new FbProfiler('audiowaveform'); }
 			const extension = RegExp(/(?:\.)(\w+$)/i).exec(handleFileName)[1];
+			const pxPerSecond = this.analysis.resolution <= sampleRate / 2
+				? this.analysis.resolution || 1
+				: Math.round(sampleRate / 2);
 			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
 				_q(_resolvePath(this.binaries.audiowaveform)) + ' -i ' + _q(handleFileName) +
-				' --pixels-per-second ' + (Math.round(this.analysis.resolution) || 1) +
+				' --pixels-per-second ' + pxPerSecond +
 				' --input-format ' + extension + ' --bits 8' +
 				(this.analysis.bMultiChannel ? ' --split-channels' : '') +
 				' -o ' + _q(seekbarFolder + 'data.json');
@@ -1797,30 +1801,20 @@ function _seekbar({
 			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&')
 				.replace(/'/g, '\\\\\\\''); // And here we go again...
 			// https://ayosec.github.io/ffmpeg-filters-docs/3.0/Filters/Audio/astats.html
-			if (this.analysis.bMultiChannel) {
-				cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-					_q(_resolvePath(this.binaries.ffprobe)) +
-					' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
-					(this.analysis.resolution > 1
-						? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
-						',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
-						: ''
-					) +
-					',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=' +
-					Array.from({ length: this.channels }, (_, i) => 'lavfi.astats.' + (i + 1) + '.Peak_level,lavfi.astats.' + (i + 1) + '.RMS_level,lavfi.astats.' + (i + 1) + '.RMS_peak').join(',') +
-					' -print_format json > ' + _q(seekbarFolder + 'data.json');
-			} else {
-				cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
-					_q(_resolvePath(this.binaries.ffprobe)) +
-					' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
-					(this.analysis.resolution > 1
-						? ',aresample=' + Math.round((this.analysis.resolution || 1) * 100) +
-						',asetnsamples=' + Math.round((this.analysis.resolution / 10) ** 2)
-						: ''
-					) +
-					',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak' +
-					' -print_format json > ' + _q(seekbarFolder + 'data.json');
-			}
+			const samplesPerFrame = this.analysis.resolution <= sampleRate / 2
+				? Math.round(sampleRate / (this.analysis.resolution * 2 || 2))
+				: 1;
+			cmd = 'CMD /C PUSHD ' + _q(handleFolder) + ' && ' +
+				_q(_resolvePath(this.binaries.ffprobe)) +
+				' -hide_banner -v panic -f lavfi -i amovie=' + _q(handleFileName) +
+				',asetnsamples=n=' + samplesPerFrame + ':p=0' +
+				',astats=metadata=1:reset=1 -show_entries frame=pkt_pts_time:frame_tags=' +
+				(
+					this.analysis.bMultiChannel
+						? Array.from({ length: this.channels }, (_, i) => 'lavfi.astats.' + (i + 1) + '.Peak_level,lavfi.astats.' + (i + 1) + '.RMS_level,lavfi.astats.' + (i + 1) + '.RMS_peak').join(',')
+						: 'lavfi.astats.Overall.Peak_level,lavfi.astats.Overall.RMS_level,lavfi.astats.Overall.RMS_peak'
+				) +
+				' -print_format json > ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isFallback || bVisualizer || bFallbackMode.analysis) {
 			profiler = new FbProfiler('visualizer');
 		}
