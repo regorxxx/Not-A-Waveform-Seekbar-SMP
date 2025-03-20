@@ -665,14 +665,15 @@ function createSeekbarMenu(bClear = true) {
 		}
 	});
 	menu.newSeparator();
-	menu.newEntry({
-		entryText: 'Open data file...', func: () => {
-			if (fb.IsPlaying) {
-				const { seekbarFolder } = this.getPaths(fb.GetNowPlaying());
+	{
+		const handle = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem(false);
+		const { seekbarFolder } = this.getPaths(handle);
+		menu.newEntry({
+			entryText: 'Open data file...', func: () => {
 				if (_isFolder(seekbarFolder)) { _explorer(seekbarFolder); }
-			}
-		}, flags: fb.IsPlaying && this.active && this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
-	});
+			}, flags: handle && _isFolder(seekbarFolder) && this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
+		});
+	}
 	menu.newSeparator();
 	{	// Readme
 		const path = folders.xxx + 'helpers\\readme\\seekbar.txt';
