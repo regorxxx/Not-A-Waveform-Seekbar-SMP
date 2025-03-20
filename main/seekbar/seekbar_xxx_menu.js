@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/03/25
+//20/03/25
 
 /* exported createSeekbarMenu */
 
@@ -61,7 +61,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Show compatible extensions', func: () => {
-					fb.ShowPopupMessage(this.reportCompatibleFileExtension().join(', '), window.Name + ': ' + this.analysis.binaryMode);
+					fb.ShowPopupMessage(this.reportCompatibleFileExtension().join(', '), 'Seekbar: ' + this.analysis.binaryMode);
 				}
 			});
 			if (!this.isCompatibleFileExtension(fb.GetNowPlaying() || fb.GetFocusItem())) {
@@ -116,7 +116,7 @@ function createSeekbarMenu(bClear = true) {
 			menu.newSeparator(subMenuTwo);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'File match pattern...', func: () => {
-					let tf = Input.string('string', this.Tf.Expression || '', 'File name format for data files:\n(TF expression)\n\nUsed for track identification, default string uses same data for all encodes of a track. Leave it empty to restore default.', window.Name, '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))');
+					let tf = Input.string('string', this.Tf.Expression || '', 'File name format for data files:\n(TF expression)\n\nUsed for track identification, default string uses same data for all encodes of a track. Leave it empty to restore default.', 'Seekbar: File match pattern', '$lower([$replace(%ALBUM ARTIST%,\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))');
 					if (tf === null) { return; }
 					if (!tf.length) { tf = seekbarProperties.matchPattern[1]; }
 					this.Tf = fb.TitleFormat(tf);
@@ -151,6 +151,7 @@ function createSeekbarMenu(bClear = true) {
 					menuName: subMenu, entryText: o.name, func: () => {
 						this.updateConfig({ analysis: { [o.key]: !this.analysis[o.key] } });
 						this.saveProperties();
+						fb.ShowPopupMessage('By changing this setting, already existing analysis data files will not be compatible. \n\nRe-analysis will be required for previously played files. It will be done automatically on playback if required.', 'Seekbar');
 					}
 				});
 				menu.newCheckMenuLast(() => this.analysis[o.key]);
@@ -543,15 +544,9 @@ function createSeekbarMenu(bClear = true) {
 						menuName: subMenuTwo, entryText: o.name + '\t' + _b(this.ui.transparency[o.key]), func: () => {
 							const input = utils.IsKeyPressed(VK_CONTROL)
 								? 100
-								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', window.Name, 200, [(n) => n >= 0 && n <= 100]);
+								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', 'Seekbar: ' + o.name + ' transparency', 200, [(n) => n >= 0 && n <= 100]);
 							if (input === null) { return; }
-							this.updateConfig({
-								ui: {
-									transparency: {
-										[o.key]: input,
-									}
-								}
-							});
+							this.updateConfig({ ui: { transparency: { [o.key]: input } } });
 							this.saveProperties();
 						}, flags: bEnabled ? MF_STRING : MF_GRAYED
 					});
@@ -596,13 +591,13 @@ function createSeekbarMenu(bClear = true) {
 					let input;
 					switch (this.ui.wheel.unit.toLowerCase()) {
 						case 's':
-							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(s)', window.Name, 5, [(n) => n > 0 && n < Infinity]);
+							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(s)', 'Seekbar: Seek ahead', 5, [(n) => n > 0 && n < Infinity]);
 							break;
 						case 'ms':
-							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(ms)', window.Name, 250, [(n) => n > 0 && n < Infinity]);
+							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(ms)', 'Seekbar: Seek ahead', 250, [(n) => n > 0 && n < Infinity]);
 							break;
 						case '%':
-							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(% of length)', window.Name, 10, [(n) => n > 0 && n <= 100]);
+							input = Input.number('int', this.ui.wheel.step, 'Enter value:\n(% of length)', 'Seekbar: Seek ahead', 10, [(n) => n > 0 && n <= 100]);
 							break;
 					}
 					if (input === null) { return; }
@@ -635,7 +630,7 @@ function createSeekbarMenu(bClear = true) {
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
-				const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', window.Name, 200, [(n) => n >= 50]);
+				const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', 'Seekbar: Refresh rate', 200, [(n) => n >= 50]);
 				if (input === null) { return; }
 				this.updateConfig({ ui: { refreshRate: input } });
 				this.saveProperties();
@@ -666,7 +661,7 @@ function createSeekbarMenu(bClear = true) {
 		entryText: 'Check for updates...', func: () => {
 			if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
 			checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-				.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name));
+				.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar'));
 		}
 	});
 	menu.newSeparator();
