@@ -430,6 +430,9 @@ function _seekbar({
 			if (Object.hasOwn(newConfig.preset, 'bDownMixToMono') || this.preset.bDownMixToMono && Object.hasOwn(newConfig.preset, 'displayChannels')) {
 				bRecalculate = true;
 			}
+			if (Object.hasOwn(newConfig.preset, 'analysisMode')) {
+				bRecalculate = true;
+			}
 		}
 		if (newConfig.ui) {
 			if (Object.hasOwn(newConfig.ui, 'refreshRate')) {
@@ -574,7 +577,7 @@ function _seekbar({
 			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz')) {
 				this.current = this.loadDataFile(seekbarFile, '.ff.lz');
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) { return; }
-			} else if (bFfProbe&& !bMulti  && _isFile(seekbarFile + '.ff.lz16')) {
+			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz16')) {
 				this.current = this.loadDataFile(seekbarFile, '.ff.lz16');
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.json')) {
@@ -670,7 +673,7 @@ function _seekbar({
 					});
 					// Calculate point scale
 					let maxVal = 1;
-					if (this.preset.analysisMode !== 'RMS_level') {
+					if (this.preset.analysisMode !== 'rms_level') {
 						this.current[c].forEach((frame) => {
 							if (frame.length === 5) { frame.length = 4; }
 							frame.push(
