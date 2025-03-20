@@ -1,5 +1,5 @@
 'use strict';
-//19/03/25
+//20/03/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -615,7 +615,7 @@ function _seekbar({
 					// Set animation using BPM if possible
 					if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 					// Update time if needed
-					if (fb.IsPlaying) { this.time = fb.PlaybackTime; }
+					if (fb.IsPlaying) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 				}
 				throttlePaint(true);
 				if (this.analysis.bVisualizerFallbackAnalysis) { bFallbackMode.analysis = false; }
@@ -638,7 +638,7 @@ function _seekbar({
 		// Set animation using BPM if possible
 		if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 		// Update time if needed
-		if (fb.IsPlaying) { this.time = fb.PlaybackTime; }
+		if (fb.IsPlaying) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 		// And paint
 		throttlePaint();
 	};
@@ -1004,7 +1004,7 @@ function _seekbar({
 	*/
 	this.updateTime = (time) => {
 		if (!this.active) { return; }
-		this.time = time;
+		this.time = Number.isSafeInteger(time) ? time : 0;
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') { return; }
 		} else { this.cache = this.current; }
@@ -1171,7 +1171,9 @@ function _seekbar({
 			const bPoints = this.preset.waveMode === 'points';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
 			let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
-			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0);
+			const currX = Number.isFinite(fb.PlaybackTime)
+				? this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0)
+				: 0;
 			const margin = channelsNum > 1 ? _scale(5) : 0;
 			const size = (this.h - this.y - margin) * this.scaleH / channelsNum;
 			const barW = (this.w - this.marginW * 2) / this.frames;
@@ -1473,7 +1475,7 @@ function _seekbar({
 		const threshold = this.analysis.binaryMode === 'ffprobe'
 			? 0.001
 			: 0.010;
-		const bIsNow = Math.abs(current - fb.PlaybackTime) / fb.PlaybackLength <= threshold;
+		const bIsNow = Math.abs(current - (fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0)) / fb.PlaybackLength <= threshold;
 		scale = Math.abs(scale);
 		if (!bIsNow || !scale) { return; }
 		const color = colors.main;
@@ -1620,7 +1622,7 @@ function _seekbar({
 			const frames = this.frames;
 			if (frames !== 0) {
 				const scroll = step * this.ui.wheel.step * (this.ui.wheel.bReversed ? -1 : 1);
-				let time = fb.PlaybackTime;
+				let time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0;
 				switch (this.ui.wheel.unit.toLowerCase()) {
 					case 'ms': time += scroll / 1000; break;
 					case '%': time += scroll / 100 * fb.PlaybackLength; break;
