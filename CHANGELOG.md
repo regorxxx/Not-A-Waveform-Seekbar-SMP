@@ -31,7 +31,7 @@
 ## [Unreleased][]
 ### Added
 - Multi-channel: added multi-channel support. Requires tracks to be re-analyzed with the setting enabled. Channels are displayed vertically stacked and independent channels may be shown/hidden at the settings. Additionally, there is a down-mixing setting to mix the desired channels into a single one (contrary to single-channel mode, it's only applied to the displayed channels). Note multi-panel support allows to show now one channel per panel too with these new settings.
-- Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy depends on the mode (ffprobe > audiowaveform) and analysis setting (RMS, peak, etc.). It also has multi-channel support (see above) and linear of logarithmic scaling.
+- Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy may depend on the mode and analysis setting (resolution, RMS, peak, etc.). It also has multi-channel support (see above) and linear or logarithmic scaling.
 - UI: added dynamic colors support based on track's artwork. It follows the background cover mode settings and must be enabled on 'colors' submenu.
 - UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
 - UI: exposed background gradient focus setting, i.e. where the center color will be at its highest intensity.
@@ -42,6 +42,7 @@
 - Installation: multiple improvements to path handling for portable and non-portable installations. By default scripts will always try to use only relative paths to the profile folder, so scripts will work without any change when exporting the profile to any other installation. This change obviously doesn't apply to already existing installations unless restoring defaults.
 - Analysis: exposed resolution setting (previously fixed to a hardcoded value) and unified it across all binary modes. Now both FFprobe (frames/samplerate) and Audiowaveform (px/second) calculate the same amount of data at a given resolution adjusting the setting to the track's samplerate. Resolution is now set in points [of data] per second (every point has 2 values, i.e. + and -), with a default value of 2. This is independent to display settings, so it affects how many data points are available for painting (which can be changed later) but also the data file size (higher resolution, bigger sizes). Note changing the setting will not force re-analysis of previously played tracks; delete previous analysis data files in case you want to apply it.
 - Analysis: default TF path pattern for analysis files changed to better handle track with multiple artists, slashes, Cyrillic and special chars and some errors with unwanted spaces. Restore defaults by leaving it empty at the input popup for the setting.
+- UI: changed FFprobe default display mode to linear scaling (like Audiowaveform).
 - UI: renamed some settings to better show which ones affect the 'unplayed' section. They should be more familiar now to people using [foo_wave_minibar_mod](https://www.foobar2000.org/components/view/foo_wave_minibar_mod) component.
 - UI: dead items now show a 'Dead or not found item.' message instead of non compatible or being stuck on analyzing. URLs still show the non compatible format.
 - Readme: added FAQ section.
@@ -58,7 +59,7 @@
 
 ## [2.6.0] - 2024-10-09
 ### Added
-- Analysis: expanded the list of compatible files with ffprobe. Thanks @TT-ReBORN.
+- Analysis: expanded the list of compatible files with FFprobe. Thanks @TT-ReBORN.
 - UI: new menu entry which shows if the currently playing (or focused) item is incompatible with the binary mode chosen and also shows a popup with the list of extensions supported.
 ### Changed
 - Analysis: default TF path pattern for analysis files now removes/replaces any non ASCII value on new installations.
@@ -242,7 +243,7 @@
 - UI: half-bars style did not paint negative points (omitted them instead of painting them inverted). It looked fine on previous usage cases (since bars were too small), but with the new 'normalize width' option there were cases with visible blank spaces. A new option has been added to revert back to the old behavior with negative values being omitted, which may look better in some settings (only available for half-bars style).
 - UI: optimized painting -without normalization enabled- with really long tracks (> 10 min). In case points would overlap, they are now skipped. This avoids painting too many points when fewer would render the same waveform, thus reducing the CPU usage.
 - Analysis: new tracks are only analyzed/displayed 1 sec after playback starts (to avoid excessive CPU usage when previewing/skipping a lot of consecutive tracks). Other scripts should use newTrackQueue() instead of newTrack() to use this feature.
-- Analysis: improved exotic filename parsing for ffprobe. Thanks @TT-ReBORN.
+- Analysis: improved exotic filename parsing for FFprobe. Thanks @TT-ReBORN.
 ### Removed
 ### Fixed
 - Analysis: enhanced data validation in some corner cases, for ex. previewing/skipping a lot of consecutive tracks (which made the panel crash at some point due to corrupted data). Now this data is also discarded. This is in addition to the other changes to avoid this situation.

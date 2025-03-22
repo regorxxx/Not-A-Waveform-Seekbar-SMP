@@ -716,7 +716,7 @@ function _seekbar({
 							if (frame.length === 5) { frame.length = 4; }
 							frame.push(
 								isFinite(frame[pos])
-									? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max)))
+									? 1 - Math.abs(Math.pow(2, frame[pos] / 10) * (1 - Math.log2(10)))
 									: 1
 							);
 							if (!isFinite(frame[4])) { frame[4] = 0; }
