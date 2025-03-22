@@ -1897,23 +1897,28 @@ function _seekbar({
 		})
 		);
 		if (bDone) {
-			const data = cmd
+			let data = cmd
 				? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
 				: this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
 			const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
 			const bPlayingSameHandle = !!nowPlaying && handle.Compare(nowPlaying);
 			if (data) {
-				if (!this.isFallback && !bFallbackMode.analysis && bFfProbe && data.frames && data.frames.length) {
+				const bNotFallback = cmd && !this.isFallback && !bFallbackMode.analysis;
+				if (bNotFallback) {
+					if (bFfProbe && data.frames) { data = data.frames; }
+					else if (bAuWav && data.data) { data = data.data; }
+				}
+				if (bNotFallback && bFfProbe && data.length) {
 					const processedData = Array.from({ length: channels }, () => []);
 					if (this.analysis.bMultiChannel) {
 						for (let i = 1; i <= channels; i++) {
-							data.frames.forEach((frame) => {
+							frames.forEach((frame) => {
 								processedData[i - 1].push(this.processFfmpegFrame(frame, i));
 							});
 						}
 					} else {
-						data.frames.forEach((frame) => {
+						data.forEach((frame) => {
 							processedData[0].push(this.processFfmpegFrame(frame, 'Overall'));
 						});
 					}
@@ -1922,11 +1927,11 @@ function _seekbar({
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.ff');
 					}
-				} else if (!this.isFallback && !bFallbackMode.analysis && bAuWav && data.data && data.data.length) {
+				} else if (bNotFallback && bAuWav && data.length) {
 					const processedData = Array.from({ length: channels }, () => []);
 					if (this.analysis.bMultiChannel) {
 						let c = 0, i = 0;
-						data.data.forEach((frame) => {
+						data.forEach((frame) => {
 							if (i === 2) {
 								c = c === (channels - 1) ? 0 : c + 1;
 								i = 0;
@@ -1935,7 +1940,7 @@ function _seekbar({
 							i++;
 						});
 					} else {
-						processedData[0] = data.data;
+						processedData[0] = data;
 					}
 					if (bPlayingSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
