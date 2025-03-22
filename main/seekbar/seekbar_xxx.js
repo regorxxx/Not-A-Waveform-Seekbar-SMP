@@ -1079,7 +1079,7 @@ function _seekbar({
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
 						? Infinity
 						: this.preset.futureSecs / this.timeConstant * barW + barW
-					: 2.5 * barW,
+					: 2.5 * barW * 2,
 				this.w - currX + barW
 			);
 			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
@@ -1608,7 +1608,7 @@ function _seekbar({
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
 						? Infinity
 						: this.preset.futureSecs / this.timeConstant * barW + barW
-					: 2.5 * barW,
+					: 2.5 * barW * 2,
 				this.w - currX + barW
 			);
 			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
