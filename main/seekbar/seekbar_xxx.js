@@ -357,10 +357,14 @@ function _seekbar({
 	this.cache = null;
 	/** @type {number[]} - OFfset values used on painting */
 	this.offset = [];
-	/** @type {number} - Current step for animation. In a range [0, this.maxStep] */
+	/** @type {number} - Current step for VU animation. In a range [0, this.maxStep] */
+	this.stepVu = 0;
+	/** @type {number} - Current step for waveform animation. In a range [0, this.maxStep] */
 	this.step = 0;
-	/** @type {number} - Max number of animation steps */
+	/** @type {number} - Max number of waveform animation steps */
 	this.maxStep = 4;
+	/** @type {number} - Max number of VU animation steps */
+	this.maxStepVu = Math.max(1, 1000 / this.ui.refreshRate);
 	/** @type {number} - Current playback time */
 	this.time = 0;
 	/** @type {number} - Reference refresh rate when using variable refresh rate setting */
@@ -379,6 +383,7 @@ function _seekbar({
 	this.isFallback = false;
 	/** @type {boolean} - Flag for analysis error. Set at this.verifyData after retrying analysis */
 	this.isError = false;
+	// Private
 	/** @type {{paint: boolean, analysis: boolean}} - Used when this.analysis.bVisualizerFallbackAnalysis is true, to track current step on processing */
 	const bFallbackMode = { paint: false, analysis: false };
 	/** @type {{rms_level: { key:string, pos:number }, rms_peak: { key:string, pos:number }, peak_level: { key:string, pos:number }}} - Used with ffprobe binary to unpack analysis data */
@@ -393,6 +398,8 @@ function _seekbar({
 	['ffprobe', 'audiowaveform'].forEach((key) => {
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
+	/** @type {Number[]} - Frames around current time to draw VU animation */
+	const framesVu = [];
 	/** @type {(bForce = false) => void} - Repaint entire window throttled */
 	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 	/** @type {(x:number, y:number, w:number, h:number, bForce = false) => void(0)} - Repaint part of window throttled */
@@ -439,6 +446,7 @@ function _seekbar({
 				this.ui.refreshRateOpt = this.ui.refreshRate;
 				throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
 				throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+				this.maxStepVu = Math.max(1, 1000 / this.ui.refreshRate);
 			}
 			if (Object.hasOwn(newConfig.ui, 'bNormalizeWidth') || Object.hasOwn(newConfig.ui, 'normalizeWidth')) {
 				bRecalculate = true;
@@ -1048,6 +1056,7 @@ function _seekbar({
 	*/
 	this.defaultSteps = () => {
 		this.maxStep = Math.round(4 * (200 / this.ui.refreshRate) ** (1 / 2));
+		this.maxStepVu = Math.max(1, 1000 / this.ui.refreshRate);
 		return this.maxStep;
 	};
 	this.defaultSteps();
@@ -1064,6 +1073,7 @@ function _seekbar({
 	this.updateTime = (time) => {
 		if (!this.active) { return; }
 		this.time = Number.isSafeInteger(time) ? time : 0;
+		framesVu.length = 0;
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') { return; }
 		} else { this.cache = this.current; }
@@ -1123,6 +1133,7 @@ function _seekbar({
 	*/
 	this.resetAnimation = () => {
 		this.step = 0;
+		this.stepVu = 0;
 		this.offset = [];
 		this.defaultSteps();
 	};
@@ -1229,6 +1240,8 @@ function _seekbar({
 			const bWaveForm = this.preset.waveMode === 'waveform';
 			const bPoints = this.preset.waveMode === 'points';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
+			let bPaintedVu = false;
+			let bFilledVu = framesVu.length >= this.maxStepVu;
 			let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
 			const currX = Number.isFinite(fb.PlaybackTime)
 				? this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0)
@@ -1273,7 +1286,24 @@ function _seekbar({
 					}
 					// Ensure points don't overlap too much without normalization
 					if (bVuMeter) {
-						this.paintVuMeter(gr, n, x, offsetY, current, size, scale, bVisualizer, colors);
+						if (this.stepVu >= this.maxStepVu) { this.stepVu = 0; }
+						if (!bFilledVu && Math.abs(current - this.time) / fb.PlaybackLength <= 0.001) {
+							framesVu.push(Math.abs(scale));
+							bFilledVu = framesVu.length >= this.maxStepVu;
+						}
+						if (!bPaintedVu) {
+							const value = framesVu[this.stepVu++];
+							[3, 2].forEach((i) => {
+								const prevValue = this.stepVu > 0 ? framesVu[this.stepVu - i] : 0;
+								if (prevValue && prevValue > value) {
+									this.paintVuMeter(gr, offsetY, size, prevValue, colors, true);
+								}
+							});
+							bPaintedVu = this.paintVuMeter(gr, offsetY, size, value, colors);
+							if (bPaintedVu) {
+								gr.DrawRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2), size, _scale(1) / 2, this.applyAlpha(colors.alt, 1));
+							}
+						}
 					} else if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
 						if (bWaveForm) {
 							this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsfuture, bVisualizer, colors);
@@ -1518,31 +1548,22 @@ function _seekbar({
 	 * VU meter paint
 	 *
 	 * @property
-	 * @name paintVU
+	 * @name paintVuMeter
 	 * @kind method
 	 * @memberof _seekbar
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
-	 * @param {number} n - Point idx
-	 * @param {number} x - X-point coord
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
-	 * @param {number} current - Point time
 	 * @param {number} size - Panel point size
 	 * @param {number} scale - Point scaling
-	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
 	 * @param {{main: number, alt:number}} colors - Colors used
+	 * @param {boolean} bFade - Flag used when drawn point should be faded
 	 * @returns {boolean}
 	*/
-	this.paintVuMeter = (gr, n, x, offsetY, current, size, scale, bVisualizer, colors) => { // NOSONAR
-		const threshold = this.analysis.binaryMode === 'ffprobe'
-			? 0.001
-			: 0.010;
-		const bIsNow = Math.abs(current - (fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0)) / fb.PlaybackLength <= threshold;
-		scale = Math.abs(scale);
-		if (!bIsNow || !scale) { return; }
-		const color = colors.main;
-		const altColor = colors.alt;
-		const barSize = this.ui.bLogScale ? (100 + 1000 * Math.log10(scale)) / 100 : scale;
-		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * barSize, size, 1, color, altColor);
+	this.paintVuMeter = (gr, offsetY, size, scale, colors, bFade) => {
+		if (!scale) { return false; }
+		const color = bFade ? this.applyAlpha(colors.main, 70) : colors.main;
+		const altColor = bFade ? this.applyAlpha(colors.alt, 70) : colors.alt;
+		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * scale, size, 1, color, altColor);
 		return true;
 	};
 	/**
