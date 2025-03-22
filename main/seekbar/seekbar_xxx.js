@@ -1,5 +1,5 @@
 'use strict';
-//21/03/25
+//22/03/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -1256,7 +1256,9 @@ function _seekbar({
 						break;
 					} else if (bPrePaint && bIsfuture && !bIsfutureAllowed) { break; }
 					if (!this.offset[n]) { this.offset.push(0); }
-					const scale = frame;
+					const scale = this.ui.bLogScale
+						? Math.sign(frame) * Math.log10((10 - 1) / 1 * Math.abs(frame) + 1)
+						: frame;
 					const x = this.x + this.marginW + barW * n;
 					// Paint the alt background at the proper point
 					if (bIsfuture && bPrePaint && !bPaintedBg) {

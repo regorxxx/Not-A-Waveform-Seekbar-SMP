@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/25
+//22/03/25
 
 /* exported createSeekbarMenu */
 
@@ -289,15 +289,13 @@ function createSeekbarMenu(bClear = true) {
 					menu.newCheckMenuLast(() => (this.ui.normalizeWidth === _scale(s)));
 				});
 		}
-		if (this.preset.waveMode === 'vumeter') {
-			menu.newEntry({
-				menuName: subMenu, entryText: 'Logarithmic scale (dB)', func: () => {
-					this.updateConfig({ ui: { bLogScale: !this.ui.bLogScale } });
-					this.saveProperties();
-				}
-			});
-			menu.newCheckMenuLast(() => this.ui.bLogScale);
-		}
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Logarithmic scale', func: () => {
+				this.updateConfig({ ui: { bLogScale: !this.ui.bLogScale } });
+				this.saveProperties();
+			}
+		});
+		menu.newCheckMenuLast(() => this.ui.bLogScale);
 		menu.newSeparator(subMenu);
 		const subMenuFour = menu.newMenu('Channels display' + (this.analysis.bMultiChannel ? '' : '\t(multi-channel only)'), subMenu, () => this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED);
 		menu.newEntry({

@@ -31,7 +31,8 @@
 ## [Unreleased][]
 ### Added
 - Multi-channel: added multi-channel support. Requires tracks to be re-analyzed with the setting enabled. Channels are displayed vertically stacked and independent channels may be shown/hidden at the settings. Additionally, there is a down-mixing setting to mix the desired channels into a single one (contrary to single-channel mode, it's only applied to the displayed channels). Note multi-panel support allows to show now one channel per panel too with these new settings.
-- Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy may depend on the mode and analysis setting (resolution, RMS, peak, etc.). It also has multi-channel support (see above) and linear or logarithmic scaling.
+- Styles: added 'VU Meter' style which mimics other VU Meter components based on bars/gradients. Note accuracy may depend on the mode and analysis setting (resolution, RMS, peak, etc.). It also has multi-channel support (see above).
+- UI: added linear and logarithmic scaling settings.
 - UI: added dynamic colors support based on track's artwork. It follows the background cover mode settings and must be enabled on 'colors' submenu.
 - UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
 - UI: exposed background gradient focus setting, i.e. where the center color will be at its highest intensity.
