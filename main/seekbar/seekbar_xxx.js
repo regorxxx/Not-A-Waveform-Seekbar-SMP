@@ -658,8 +658,46 @@ function _seekbar({
 	this.normalizePoints = (bNormalizeWidth = false) => {
 		this.frames = this.current[0].length;
 		if (this.frames) {
-			let upper = Array.from({ length: this.channels }, () => 0);
-			let lower = Array.from({ length: this.channels }, () => 0);
+			const bDiscardedSamples = this.clampResolution(Math.max(this.w / _scale(1), 40000));
+			const limits = this.normalizeAmplitude();
+			// Adjust num of frames to window size
+			if (bNormalizeWidth && !bDiscardedSamples) { this.normalizeResolution(limits); }
+		}
+	};
+	/**
+	 * Limits quantity of points to avoid OOM errors (which may happen when setting resolution to Infinity)
+	 *
+	 * @property
+	 * @name clampResolution
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {Number} maxFrames - Max number of frames allowed
+	 * @returns {boolean} true if data was over limits
+	*/
+	this.clampResolution = (maxFrames) => {
+		if (this.frames) {
+			if (this.frames > maxFrames) {
+				const scale = Math.ceil(this.frames / maxFrames);
+				this.current = this.current.map((channel) => channel.filter((val, i) => !(i % scale)));
+				this.frames = this.current[0].length;
+				return true;
+			}
+		}
+		return false;
+	};
+	/**
+	 * Normalize data to have amplitudes between [0, 1].
+	 *
+	 * @property
+	 * @name normalizeAmplitude
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {{ upper:number[], lower:number[] }} Max amplitude value per channel
+	*/
+	this.normalizeAmplitude = () => {
+		const upper = Array.from({ length: this.channels }, () => 0);
+		const lower = Array.from({ length: this.channels }, () => 0);
+		if (this.frames) {
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				for (let c = 0; c < this.channels; c++) {
 					// Calculate max values
@@ -718,88 +756,105 @@ function _seekbar({
 					this.current[c] = this.current[c].map((frame) => frame / max);
 				}
 			}
+		}
+		return { upper, lower };
+	};
+	/**
+	 * Normalize quantity of points according to panel width.
+	 *
+	 * @property
+	 * @name normalizeResolution
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {object} o - Arguments
+	 * @param {Number[]} o.upper - Max amplitude value per channel
+	 * @param {Number[]} o.lower - Min amplitude value per channel
+	 * @returns {void}
+	*/
+	this.normalizeResolution = ({ upper, lower, newFrames }) => {
+		const frames = this.frames;
+		if (frames) {
 			// Adjust num of frames to window size
-			if (bNormalizeWidth) {
+			if (!newFrames) {
 				const barW = this.ui.normalizeWidth;
-				const frames = this.frames;
-				const newFrames = Math.floor((this.w - this.marginW * 2) / barW);
-				if (newFrames !== frames) {
-					for (let c = 0; c < this.channels; c++) {
-						let data;
-						if (newFrames < frames) {
-							const scale = frames / newFrames;
-							data = Array.from({ length: newFrames }, () => { return { val: 0, count: 0 }; });
-							let j = 0, h = 0, frame;
-							for (let i = 0; i < frames; i++) {
-								frame = this.current[c][i];
-								if (h >= scale) {
-									const w = (h - scale);
-									if (i % 2 === 0) {
-										if ((j + 1) >= newFrames) { break; }
-										data[j + 1].val += frame * w;
-										data[j + 1].count += w;
-									} else {
-										data[j].val += frame * w;
-										data[j].count += w;
-									}
-									j += 2;
-									h = 0;
-									data[j].val += frame * (1 - w);
-									data[j].count += (1 - w);
+				newFrames = Math.floor((this.w - this.marginW * 2) / barW);
+			}
+			if (newFrames !== frames) {
+				for (let c = 0; c < this.channels; c++) {
+					let data;
+					if (newFrames < frames) {
+						const scale = frames / newFrames;
+						data = Array.from({ length: newFrames }, () => { return { val: 0, count: 0 }; });
+						let j = 0, h = 0, frame;
+						for (let i = 0; i < frames; i++) {
+							frame = this.current[c][i];
+							if (h >= scale) {
+								const w = (h - scale);
+								if (i % 2 === 0) {
+									if ((j + 1) >= newFrames) { break; }
+									data[j + 1].val += frame * w;
+									data[j + 1].count += w;
 								} else {
-									if (i % 2 === 0) { // NOSONAR
-										if ((j + 1) >= newFrames) { break; }
-										data[j + 1].val += frame;
-										data[j + 1].count++;
-									} else {
-										data[j].val += frame;
-										data[j].count++;
-										h++;
-									}
+									data[j].val += frame * w;
+									data[j].count += w;
 								}
-							}
-						} else {
-							const scale = newFrames / frames;
-							data = Array.from({ length: newFrames }, () => { return { val: 0, count: 0 }; });
-							let j = 0, h = 0, frame;
-							for (let i = 0; i < frames; i++) {
-								frame = this.current[c][i];
-								while (h < scale) {
+								j += 2;
+								h = 0;
+								data[j].val += frame * (1 - w);
+								data[j].count += (1 - w);
+							} else {
+								if (i % 2 === 0) { // NOSONAR
+									if ((j + 1) >= newFrames) { break; }
+									data[j + 1].val += frame;
+									data[j + 1].count++;
+								} else {
 									data[j].val += frame;
 									data[j].count++;
 									h++;
-									j++;
-									if (j >= newFrames) { break; }
 								}
-								h = (h - scale);
-								if (j >= newFrames) { break; }
 							}
 						}
-						// Filter non valid values
-						let len = data.length;
-						while (data[len - 1].count === 0) { data.pop(); len--; }
-						// Normalize
-						this.current[c] = data.map((el) => el.val / el.count);
-						// Some combinations of bar widths and number of points may affect the bias to the upper or lower part of the waveform
-						// Lower or upper side can be normalized to the max value of the other side to account for this
-						const bias = Math.abs(upper[c] / lower[c]);
-						upper[c] = lower[c] = 0;
-						this.current[c].forEach((frame) => {
-							upper[c] = Math.max(upper[c], frame);
-							lower[c] = Math.min(lower[c], frame);
-						});
-						const newBias = Math.abs(upper[c] / lower[c]);
-						const diff = bias - newBias;
-						if (diff > 0.1) {
-							const distort = bias / newBias;
-							const sign = Math.sign(diff);
-							this.current[c] = this.current[c].map((frame) => {
-								return sign === 1 && frame > 0 || sign !== 1 && frame < 0 ? frame * distort : frame;
-							});
+					} else {
+						const scale = newFrames / frames;
+						data = Array.from({ length: newFrames }, () => { return { val: 0, count: 0 }; });
+						let j = 0, h = 0, frame;
+						for (let i = 0; i < frames; i++) {
+							frame = this.current[c][i];
+							while (h < scale) {
+								data[j].val += frame;
+								data[j].count++;
+								h++;
+								j++;
+								if (j >= newFrames) { break; }
+							}
+							h = (h - scale);
+							if (j >= newFrames) { break; }
 						}
 					}
-					this.frames = this.current[0].length;
+					// Filter non valid values
+					let len = data.length;
+					while (data[len - 1].count === 0) { data.pop(); len--; }
+					// Normalize
+					this.current[c] = data.map((el) => el.val / el.count);
+					// Some combinations of bar widths and number of points may affect the bias to the upper or lower part of the waveform
+					// Lower or upper side can be normalized to the max value of the other side to account for this
+					const bias = Math.abs(upper[c] / lower[c]);
+					upper[c] = lower[c] = 0;
+					this.current[c].forEach((frame) => {
+						upper[c] = Math.max(upper[c], frame);
+						lower[c] = Math.min(lower[c], frame);
+					});
+					const newBias = Math.abs(upper[c] / lower[c]);
+					const diff = bias - newBias;
+					if (diff > 0.1) {
+						const distort = bias / newBias;
+						const sign = Math.sign(diff);
+						this.current[c] = this.current[c].map((frame) => {
+							return sign === 1 && frame > 0 || sign !== 1 && frame < 0 ? frame * distort : frame;
+						});
+					}
 				}
+				this.frames = this.current[0].length;
 			}
 		}
 	};
