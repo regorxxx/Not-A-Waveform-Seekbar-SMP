@@ -730,8 +730,9 @@ function _seekbar({
 					}
 					// Normalize
 					if (maxVal !== 0) {
+						const limit = round(1 + maxVal, 3);
 						this.current[c].forEach((frame) => {
-							if (frame[4] !== 1) { frame[4] = frame[4] - maxVal; }
+							if (frame[4] <= limit) { frame[4] = round(frame[4] - maxVal, 3); }
 						});
 					}
 					// Flat data
@@ -753,7 +754,7 @@ function _seekbar({
 					});
 					max = Math.max(Math.abs(upper[c]), Math.abs(lower[c]));
 					// Calculate point scale
-					this.current[c] = this.current[c].map((frame) => frame / max);
+					this.current[c] = this.current[c].map((frame) => round(frame / max, 3));
 				}
 			}
 		}
