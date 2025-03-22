@@ -1941,9 +1941,7 @@ function _seekbar({
 	 * @returns {Number[][]}
 	*/
 	this.visualizerData = (handle, preset = 'classic spectrum analyzer', bVariableLen = false) => {
-		const samples = bVariableLen
-			? handle.Length * (this.analysis.resolution || 1)
-			: this.w / _scale(5) * (this.analysis.resolution || 1);
+		const samples = (bVariableLen ? handle.Length : this.w / _scale(5)) * Math.min(this.analysis.resolution || 1, this.w / _scale(1));
 		const data = Array.from({ length: this.channels }, () => []);
 		for (let c = 0; c < this.channels; c++) {
 			switch (preset) { // NOSONAR
