@@ -419,6 +419,8 @@ function _seekbar({
 	['ffprobe', 'audiowaveform'].forEach((key) => {
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
+	/** @type {Number} - Last time update */
+	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
 	const framesVu = [];
 	/** @type {(bForce = false) => void} - Repaint entire window throttled */
@@ -1096,6 +1098,10 @@ function _seekbar({
 	*/
 	this.updateTime = (time) => {
 		if (!this.active) { return; }
+		// Workaround for foo_skip_track
+		const now = Date.now();
+		const bFull = (now - this.lastUpdate) < 500;
+		this.lastUpdate = now;
 		this.time = Number.isSafeInteger(time) ? time : 0;
 		framesVu.length = 0;
 		if (this.cache === this.current) { // Paint only once if there is no animation
@@ -1104,8 +1110,9 @@ function _seekbar({
 		// Repaint by zone when possible
 		const frames = this.frames;
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
-		if (this.analysis.binaryMode === 'visualizer' || this.preset.waveMode === 'vumeter' || !frames) { throttlePaint(); }
-		else if (bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
+		if (this.analysis.binaryMode === 'visualizer' || this.preset.waveMode === 'vumeter' || !frames || bFull) {
+			throttlePaint(bFull);
+		} else if (bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
