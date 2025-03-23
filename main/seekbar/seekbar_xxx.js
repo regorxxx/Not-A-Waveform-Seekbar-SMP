@@ -1,5 +1,5 @@
 'use strict';
-//22/03/25
+//23/03/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -218,6 +218,27 @@ function _seekbar({
 		else if (this.ui.wheel.step > 100 && this.ui.wheel.unit === '%') { this.ui.wheel.step = 100; }
 		this.preset.displayChannels.sort((a, b) => a - b);
 	};
+	/**
+	 * Updates all panel repaint functions to use refresh rate settings.
+	 *
+	 * @property
+	 * @name updateRepaintMethods
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {number} Refresh rate
+	*/
+	this.updateRepaintMethods = () => {
+		const timer = this.preset.bAnimate ? this.ui.refreshRate : 60;
+		throttlePaint = throttle(
+			(bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce),
+			timer
+		);
+		throttlePaintRect = throttle(
+			(x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce),
+			timer
+		);
+		return timer;
+	};
 	// Add default args
 	this.defaults();
 	/**
@@ -401,15 +422,16 @@ function _seekbar({
 	/** @type {Number[]} - Frames around current time to draw VU animation */
 	const framesVu = [];
 	/** @type {(bForce = false) => void} - Repaint entire window throttled */
-	let throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
+	let throttlePaint;
 	/** @type {(x:number, y:number, w:number, h:number, bForce = false) => void(0)} - Repaint part of window throttled */
-	let throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+	let throttlePaintRect;
 	/** @type {FbProfiler} - Used for profiling when this.bProfile is true */
 	const profilerPaint = new FbProfiler('paint');
 
-	// Check
+	// Check & Init
 	this.checkConfig();
 	if (!_isFolder(this.folder)) { _createFolder(this.folder); }
+	this.updateRepaintMethods();
 
 	/**
 	 * Updates all panel related settings. Use this instead of changing settings directly to ensure the UI and variables are updated properly.
@@ -440,12 +462,14 @@ function _seekbar({
 			if (Object.hasOwn(newConfig.preset, 'analysisMode')) {
 				bRecalculate = true;
 			}
+			if (Object.hasOwn(newConfig.preset, 'bAnimate')) {
+				this.updateRepaintMethods();
+			}
 		}
 		if (newConfig.ui) {
 			if (Object.hasOwn(newConfig.ui, 'refreshRate')) {
 				this.ui.refreshRateOpt = this.ui.refreshRate;
-				throttlePaint = throttle((bForce = false) => window.RepaintRect(this.x, this.y, this.w, this.h, bForce), this.ui.refreshRate);
-				throttlePaintRect = throttle((x, y, w, h, bForce = false) => window.RepaintRect(x, y, w, h, bForce), this.ui.refreshRate);
+				if (this.preset.bAnimate) { this.updateRepaintMethods(); }
 				this.maxStepVu = Math.max(1, 1000 / this.ui.refreshRate);
 			}
 			if (Object.hasOwn(newConfig.ui, 'bNormalizeWidth') || Object.hasOwn(newConfig.ui, 'normalizeWidth')) {
