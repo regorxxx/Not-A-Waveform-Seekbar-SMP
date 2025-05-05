@@ -1,5 +1,5 @@
 'use strict';
-//23/03/25
+//05/05/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -21,7 +21,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {{ffprobe: string?, audiowaveform: string?, visualizer: string?}} [o.binaries] - Paths to binaries. May be relative paths to profile folder (.//profile//) or foobar folder (.//), root will be replaced on execution.
  * @param {object} [o.preset] - Waveform display related settings.
  * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} [o.preset.waveMode] - [='waveform'] Waveform display design.
- * @param {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} [o.preset.analysisMode] - [='peak_level'] Data analysis mode (only available using ffprobe).
+ * @param {'rms_level'|'rms_peak'|'peak_level'} [o.preset.analysisMode] - [='peak_level'] Data analysis mode (only available using ffprobe).
  * @param {'full'|'partial'} [o.preset.paintMode] - [='full'] Displays entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link o.preset.bPrePaint}
  * @param {boolean} [o.preset.bPrePaint] - [=false] Displays the region after the current time. How many seconds are shown is set by {@link o.preset.futureSecs}
  * @param {boolean} [o.preset.bPaintCurrent] - [=true] Paint current time indicator.
@@ -291,7 +291,7 @@ function _seekbar({
 	/**
 	 * @typedef {object} Preset - Waveform display related settings.
 	 * @property {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} waveMode - Waveform design.
-	 * @property {'peak_level'|'rms_level'|'peak_level'|'harms_peaklfbars'} analysisMode - Data analysis mode (only available using ffprobe).
+	 * @property {'rms_level'|'rms_peak'|'peak_level'} analysisMode - Data analysis mode (only available using ffprobe).
 	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
 	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
 	 * @property {boolean} bPaintCurrent - Flag to paint current time indicator.
@@ -408,7 +408,9 @@ function _seekbar({
 	/** @type {{paint: boolean, analysis: boolean}} - Used when this.analysis.bVisualizerFallbackAnalysis is true, to track current step on processing */
 	const bFallbackMode = { paint: false, analysis: false };
 	/** @type {{rms_level: { key:string, pos:number }, rms_peak: { key:string, pos:number }, peak_level: { key:string, pos:number }}} - Used with ffprobe binary to unpack analysis data */
-	const modes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 } };
+	const ffprobeModes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 } };
+	/** @type {number} - Used with ffprobe binary, analysis data length (+ time)*/
+	const ffprobeDataLen =  Object.keys(ffprobeModes).length;
 	/** @type {{ffprobeList: string[], audiowaveformList: string[], ffprobe: RegExp, audiowaveform: RegExp}} - Helpers to check for compatible files for different binaries */
 	const compatibleFiles = {
 		ffprobeList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv'],
@@ -735,7 +737,7 @@ function _seekbar({
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				for (let c = 0; c < this.channels; c++) {
 					// Calculate max values
-					const pos = modes[this.preset.analysisMode].pos;
+					const pos = ffprobeModes[this.preset.analysisMode].pos;
 					let max = 0;
 					this.current[c].forEach((frame) => {
 						// After parsing JSON, restore infinity values
@@ -745,32 +747,35 @@ function _seekbar({
 					});
 					// Calculate point scale
 					let maxVal = 1;
+					const lastIdx = ffprobeDataLen + 1; // + Time
+					const maxLen = lastIdx + 1;
 					if (this.preset.analysisMode !== 'rms_level') {
 						this.current[c].forEach((frame) => {
-							if (frame.length === 5) { frame.length = 4; }
+							if (frame.length === maxLen) { frame.length = lastIdx; }
 							frame.push(
 								isFinite(frame[pos])
 									? 1 - Math.abs(Math.pow(2, frame[pos] / 10) * (1 - Math.log2(10)))
+									// ? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max)))
 									: 1
 							);
-							if (!isFinite(frame[4])) { frame[4] = 0; }
-							maxVal = Math.min(maxVal, frame[4]);
+							if (!isFinite(frame[lastIdx])) { frame[lastIdx] = 0; }
+							maxVal = Math.min(maxVal, frame[lastIdx]);
 						});
 					} else {
 						this.current[c].forEach((frame) => {
 							frame.push(isFinite(frame[pos]) ? 1 - Math.abs((frame[pos] - max) / max) : 1);
-							maxVal = Math.min(maxVal, frame[4]);
+							maxVal = Math.min(maxVal, frame[lastIdx]);
 						});
 					}
 					// Normalize
 					if (maxVal !== 0) {
 						const limit = round(1 + maxVal, 3);
 						this.current[c].forEach((frame) => {
-							if (frame[4] <= limit) { frame[4] = round(frame[4] - maxVal, 3); }
+							if (frame[lastIdx] <= limit) { frame[lastIdx] = round(frame[lastIdx] - maxVal, 3); }
 						});
 					}
 					// Flat data
-					this.current[c] = this.current[c].map((x, i) => Math.sign((0.5 - i % 2)) * (1 - x[4]));
+					this.current[c] = this.current[c].map((x, i) => Math.sign((0.5 - i % 2)) * (1 - x[lastIdx]));
 					// Calculate max values
 					this.current[c].forEach((frame) => {
 						upper[c] = Math.max(upper[c], frame);
@@ -907,12 +912,26 @@ function _seekbar({
 		this.frames = this.current[0].length;
 		const monoData = [];
 		const channelsNum = this.getDisplayChannels(false).length;
-		for (let i = 0; i < this.frames; i++) {
-			let frame = 0;
-			for (let c = 0; c < channelsNum; c++) {
-				frame += this.current[c][i];
+		if (this.analysis.binaryMode === 'ffprobe') {
+			const defFrame = Array(ffprobeDataLen + 1).fill(0); // + Time
+			for (let i = 0; i < this.frames; i++) {
+				const frame = [...defFrame];
+				for (let c = 0; c < channelsNum; c++) {
+					frame[0] = this.current[c][i][0]; // Time
+					for (let mode = 1; mode <= ffprobeDataLen; mode++) {
+						frame[mode] += this.current[c][i][mode];
+					}
+				}
+				monoData.push(frame.map((v) => v / channelsNum));
 			}
-			monoData.push(frame / channelsNum);
+		} else {
+			for (let i = 0; i < this.frames; i++) {
+				let frame = 0;
+				for (let c = 0; c < channelsNum; c++) {
+					frame += this.current[c][i];
+				}
+				monoData.push(frame / channelsNum);
+			}
 		}
 		this.channels = 1;
 		this.current = [monoData];
@@ -934,9 +953,11 @@ function _seekbar({
 		if ((new Set(this.current.map((channel) => channel.length))).size > 1) { return false; }
 		switch (this.analysis.binaryMode) {
 			case 'ffprobe': {
+				const lastIdx = ffprobeDataLen + 1; // + Time
+				const maxLen = lastIdx + 1;
 				return this.current.every((channel) => channel.every((frame) => {
 					const len = Object.hasOwn(frame, 'length') ? frame.length : null;
-					return (len === 4 || len === 5);
+					return (len === lastIdx || len === maxLen);
 				}));
 			}
 			case 'audiowaveform': { // NOSONAR
@@ -1862,6 +1883,7 @@ function _seekbar({
 	 * @returns {{seekbarFolder: string, seekbarFile: string, sourceFile: string}} Track data folder, track data filename and track source path
 	*/
 	this.getPaths = (handle) => {
+		if (!handle) {return {seekbarFolder: '', seekbarFile: '', sourceFile: ''}; }
 		const id = sanitizePath(this.Tf.EvalWithMetadb(handle)); // Ensure paths are valid!
 		const fileName = id.split('\\').pop();
 		const seekbarFolder = this.folder + id.replace(fileName, '');
@@ -1967,7 +1989,7 @@ function _seekbar({
 					const processedData = Array.from({ length: channels }, () => []);
 					if (this.analysis.bMultiChannel) {
 						for (let i = 1; i <= channels; i++) {
-							frames.forEach((frame) => {
+							data.forEach((frame) => {
 								processedData[i - 1].push(this.processFfmpegFrame(frame, i));
 							});
 						}
