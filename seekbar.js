@@ -78,7 +78,7 @@ let seekbarProperties = {
 				bgFuture: 15,
 				mainFuture: 75,
 				altFuture: 75,
-				currPos: 100
+				currPos: 50
 			},
 			refreshRate: 200,
 			bVariableRefreshRate: true,
