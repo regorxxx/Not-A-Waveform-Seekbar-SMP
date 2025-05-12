@@ -64,7 +64,8 @@ function createSeekbarMenu(bClear = true) {
 					fb.ShowPopupMessage(this.reportCompatibleFileExtension().join(', '), 'Seekbar: ' + this.analysis.binaryMode);
 				}
 			});
-			if (!this.isCompatibleFileExtension(fb.GetNowPlaying() || fb.GetFocusItem())) {
+			const handle = fb.GetNowPlaying() || fb.GetFocusItem();
+			if (handle && !this.isCompatibleFileExtension(handle)) {
 				menu.addTipLast('(incompatible file)');
 			}
 		}
