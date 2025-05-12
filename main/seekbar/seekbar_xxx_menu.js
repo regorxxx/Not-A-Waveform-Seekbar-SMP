@@ -660,6 +660,17 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => this.ui.bVariableRefreshRate);
+	}
+	menu.newSeparator();
+	{
+		const subMenu = menu.newMenu('Updates');
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Check for updates...', func: () => {
+				if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
+				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar'));
+			}
+		});
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Automatically check for updates', func: () => {
@@ -673,14 +684,6 @@ function createSeekbarMenu(bClear = true) {
 		});
 		menu.newCheckMenuLast(() => seekbarProperties.bAutoUpdateCheck[1]);
 	}
-	menu.newSeparator();
-	menu.newEntry({
-		entryText: 'Check for updates...', func: () => {
-			if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
-			checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-				.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar'));
-		}
-	});
 	menu.newSeparator();
 	{
 		const handle = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem(false);
