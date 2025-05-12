@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/03/25
+//12/05/25
 
 /* exported createSeekbarMenu */
 
@@ -552,6 +552,7 @@ function createSeekbarMenu(bClear = true) {
 				{ name: 'Wav. Int. (unplayed)', bPrepaint: true, key: 'altFuture' },
 				{ name: 'Bg. full panel', bPrepaint: false, key: 'bg' },
 				{ name: 'Bg. (unplayed)', bPartial: true, key: 'bgFuture' },
+				{ name: 'Current position', bPartial: false, key: 'currPos' },
 			].forEach((o) => {
 				if (menu.isSeparator(o)) {
 					menu.newEntry({ menuName: subMenuTwo, entryText: o.name, flags: MF_GRAYED });

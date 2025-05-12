@@ -54,6 +54,7 @@
 - Update audiowaveform binaries to 1.10.1.
 ### Removed
 ### Fixed
+- UI: missing transparency setting for current position.
 - UI: '&' being displayed as '_' on tooltips.
 - UI: wrong position on second background gradient using bigradient mode.
 - UI: long time bug in some cases where the current position was not properly painted (in width).
