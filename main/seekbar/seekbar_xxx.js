@@ -89,13 +89,13 @@ function _seekbar({
 			currPos: 0xFFFFFFFF // White RGB(255,255,255)
 		},
 		transparency: {
-			bg: 100,
-			main: 100,
-			alt: 100,
-			bgFuture: 100,
-			mainFuture: 100,
-			altFuture: 100,
-			currPos: 100
+			bg: 30,
+			main: 75,
+			alt: 75,
+			bgFuture: 15,
+			mainFuture: 75,
+			altFuture: 75,
+			currPos: 50
 		},
 		pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30 },
 		wheel: {
