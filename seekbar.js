@@ -1,16 +1,18 @@
 'use strict';
-//21/03/25
+//14/05/25
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '2.6.0' }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable */
+/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable */
+include('helpers\\helpers_xxx_flags.js');
+/* global VK_LWIN:readable */
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable */
 include('helpers\\helpers_xxx_file.js');
-/* global _open:readable, utf8:readable */
+/* global _open:readable, utf8:readable, WshShell:readable, _save:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable */
+/* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_properties.js');
@@ -20,7 +22,7 @@ include('helpers\\menu_xxx.js');
 include('main\\seekbar\\seekbar_xxx.js');
 /* global _seekbar:readable */
 include('main\\seekbar\\seekbar_xxx_menu.js');
-/* global createSeekbarMenu:readable */
+/* global settingsMenu:readable, importSettingsMenu:readable, Input:readable */
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
@@ -163,7 +165,7 @@ const seekbar = new _seekbar({
 	callbacks: { backgroundColor: () => background.getColors()[0] }
 });
 if (!seekbarProperties.bEnabled[1]) { seekbar.switch(); }
-_menu.bindInstance(seekbar, createSeekbarMenu);
+_menu.bindInstance(seekbar, settingsMenu);
 
 // Helpers
 seekbar.saveProperties = function () {
@@ -175,6 +177,54 @@ seekbar.saveProperties = function () {
 	}
 	overwriteProperties(seekbarProperties);
 };
+
+seekbar.shareUiSettings = (function (mode = 'popup') {
+	const settings = Object.fromEntries(
+		['preset', 'ui', 'background', 'bDynamicColors']
+			.map((key) => [key, clone(seekbarProperties[key].slice(0, 2))])
+	);
+	switch (mode.toLowerCase()) {
+		case 'popup': {
+			const keys = ['Colors', 'Preset', 'Background'];
+			const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, window.Name, popup.question + popup.yes_no);
+			if (answer === popup.yes) {
+				window.NotifyOthers('Seekbar: share UI settings', settings);
+				return true;
+			}
+			return false;
+		}
+		case 'path': {
+			const input = Input.string('file', folders.data + 'ui_settings_' + window.Name + '.json', 'File name name:', 'Seekbar: export UI settings', folders.data + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+			if (input === null) { return null; }
+			return _save(input, JSON.stringify(settings, null, '\t').replace(/\n/g, '\r\n'))
+				? input
+				: null;
+		}
+		default:
+			return settings;
+	}
+}).bind(seekbar);
+
+seekbar.applyUiSettings = (function (settings, bForce) {
+	const answer = bForce
+		? popup.yes
+		: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.Name + ': Seekbar', popup.question + popup.yes_no);
+	if (answer === popup.yes) {
+		['bDynamicColors'].forEach((key) => {
+			seekbarProperties[key][1] = !!settings[key][1];
+			if (Object.hasOwn(this, key)) { this[key] = seekbarProperties[key][1]; }
+		});
+		['preset', 'ui', 'background'].forEach((key) => {
+			seekbarProperties[key][1] = String(settings[key][1]);
+		});
+		background.changeConfig({ config: JSON.parse(seekbarProperties.background[1]), bRepaint: true });
+		this.updateConfig({ preset: JSON.parse(seekbarProperties.preset[1]), ui: JSON.parse(seekbarProperties.ui[1]) });
+		// Save
+		overwriteProperties(seekbarProperties);
+		window.Repaint();
+	}
+}).bind(seekbar);
+
 
 globProfiler.Print('seekbar');
 
@@ -274,6 +324,9 @@ addEventListener('on_script_unload', () => {
 });
 
 addEventListener('on_mouse_rbtn_up', (x, y) => {
+	if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
+		return importSettingsMenu.call(seekbar).btn_up(x, y);
+	}
 	seekbar.rbtn_up(x, y);
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
 });
@@ -284,6 +337,13 @@ addEventListener('on_mouse_wheel', (step) => {
 
 addEventListener('on_mouse_wheel_h', (step) => {
 	seekbar.wheel(step);
+});
+
+addEventListener('on_notify_data', (name, info) => {
+	if (name === 'bio_imgChange' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
+	if (name === 'Seekbar: share UI settings') {
+		if (info) { seekbar.applyUiSettings(clone(info)); }
+	}
 });
 
 if (fb.IsPlaying) { window.Repaint(); setTimeout(() => { on_playback_new_track(fb.GetNowPlaying()); seekbar.updateTime(fb.PlaybackTime); }, 0); }

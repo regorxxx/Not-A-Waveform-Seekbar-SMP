@@ -1,14 +1,18 @@
 ﻿'use strict';
-//12/05/25
+//14/05/25
 
-/* exported createSeekbarMenu */
+/* exported settingsMenu, importSettingsMenu */
 
-/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, _isFolder:readable, _explorer:readable, background:readable, folders:readable */
+/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable */
 
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _open:readable, utf8:readable */
+/* global _open:readable, utf8:readable, WshShell:readable, popup:readable, _save:readable, _deleteFolder:readable, _deleteFile:readable, _isFolder:readable, _explorer:readable, _copyFolder:readable */
+include('..\\..\\helpers\\helpers_xxx_file_zip.js');
+/* global _zip:readable, _unzip:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
+include('..\\..\\helpers\\helpers_xxx_properties.js');
+/* global overwriteProperties:readable */
 include('..\\window\\window_xxx_background_menu.js');
 /* global _menu:readable, createBackgroundMenu:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
@@ -16,7 +20,7 @@ include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma.min'); // Relative to helpers folder
 
 // Generic menu for config
-function createSeekbarMenu(bClear = true) {
+function settingsMenu(bClear = true) {
 	if (!this.menu) { this.menu = new _menu(); }
 	const menu = this.menu;
 	if (bClear) { menu.clear(true); } // Reset on every call
@@ -669,7 +673,7 @@ function createSeekbarMenu(bClear = true) {
 			menuName: subMenu, entryText: 'Check for updates...', func: () => {
 				if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar'));
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar: Update check'));
 			}
 		});
 		menu.newSeparator(subMenu);
@@ -706,5 +710,106 @@ function createSeekbarMenu(bClear = true) {
 			}
 		});
 	}
+	return menu;
+}
+
+function importSettingsMenu() {
+	const menu = new _menu();
+	menu.newEntry({ entryText: 'Panel menu: ' + window.Name, flags: MF_GRAYED });
+	menu.newSeparator();
+	menu.newEntry({
+		entryText: 'Export panel settings...', func: () => {
+			const bData = WshShell.Popup('Also export track\'s analysis data files?', 0, 'Seekbar: Export panel settings', popup.question + popup.yes_no);
+			const input = Input.string('file', folders.data + 'settings_' + window.Name.replace(/\s/g, '_') + (bData ? '_' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip' : '.json'), 'File name:', 'Seekbar: Export panel settings', folders.data + 'settings' + (bData ? '.zip' : '.json'), void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+			if (input === null) { return null; }
+			const settings = JSON.stringify(
+				seekbarProperties,
+				(key, val) => {
+					if (Array.isArray(val)) {
+						val.length = 2;
+					}
+					return val;
+				},
+				'\t'
+			).replace(/\n/g, '\r\n');
+			let bDone;
+			if (bData) {
+				bDone = _save(folders.temp + 'settings.json', settings);
+				if (bDone) {
+					_zip(
+						[folders.temp + 'settings.json', fb.ProfilePath + 'js_data\\seekbar\\'],
+						input,
+						false,
+						fb.ProfilePath + 'js_data\\'
+					);
+					bDone = _isFile(input);
+				}
+			} else if (_save(input, settings)) { bDone = true; }
+			if (bDone) {
+				console.log('Seekbar: exported panel settings to\n\t ' + input);
+				_explorer(input);
+			} else {
+				console.popup('Seekbar: failed exporting panel settings.', window.Name);
+			}
+		}
+	});
+	menu.newEntry({
+		entryText: 'Import panel settings...', func: () => {
+			const input = Input.string('file', '', 'File name:\n\nPanel settings must be provided in a .json file, if including also database files provide a .zip file instead.\n\nNote existing track\'s analysis data will nuked and overwritten.', 'Seekbar: import settings', 'C:\\foobar2000\\profile\\js_data\\settings_World_Map_2025-05-09T11_06_50.zip', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+			if (input === null) { return null; }
+			let bDone;
+			if (/\.zip$/i.test(input)) {
+				_deleteFolder(folders.temp + 'import\\');
+				_unzip(input, folders.temp + 'import\\');
+				if (_isFile(folders.temp + 'import\\settings.json')) {
+					const settings = JSON.parse(
+						_open(folders.temp + 'import\\settings.json', utf8),
+						(key, val) => {
+							return val === null
+								? Infinity
+								: val;
+						}
+					);
+					overwriteProperties(settings);
+					_deleteFile(folders.temp + 'import\\settings.json');
+					console.log('Seekbar: imported panel settings');
+				} else if (_isFolder(folders.temp + 'import\\seekbar\\')) {
+					console.log('Seekbar: no panel settings file found (settings.json)');
+					console.log('Seekbar: importing only track\'s analysis data files\n\t ' + folders.temp + 'import\\seekbar\\');
+				}
+				if (_isFolder(folders.temp + 'import\\seekbar\\')) {
+					_deleteFolder(fb.ProfilePath + 'js_data\\seekbar\\');
+					bDone = _copyFolder(folders.temp + 'import\\seekbar\\*', fb.ProfilePath + 'js_data\\seekbar\\');
+					_deleteFolder(folders.temp + 'import\\');
+					if (bDone) {
+						console.log('Seekbar: imported track\'s analysis data files');
+						console.log('Seekbar: imported panel settings + track\'s analysis data from\n\t ' + input);
+					}
+				} else {
+					_deleteFolder(folders.temp + 'import\\');
+					console.log('Seekbar: imported panel settings from\n\t ' + input);
+				}
+			} else {
+				const settings = JSON.parse(
+					_open(input, utf8),
+					(key, val) => {
+						return val === null
+							? Infinity
+							: val;
+					}
+				);
+				overwriteProperties(settings);
+				if (bDone) { console.log('Seekbar: imported panel settings from\n\t ' + input); }
+			}
+			console.log('Seekbar: reloading panel...');
+			window.Reload();
+		}
+	});
+	menu.newSeparator();
+	menu.newEntry({
+		entryText: 'Share UI settings...', func: () => {
+			this.shareUiSettings('popup');
+		}
+	});
 	return menu;
 }
