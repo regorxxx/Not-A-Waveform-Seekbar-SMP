@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/01/25
+//13/05/25
 
 /* exported dynamicColors */
 
@@ -25,6 +25,7 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 		: blendColors(main, tint, 0.5);
 	let sec = colorScheme.filter((c) => c !== main && c !== tint)
 		.sort((a, b) => Chroma.contrast(b, note) - Chroma.contrast(a, note))[0];
+	if (typeof sec === 'undefined') { sec = blendColors(tint, note, 0.5); }
 	if (bAdvanced) {
 		let cMain = Chroma(main);
 		let cSec = Chroma(sec);
@@ -65,6 +66,5 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 		note,
 		mainAlt: blendColors(main, Chroma.contrast(note, bgColor) > 2 ? note : bgColor, 0.5),
 		secAlt: blendColors(sec, Chroma.contrast(note, bgColor) > 2 ? note : bgColor, 0.5),
-
 	};
 }
