@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//20/05/25
 
 /* exported _background */
 
@@ -24,19 +24,24 @@ function _background({
 	/* eslint-enable no-unused-vars */
 } = {}) {
 
-	this.defaults = () => {
+	this.defaults = (bPosition = false, bCallbacks = false) => {
 		return {
-			x: 0, y: 0, w: window.Width, h: window.Height,
+			...(bPosition ? { x: 0, y: 0, w: window.Width, h: window.Height } : {}),
 			offsetH: _scale(1),
 			timer: 60,
 			coverMode: 'none', // none | front | back | disc | icon | artist | path
 			coverModeOptions: { blur: 50, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true },
 			colorMode: 'none', // none | single | gradient | bigradient
 			colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [] },
-			callbacks: {
-				change: null, /* (config, arguments, callbackArgs) => void(0) */
-				artColors: null /* (colArray) => void(0) */
-			},
+			...(bCallbacks
+				? {
+					callbacks: {
+						change: null, /* (config, arguments, callbackArgs) => void(0) */
+						artColors: null /* (colArray) => void(0) */
+					}
+				}
+				: {}
+			)
 		};
 	};
 

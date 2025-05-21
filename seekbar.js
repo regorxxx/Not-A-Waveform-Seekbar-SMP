@@ -1,5 +1,5 @@
 'use strict';
-//14/05/25
+//20/05/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -120,6 +120,7 @@ seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 */
 const background = new _background({
 	...JSON.parse(seekbarProperties.background[1]),
+	x: 0, y: 0, w: window.Width, h: window.Height,
 	callbacks: {
 		change: function (config, changeArgs, callbackArgs) {
 			if (callbackArgs && callbackArgs.bSaveProperties) {
@@ -178,7 +179,7 @@ seekbar.saveProperties = function () {
 	overwriteProperties(seekbarProperties);
 };
 
-seekbar.shareUiSettings = (function (mode = 'popup') {
+seekbar.shareUiSettings = function (mode = 'popup') {
 	const settings = Object.fromEntries(
 		['preset', 'ui', 'background', 'bDynamicColors']
 			.map((key) => [key, clone(seekbarProperties[key].slice(0, 2))])
@@ -186,7 +187,7 @@ seekbar.shareUiSettings = (function (mode = 'popup') {
 	switch (mode.toLowerCase()) {
 		case 'popup': {
 			const keys = ['Colors', 'Preset', 'Background'];
-			const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, window.Name, popup.question + popup.yes_no);
+			const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, 'Seekbar: share UI settings', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
 				window.NotifyOthers('Seekbar: share UI settings', settings);
 				return true;
@@ -203,27 +204,31 @@ seekbar.shareUiSettings = (function (mode = 'popup') {
 		default:
 			return settings;
 	}
-}).bind(seekbar);
+};
 
-seekbar.applyUiSettings = (function (settings, bForce) {
+seekbar.applyUiSettings = function (settings, bForce) {
+	window.highlight = true;
+	window.Repaint();
 	const answer = bForce
 		? popup.yes
 		: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.Name + ': Seekbar', popup.question + popup.yes_no);
 	if (answer === popup.yes) {
+		const newBg = JSON.parse(String(settings.background[1]));
+		['x', 'y', 'w', 'h', 'callbacks'].forEach((key) => delete newBg[key]);
 		['bDynamicColors'].forEach((key) => {
 			seekbarProperties[key][1] = !!settings[key][1];
 			if (Object.hasOwn(this, key)) { this[key] = seekbarProperties[key][1]; }
 		});
-		['preset', 'ui', 'background'].forEach((key) => {
+		['preset', 'ui'].forEach((key) => {
 			seekbarProperties[key][1] = String(settings[key][1]);
 		});
-		background.changeConfig({ config: JSON.parse(seekbarProperties.background[1]), bRepaint: true });
+		background.changeConfig({ config: newBg, bRepaint: false, callbackArgs: { bSaveProperties: true } });
 		this.updateConfig({ preset: JSON.parse(seekbarProperties.preset[1]), ui: JSON.parse(seekbarProperties.ui[1]) });
-		// Save
-		overwriteProperties(seekbarProperties);
-		window.Repaint();
+		this.saveProperties();
 	}
-}).bind(seekbar);
+	window.highlight = false;
+	window.Repaint();
+};
 
 
 globProfiler.Print('seekbar');
@@ -308,6 +313,7 @@ addEventListener('on_paint', (gr) => {
 		background.paint(gr);
 	}
 	seekbar.paint(gr);
+	if (window.highlight) { extendGR(gr, { Highlight: true }); }
 	if (window.debugPainting) { window.drawDebugRectAreas(gr); }
 });
 

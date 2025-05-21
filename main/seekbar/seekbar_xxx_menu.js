@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/25
+//20/05/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -594,6 +594,12 @@ function settingsMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => seekbarProperties.bDynamicColors[1]);
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Share UI settings...', func: () => {
+				this.shareUiSettings('popup');
+			}
+		});
 	}
 	{ // NOSONAR [menu block]
 		createBackgroundMenu.call(
@@ -799,7 +805,7 @@ function importSettingsMenu() {
 					}
 				);
 				overwriteProperties(settings);
-				if (bDone) { console.log('Seekbar: imported panel settings from\n\t ' + input); }
+				console.log('Seekbar: imported panel settings from\n\t ' + input);
 			}
 			console.log('Seekbar: reloading panel...');
 			window.Reload();
