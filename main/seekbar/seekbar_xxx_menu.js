@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/25
+//02/06/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -743,10 +743,10 @@ function importSettingsMenu() {
 				bDone = _save(folders.temp + 'settings.json', settings);
 				if (bDone) {
 					_zip(
-						[folders.temp + 'settings.json', fb.ProfilePath + 'js_data\\seekbar\\'],
+						[folders.temp + 'settings.json', folders.data + 'seekbar\\'],
 						input,
 						false,
-						fb.ProfilePath + 'js_data\\'
+						folders.data
 					);
 					bDone = _isFile(input);
 				}
@@ -784,8 +784,8 @@ function importSettingsMenu() {
 					console.log('Seekbar: importing only track\'s analysis data files\n\t ' + folders.temp + 'import\\seekbar\\');
 				}
 				if (_isFolder(folders.temp + 'import\\seekbar\\')) {
-					_deleteFolder(fb.ProfilePath + 'js_data\\seekbar\\');
-					bDone = _copyFolder(folders.temp + 'import\\seekbar\\*', fb.ProfilePath + 'js_data\\seekbar\\');
+					_deleteFolder(folders.data + 'seekbar\\');
+					bDone = _copyFolder(folders.temp + 'import\\seekbar\\*', folders.data + 'seekbar\\');
 					_deleteFolder(folders.temp + 'import\\');
 					if (bDone) {
 						console.log('Seekbar: imported track\'s analysis data files');
