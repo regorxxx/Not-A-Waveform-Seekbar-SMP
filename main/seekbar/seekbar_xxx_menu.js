@@ -674,14 +674,6 @@ function settingsMenu(bClear = true) {
 	{
 		const subMenu = menu.newMenu('Updates');
 		menu.newEntry({
-			menuName: subMenu, entryText: 'Check for updates...', func: () => {
-				if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
-				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar: Update check'));
-			}
-		});
-		menu.newSeparator(subMenu);
-		menu.newEntry({
 			menuName: subMenu, entryText: 'Automatically check for updates', func: () => {
 				seekbarProperties.bAutoUpdateCheck[1] = !seekbarProperties.bAutoUpdateCheck[1];
 				this.saveProperties();
@@ -692,6 +684,14 @@ function settingsMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => seekbarProperties.bAutoUpdateCheck[1]);
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Check for updates...', func: () => {
+				if (typeof checkUpdate === 'undefined') { include('helpers\\helpers_xxx_web_update.js'); }
+				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar: Update check'));
+			}
+		});
 	}
 	menu.newSeparator();
 	{
