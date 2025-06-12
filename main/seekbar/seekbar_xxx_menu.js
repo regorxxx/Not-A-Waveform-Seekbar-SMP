@@ -1,18 +1,16 @@
 ﻿'use strict';
-//02/06/25
+//12/06/25
 
 /* exported settingsMenu, importSettingsMenu */
 
 /* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable */
 
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _open:readable, utf8:readable, WshShell:readable, popup:readable, _save:readable, _deleteFolder:readable, _deleteFile:readable, _isFolder:readable, _explorer:readable, _copyFolder:readable */
-include('..\\..\\helpers\\helpers_xxx_file_zip.js');
-/* global _zip:readable, _unzip:readable */
+/* global _open:readable, utf8:readable, WshShell:readable, popup:readable, _deleteFolder:readable, _isFolder:readable, _explorer:readable, _renameFolder:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
-include('..\\..\\helpers\\helpers_xxx_properties.js');
-/* global overwriteProperties:readable */
+include('..\\..\\helpers\\helpers_xxx_export.js');
+/* global exportSettings:readable, importSettings:readable */
 include('..\\window\\window_xxx_background_menu.js');
 /* global _menu:readable, createBackgroundMenu:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
@@ -726,89 +724,42 @@ function importSettingsMenu() {
 	menu.newEntry({
 		entryText: 'Export panel settings...', func: () => {
 			const bData = WshShell.Popup('Also export track\'s analysis data files?', 0, 'Seekbar: Export panel settings', popup.question + popup.yes_no);
-			const input = Input.string('file', folders.data + 'settings_' + window.Name.replace(/\s/g, '_') + (bData ? '_' + new Date().toISOString().split('.')[0].replace(/[ :,]/g, '_') + '.zip' : '.json'), 'File name:', 'Seekbar: Export panel settings', folders.data + 'settings' + (bData ? '.zip' : '.json'), void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
-			if (input === null) { return null; }
-			const settings = JSON.stringify(
+			exportSettings(
 				seekbarProperties,
-				(key, val) => {
-					if (Array.isArray(val)) {
-						val.length = 2;
-					}
-					return val;
-				},
-				'\t'
-			).replace(/\n/g, '\r\n');
-			let bDone;
-			if (bData) {
-				bDone = _save(folders.temp + 'settings.json', settings);
-				if (bDone) {
-					_zip(
-						[folders.temp + 'settings.json', folders.data + 'seekbar\\'],
-						input,
-						false,
-						folders.data
-					);
-					bDone = _isFile(input);
-				}
-			} else if (_save(input, settings)) { bDone = true; }
-			if (bDone) {
-				console.log('Seekbar: exported panel settings to\n\t ' + input);
-				_explorer(input);
-			} else {
-				console.popup('Seekbar: failed exporting panel settings.', window.Name);
-			}
+				bData
+					? [folders.temp + 'settings.json', folders.data + 'seekbar\\']
+					: [],
+				'Seekbar'
+			);
 		}
 	});
 	menu.newEntry({
 		entryText: 'Import panel settings...', func: () => {
-			const input = Input.string('file', '', 'File name:\n\nPanel settings must be provided in a .json file, if including also database files provide a .zip file instead.\n\nNote existing track\'s analysis data will nuked and overwritten.', 'Seekbar: import settings', 'C:\\foobar2000\\profile\\js_data\\settings_World_Map_2025-05-09T11_06_50.zip', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
-			if (input === null) { return null; }
-			let bDone;
-			if (/\.zip$/i.test(input)) {
-				_deleteFolder(folders.temp + 'import\\');
-				_unzip(input, folders.temp + 'import\\');
-				if (_isFile(folders.temp + 'import\\settings.json')) {
-					const settings = JSON.parse(
-						_open(folders.temp + 'import\\settings.json', utf8),
-						(key, val) => {
-							return val === null
-								? Infinity
-								: val;
+			importSettings(
+				{
+					onUnzipData: (importPath, panelName) => { // eslint-disable-line no-unused-vars
+						if (_isFolder(importPath + 'seekbar')) {
+							const seekbarData = folders.data + 'seekbar\\';
+							let bDone = _renameFolder(seekbarData.replace(/\\$/gi, ''), importPath + 'back\\');
+							if (bDone) {
+								bDone = _renameFolder(importPath + 'seekbar', folders.data);
+								if (bDone) {
+									_deleteFolder(importPath + 'back\\seekbar');
+									console.log(panelName + ': imported track\'s analysis data files.');
+								} else {
+									if (_isFolder(seekbarData)) { _deleteFolder(seekbarData); }
+									_renameFolder(importPath + 'back\\seekbar', folders.data);
+									console.popup(panelName + ': failed importing track\'s analysis data files.', window.Name);
+								}
+							} else { console.popup(panelName + ': failed importing track\'s analysis data files.', window.Name); }
+							return bDone;
 						}
-					);
-					overwriteProperties(settings);
-					_deleteFile(folders.temp + 'import\\settings.json');
-					console.log('Seekbar: imported panel settings');
-				} else if (_isFolder(folders.temp + 'import\\seekbar\\')) {
-					console.log('Seekbar: no panel settings file found (settings.json)');
-					console.log('Seekbar: importing only track\'s analysis data files\n\t ' + folders.temp + 'import\\seekbar\\');
-				}
-				if (_isFolder(folders.temp + 'import\\seekbar\\')) {
-					_deleteFolder(folders.data + 'seekbar\\');
-					bDone = _copyFolder(folders.temp + 'import\\seekbar\\*', folders.data + 'seekbar\\');
-					_deleteFolder(folders.temp + 'import\\');
-					if (bDone) {
-						console.log('Seekbar: imported track\'s analysis data files');
-						console.log('Seekbar: imported panel settings + track\'s analysis data from\n\t ' + input);
+						return true;
 					}
-				} else {
-					_deleteFolder(folders.temp + 'import\\');
-					console.log('Seekbar: imported panel settings from\n\t ' + input);
-				}
-			} else {
-				const settings = JSON.parse(
-					_open(input, utf8),
-					(key, val) => {
-						return val === null
-							? Infinity
-							: val;
-					}
-				);
-				overwriteProperties(settings);
-				console.log('Seekbar: imported panel settings from\n\t ' + input);
-			}
-			console.log('Seekbar: reloading panel...');
-			window.Reload();
+				},
+				seekbarProperties,
+				'Seekbar'
+			);
 		}
 	});
 	menu.newSeparator();
