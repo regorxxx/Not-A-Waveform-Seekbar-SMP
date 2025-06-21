@@ -494,7 +494,7 @@ function _seekbar({
 		}
 		// Recalculate data points or repaint
 		if (bRecalculate) { this.newTrack(void (0), void (0), true); }
-		else { throttlePaint(); }
+		else if (window.IsVisible) { throttlePaint(); }
 	};
 	/**
 	 * Retrieves JSON-compatible panel settings
@@ -782,7 +782,7 @@ function _seekbar({
 					// Update time if needed
 					if (this.isTrackPlaying()) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 				}
-				throttlePaint(true);
+				if (window.IsVisible) { throttlePaint(true); }
 				if (this.analysis.bVisualizerFallbackAnalysis) { bFallbackMode.analysis = false; }
 				await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
 				if (this.currentHandle && !handle.Compare(this.currentHandle)) { return; }
@@ -804,7 +804,7 @@ function _seekbar({
 		// Update time if needed
 		if (this.isTrackPlaying()) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 		// And paint
-		throttlePaint();
+		if (window.IsVisible) { throttlePaint(); }
 	};
 	/**
 	 * Normalize data to have amplitudes between [0, 1]. Alternatively, it may also normalize quantity of points according to panel width.
@@ -1253,6 +1253,7 @@ function _seekbar({
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') { return; }
 		} else { this.cache = this.current; }
+		if (!window.IsVisible) { return; }
 		// Repaint by zone when possible
 		const frames = this.frames;
 		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
@@ -1328,10 +1329,10 @@ function _seekbar({
 	this.stop = (reason = -1) => {
 		if (reason !== -1 && !this.active) { return; }
 		if (reason !== -1 && this.getPreferredTrackMode() === 'selected') {
-			throttlePaint();
+			if (window.IsVisible) { throttlePaint(); }
 		} else {
 			this.reset();
-			if (reason !== 2) { throttlePaint(); }
+			if (reason !== 2 && window.IsVisible) { throttlePaint(); }
 		}
 	};
 	/**
@@ -1346,6 +1347,7 @@ function _seekbar({
 	*/
 	this.pause = (state) => {
 		if (!state) { this.resetAnimation(); }
+		if (!window.IsVisible) { return; }
 		throttlePaint(true);
 	};
 	/**
@@ -1868,7 +1870,7 @@ function _seekbar({
 						fb.Play();
 						setTimeout(() => {
 							fb.PlaybackTime = time;
-							throttlePaint(true);
+							if (window.IsVisible) { throttlePaint(true); }
 						}, 100);
 					} else {
 						const queue = plman.GetPlaybackQueueHandles();
@@ -1877,12 +1879,12 @@ function _seekbar({
 						fb.Play();
 						setTimeout(() => {
 							fb.PlaybackTime = time;
-							throttlePaint(true);
+							if (window.IsVisible) { throttlePaint(true); }
 						}, 100);
 					}
 				} else {
 					fb.PlaybackTime = time;
-					throttlePaint(true);
+					if (window.IsVisible) { throttlePaint(true); }
 				}
 				return true;
 			}
@@ -1915,7 +1917,7 @@ function _seekbar({
 				if (time < 0) { time = 0; }
 				else if (time > this.getHandleLength()) { time = this.getHandleLength(); }
 				fb.PlaybackTime = time;
-				throttlePaint(true);
+				if (window.IsVisible) { throttlePaint(true); }
 				return true;
 			}
 		}
@@ -2182,7 +2184,9 @@ function _seekbar({
 				else { profiler.Print('Visualizer.'); }
 			}
 			if (bPlayingSameHandle) {
-				if (this.current.length && this.current.some((channel) => channel.length)) { throttlePaint(); }
+				if (this.current.length && this.current.some((channel) => channel.length)) {
+					if (window.IsVisible) { throttlePaint(); }
+				}
 				else { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
 			}
 		}
