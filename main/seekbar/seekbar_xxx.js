@@ -1,5 +1,5 @@
 'use strict';
-//21/06/25
+//22/06/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -493,7 +493,7 @@ function _seekbar({
 			}
 		}
 		// Recalculate data points or repaint
-		if (bRecalculate) { this.newTrack(); }
+		if (bRecalculate) { this.newTrack(void (0), void (0), true); }
 		else { throttlePaint(); }
 	};
 	/**
@@ -574,7 +574,7 @@ function _seekbar({
 			window.Repaint();
 			setTimeout(() => {
 				const handle = this.getHandle();
-				this.newTrack(handle);
+				this.newTrack(handle, void (0), true);
 				if (this.isTrackPlaying()) { this.updateTime(fb.PlaybackTime); }
 			}, 0);
 		} else if (wasActive && !this.active) {
@@ -720,9 +720,9 @@ function _seekbar({
 	 * @param {boolean} [bIsRetry] - [=false] If false, will retry analysis a second time.
 	 * @returns {boolean} New state
 	*/
-	this.newTrack = async (handle = this.getHandle(), bIsRetry = false) => {
+	this.newTrack = async (handle = this.getHandle(), bIsRetry = false, bForce = false) => {
 		if (!this.active) { return; }
-		if (this.compareTrack(handle)) { return; }
+		if (this.compareTrack(handle) && !bForce) { return; }
 		this.reset();
 		if (handle) {
 			this.currentHandle = handle;
@@ -1124,7 +1124,7 @@ function _seekbar({
 			} else {
 				console.log('Seekbar: Analysis file not valid.' + (file ? ' Creating new one -> ' + file : ''));
 				file && _deleteFile(file);
-				this.newTrack(handle, true);
+				this.newTrack(handle, true, true);
 			}
 			return false;
 		}
