@@ -1484,7 +1484,7 @@ function _seekbar({
 							});
 							bPaintedVu = this.paintVuMeter(gr, offsetY, size, value, colors);
 							if (bPaintedVu) {
-								gr.DrawRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2), size, _scale(1) / 2, this.applyAlpha(colors.alt, 1));
+								gr.DrawRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2), size, _scale(1) / 2, this.applyAlpha(colors.alt, 0.6));
 							}
 						}
 					} else if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
