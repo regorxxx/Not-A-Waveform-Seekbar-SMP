@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/25
+//19/06/25
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings*/
 
@@ -132,8 +132,8 @@ function addGlobValues(type) {
 			globTags.artist = _t(globTags.artistRaw);
 			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 			globTags.sortPlayCount = '$sub(99999,' + _t(globTags.playCount) + ')';
-			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%FIRST_PLAYED%,%2003_FIRST_PLAYED%)';
-			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%LAST_PLAYED%,%2003_LAST_PLAYED%)';
+			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%2003_FIRST_PLAYED%,%FIRST_PLAYED%,99999)';
+			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%2003_LAST_PLAYED%,%LAST_PLAYED%,0)';
 			globTags.sortAdded = '$if3(%ADDED_ENHANCED%,%ADDED%,%2003_ADDED%)';
 			globTags.isLoved = '$ifequal(' + _t(globTags.feedback) + ',1,1$not(0),0)';
 			globTags.isHated = '$ifequal(' + _t(globTags.feedback) + ',-1,1$not(0),0)';
@@ -170,6 +170,8 @@ function addGlobValues(type) {
 				'|' + globTags.playCount;
 			globQuery.fav = '((' + globQuery.loved + ') OR (' + globQuery.ratingTop + '))';
 			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
+			globQuery.lastPlayedFunc = '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%LAST_PLAYED% PRESENT AND %LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#))';
+			globQuery.firstPlayedFunc = '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%FIRST_PLAYED% PRESENT AND %FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#))';
 			break;
 		case 'All':
 			addGlobValues('tags');
@@ -233,8 +235,8 @@ const globQuery = {
 	live: '(' + globTags.genre + ' IS live OR ' + globTags.style + ' IS live)',
 	hifi: globTags.style + ' IS hi-fi',
 	SACD: '(%_PATH% HAS .iso OR CODEC IS mlp OR CODEC IS dsd64 OR CODEC IS dst64)',
-	recent: '(%LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS OR %LAST_PLAYED% DURING LAST 4 WEEKS OR %2003_LAST_PLAYED% DURING LAST 4 WEEKS)',
-	added: '(%ADDED_ENHANCED% DURING LAST 4 WEEKS OR %ADDED% DURING LAST 4 WEEKS OR %2003_ADDED% DURING LAST 4 WEEKS)',
+	recent: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% DURING LAST 4 WEEKS) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% DURING LAST 4 WEEKS) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% DURING LAST 4 WEEKS))',
+	added: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% DURING LAST 4 WEEKS) OR (%2003_ADDED% PRESENT AND %2003_ADDED% DURING LAST 4 WEEKS) OR (%2003_ADDED% MISSING AND %ADDED% DURING LAST 4 WEEKS))',
 	loved: globTags.feedback + ' IS 1',
 	hated: globTags.feedback + ' IS -1'
 };
