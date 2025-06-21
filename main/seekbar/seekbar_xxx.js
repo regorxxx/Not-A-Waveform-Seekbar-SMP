@@ -1,5 +1,5 @@
 'use strict';
-//06/05/25
+//11/06/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -410,7 +410,7 @@ function _seekbar({
 	/** @type {{rms_level: { key:string, pos:number }, rms_peak: { key:string, pos:number }, peak_level: { key:string, pos:number }}} - Used with ffprobe binary to unpack analysis data */
 	const ffprobeModes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 } };
 	/** @type {number} - Used with ffprobe binary, analysis data length (+ time)*/
-	const ffprobeDataLen =  Object.keys(ffprobeModes).length;
+	const ffprobeDataLen = Object.keys(ffprobeModes).length;
 	/** @type {{ffprobeList: string[], audiowaveformList: string[], ffprobe: RegExp, audiowaveform: RegExp}} - Helpers to check for compatible files for different binaries */
 	const compatibleFiles = {
 		ffprobeList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv'],
@@ -1883,7 +1883,7 @@ function _seekbar({
 	 * @returns {{seekbarFolder: string, seekbarFile: string, sourceFile: string}} Track data folder, track data filename and track source path
 	*/
 	this.getPaths = (handle) => {
-		if (!handle) {return {seekbarFolder: '', seekbarFile: '', sourceFile: ''}; }
+		if (!handle) { return { seekbarFolder: '', seekbarFile: '', sourceFile: '' }; }
 		const id = sanitizePath(this.Tf.EvalWithMetadb(handle)); // Ensure paths are valid!
 		const fileName = id.split('\\').pop();
 		const seekbarFolder = this.folder + id.replace(fileName, '');
@@ -1904,7 +1904,7 @@ function _seekbar({
 	 * @param {string} seekbarFile - Track data filename
 	 * @param {string} [sourceFile] - [=handle.Path] track source path
 	 * @param {number} mask - keyboard mask
-	 * @returns {Promise<Boolean>}
+	 * @returns {Promise.<Boolean>}
 	*/
 	this.analyze = async (handle, seekbarFolder, seekbarFile, sourceFile = handle.Path) => {
 		if (!_isFolder(seekbarFolder)) { _createFolder(seekbarFolder); }
