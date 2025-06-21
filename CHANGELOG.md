@@ -61,6 +61,7 @@
 - UI: '&' being displayed as '_' on tooltips.
 - UI: wrong position on second background gradient using bigradient mode.
 - UI: long time bug in some cases where the current position was not properly painted (in width).
+- UI: repaint glitch after pausing due to foobar playback time delayed callback.
 - UI: show compatible extensions doesn't show the incompatible file tip if there is no selection available.
 - Fixed some cases where stopping playback during analysis or changing the playing track affected shown data. Now files are analyzed (and saved) on the background, independently of what the panel shows (which depends on actual playback).
 - Workaround for foobar2000 bug, the reported playback time was a non-safe value and could lead to crashes. See [here](https://hydrogenaud.io/index.php/topic,127620.msg1061036).

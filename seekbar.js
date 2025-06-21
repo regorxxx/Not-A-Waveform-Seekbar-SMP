@@ -1,5 +1,5 @@
 'use strict';
-//20/05/25
+//21/06/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -288,7 +288,7 @@ addEventListener('on_playback_new_track', (handle) => {
 });
 
 addEventListener('on_playback_time', (time) => {
-	seekbar.updateTime(time);
+	if (!fb.IsPaused) { seekbar.updateTime(time); }
 });
 
 addEventListener('on_playback_seek', (time) => {
