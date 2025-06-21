@@ -1,5 +1,5 @@
 'use strict';
-//11/06/25
+//21/06/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -47,6 +47,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {number} [o.analysis.resolution] - [=2] Data points per second (every point has 2 values, i.e. + and -). On visualizer mode is adjusted per window width. Changing this setting requires re-analysis of files to apply, but previous data files will be compatible too (just with different number of points).
  * @param {'none'|'utf-8'|'utf-16'} [o.analysis.compressionMode] - [='utf-16'] Set to anything but 'none' to apply compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70% compression) and 7zip (~80% compression).
  * @param {'library'|'all'|'none'} [o.analysis.storeMode] - [='library'] Controls wether analysis data files are saved to disk, for library items only, any item or none.
+ * @param {Array.<'playing'|'selected'|'blank'>} [o.analysis.trackMode] - [=['playing', 'selected', 'blank']] Track preferred for visualization (order by priority).
  * @param {boolean} [o.analysis.bAutoAnalysis] - [=true] Wether automatically analyze tracks on playback or on demand. For usual seekbar usage it should be true, but may be set to false if the parent panel exposes some way to do it manually (for ex. for track analysis).
  * @param {boolean} [o.analysis.bAutoRemove] - [=true] Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate them).
  * @param {boolean} [o.analysis.bVisualizerFallback] - [=true] Uses visualizer mode when file can not be processed (not compatible format).
@@ -114,6 +115,7 @@ function _seekbar({
 		resolution: 2,
 		compressionMode: 'utf-16',
 		storeMode: 'library',
+		trackMode: ['playing', 'selected', 'blank'],
 		bAutoAnalysis: true,
 		bAutoRemove: false,
 		bVisualizerFallback: true,
@@ -177,6 +179,7 @@ function _seekbar({
 			resolution: 1,
 			compressionMode: 'utf-16',
 			storeMode: 'library',
+			trackMode: ['playing', 'selected', 'blank'],
 			bAutoAnalysis: true,
 			bAutoRemove: false,
 			bVisualizerFallback: true,
@@ -310,6 +313,7 @@ function _seekbar({
 	 * @property {number} resolution - Data points per second (every point has 2 values, i.e. + and -). On visualizer mode is adjusted per window width. Changing this setting requires re-analysis of files to apply, but previous data files will be compatible too (just with different number of points).
 	 * @property {'none'|'utf-8'|'utf-16'} compressionMode - Anything but 'none' applies compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70%  compression) and 7zip (~80% compression).
 	 * @property {'library'|'all'|'none'} storeMode - Controls wether analysis data files are saved to disk, for library items only, any item or none.
+	 * @property {Array.<'playing'|'selected'|'blank'>} trackMode - Track preferred for visualization (order by priority).
 	 * @property {boolean} bAutoAnalysis - Flag to automatically analyze tracks on playback or on demand.
 	 * @property {boolean} bAutoRemove - Flag to delete analysis files when unloading the script. They are kept during the session (to not recalculate them).
 	 * @property {boolean} bVisualizerFallback -  Flag to use visualizer mode when file can not be processed (not compatible format).
@@ -404,6 +408,8 @@ function _seekbar({
 	this.isFallback = false;
 	/** @type {boolean} - Flag for analysis error. Set at this.verifyData after retrying analysis */
 	this.isError = false;
+	/** @type {FbMetadbHandle} - Current handle being displayed */
+	this.currentHandle = null;
 	// Private
 	/** @type {{paint: boolean, analysis: boolean}} - Used when this.analysis.bVisualizerFallbackAnalysis is true, to track current step on processing */
 	const bFallbackMode = { paint: false, analysis: false };
@@ -482,6 +488,9 @@ function _seekbar({
 		}
 		if (newConfig.analysis) {
 			bRecalculate = true;
+			if (Object.hasOwn(newConfig.analysis, 'trackMode')) {
+				this.currentHandle = null;
+			}
 		}
 		// Recalculate data points or repaint
 		if (bRecalculate) { this.newTrack(); }
@@ -561,13 +570,15 @@ function _seekbar({
 	this.switch = (bEnable = !this.active) => {
 		const wasActive = this.active;
 		this.active = bEnable;
-		if (fb.IsPlaying) {
-			if (!wasActive && this.active) {
-				window.Repaint();
-				setTimeout(() => { this.newTrack(fb.GetNowPlaying()); this.updateTime(fb.PlaybackTime); }, 0);
-			} else if (wasActive && !this.active) {
-				this.stop(-1);
-			}
+		if (!wasActive && this.active) {
+			window.Repaint();
+			setTimeout(() => {
+				const handle = this.getHandle();
+				this.newTrack(handle);
+				if (this.isTrackPlaying()) { this.updateTime(fb.PlaybackTime); }
+			}, 0);
+		} else if (wasActive && !this.active) {
+			this.stop(-1);
 		}
 		return this.active;
 	};
@@ -585,20 +596,136 @@ function _seekbar({
 		this.queueId = setTimeout(() => { this.newTrack(...arguments); }, this.queueMs); // Arguments points to the first non arrow func
 	};
 	/**
+	 * Retrieves preferred track mode for usage in callbacks.
+	 *
+	 * @property
+	 * @name getPreferredTrackMode
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {'playing'|'selected'|'blank'}
+	*/
+	this.getPreferredTrackMode = function () {
+		let trackMode = '';
+		this.analysis.trackMode.some((mode) => {
+			switch (mode.toLowerCase()) {
+				case 'playing': {
+					if (fb.IsPlaying) { trackMode = 'playing'; return true; }
+					break;
+				}
+				case 'selected': {
+					if (fb.GetSelections(1).Count || fb.GetFocusItem(true)) { trackMode = 'selected'; return true; }
+					break;
+				}
+				case 'blank': { trackMode = 'blank'; return true; }
+			}
+		});
+		return trackMode;
+	};
+	/**
+	 * Retrieves handle to process according to preferred track settings.
+	 *
+	 * @property
+	 * @name getHandle
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {FbMetadbHandle}
+	*/
+	this.getHandle = function () {
+		let handle = null;
+		this.analysis.trackMode.some((mode) => {
+			switch (mode.toLowerCase()) {
+				case 'playing': {
+					if (fb.IsPlaying) { handle = fb.GetNowPlaying(); return true; }
+					break;
+				}
+				case 'selected': {
+					const sel = fb.GetSelectionType() > 0 ? fb.GetSelections(1) : null;
+					const h = sel && sel.Count ? sel[0] : fb.GetFocusItem(true);
+					if (h) { handle = h; return true; }
+					break;
+				}
+				case 'blank': {
+					return true;
+				}
+			}
+		});
+		if (this.analysis.trackMode.length <= 1 && (this.analysis.trackMode[0] || '').toLowerCase() === 'blank' && this.currentHandle) {
+			handle = this.currentHandle;
+		}
+		return handle;
+	};
+	/**
+	 * Retrieves handle to process according to preferred track settings.
+	 *
+	 * @property
+	 * @name getHandleLength
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {number}
+	*/
+	this.getHandleLength = function () {
+		let len = 0;
+		this.analysis.trackMode.some((mode) => {
+			if (mode.toLowerCase() === 'playing') {
+				if (fb.IsPlaying) { len = fb.PlaybackLength; return true; }
+			} else if (this.currentHandle) {
+				len = this.currentHandle.Length; return true;
+			} else {
+				const handle = this.getHandle();
+				if (fb.IsPlaying) {
+					const np = fb.GetNowPlaying();
+					if (np && np.Compare(handle)) {
+						len = fb.PlaybackLength; return true;
+					}
+				}
+				if (handle) { len = handle.Length; return true; }
+			}
+		});
+		return len;
+	};
+	/**
+	 * Compares handle to process to current one.
+	 *
+	 * @property
+	 * @name compareTrack
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} [handle] - [=this.getHandle()] Handle to get data for.
+	 * @returns {boolean} True when tracks match
+	*/
+	this.compareTrack = function (handle = this.getHandle()) {
+		return this.currentHandle && handle && handle.Compare(this.currentHandle);
+	};
+	/**
+	 * Outputs wether the currently displayed track is also the playing track or not
+	 *
+	 * @property
+	 * @name isTrackPlaying
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {boolean} True when tracks match
+	*/
+	this.isTrackPlaying = function () {
+		const np = fb.IsPlaying ? fb.GetNowPlaying() : null;
+		return this.currentHandle && np && np.Compare(this.currentHandle);
+	};
+	/**
 	 * Process a track to get its data and use it to paint the panel afterwards.
 	 *
 	 * @property
 	 * @name newTrack
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {FbMetadbHandle} [handle] - [=fb.GetNowPlaying()] Handle to get data for.
+	 * @param {FbMetadbHandle} [handle] - [=this.getHandle()] Handle to get data for.
 	 * @param {boolean} [bIsRetry] - [=false] If false, will retry analysis a second time.
 	 * @returns {boolean} New state
 	*/
-	this.newTrack = async (handle = fb.GetNowPlaying(), bIsRetry = false) => {
+	this.newTrack = async (handle = this.getHandle(), bIsRetry = false) => {
 		if (!this.active) { return; }
+		if (this.compareTrack(handle)) { return; }
 		this.reset();
 		if (handle) {
+			this.currentHandle = handle;
 			this.checkAllowedFile(handle);
 			let bAnalysis = false;
 			const { seekbarFolder, seekbarFile, sourceFile } = this.getPaths(handle);
@@ -647,20 +774,18 @@ function _seekbar({
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
-					const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
-					if (!nowPlaying || !handle.Compare(nowPlaying)) { return; }
+					if (this.currentHandle && !handle.Compare(this.currentHandle)) { return; }
 					// Calculate waveform on the fly
-					this.normalizePoints();
+					if (this.current[0]) { this.normalizePoints(); }
 					// Set animation using BPM if possible
 					if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 					// Update time if needed
-					if (fb.IsPlaying) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
+					if (this.isTrackPlaying()) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 				}
 				throttlePaint(true);
 				if (this.analysis.bVisualizerFallbackAnalysis) { bFallbackMode.analysis = false; }
 				await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
-				const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
-				if (!nowPlaying || !handle.Compare(nowPlaying)) { return; }
+				if (this.currentHandle && !handle.Compare(this.currentHandle)) { return; }
 				if (!this.verifyData(handle, void (0), bIsRetry)) { return; }
 				bFallbackMode.analysis = bFallbackMode.paint = false;
 				bAnalysis = true;
@@ -677,7 +802,7 @@ function _seekbar({
 		// Set animation using BPM if possible
 		if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 		// Update time if needed
-		if (fb.IsPlaying) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
+		if (this.isTrackPlaying()) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 		// And paint
 		throttlePaint();
 	};
@@ -1012,10 +1137,10 @@ function _seekbar({
 	 * @name checkAllowedFile
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {FbMetadbHandle} handle - [=fb.GetNowPlaying()] Track
+	 * @param {FbMetadbHandle} handle - [=this.getHandle()] Track
 	 * @returns {void}
 	*/
-	this.checkAllowedFile = (handle = fb.GetNowPlaying()) => {
+	this.checkAllowedFile = (handle = this.getHandle()) => {
 		if (!handle) { throw new Error('No handle argument'); }
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
 		const bNoSubSong = !this.isSubSong(handle);
@@ -1036,11 +1161,11 @@ function _seekbar({
 	 * @name isCompatibleFileExtension
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {FbMetadbHandle} handle - [=fb.GetNowPlaying()] Track
+	 * @param {FbMetadbHandle} handle - [=this.getHandle()] Track
 	 * @param {string} mode - [=this.analysis.binaryMode] Binary mode
 	 * @returns {boolean}
 	*/
-	this.isCompatibleFileExtension = (handle = fb.GetNowPlaying(), mode = this.analysis.binaryMode) => {
+	this.isCompatibleFileExtension = (handle = this.getHandle(), mode = this.analysis.binaryMode) => {
 		return mode === 'visualizer'
 			? true
 			: handle
@@ -1082,10 +1207,10 @@ function _seekbar({
 	 * @name bpmSteps
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {FbMetadbHandle} handle - [=fb.GetNowPlaying()] Track
+	 * @param {FbMetadbHandle} handle - [=this.getHandle()] Track
 	 * @returns {number} Max steps for a given BPM
 	*/
-	this.bpmSteps = (handle = fb.GetNowPlaying()) => {
+	this.bpmSteps = (handle = this.getHandle()) => {
 		// Don't allow anything faster than 2 steps or slower than 10 (scaled to 200 ms refresh rate) and consider all tracks have 100 BPM as default
 		if (!handle) { return this.defaultSteps(); }
 		const BPM = Number(this.TfMaxStep.EvalWithMetadb(handle));
@@ -1135,7 +1260,7 @@ function _seekbar({
 			throttlePaint(bFull);
 		} else if (bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
 			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
-			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / fb.PlaybackLength;
+			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
@@ -1159,6 +1284,7 @@ function _seekbar({
 	*/
 	this.reset = () => {
 		this.current = [];
+		this.currentHandle = null;
 		this.channels = 0;
 		this.frames = 0;
 		this.timeConstant = 0;
@@ -1201,8 +1327,12 @@ function _seekbar({
 	*/
 	this.stop = (reason = -1) => {
 		if (reason !== -1 && !this.active) { return; }
-		this.reset();
-		if (reason !== 2) { throttlePaint(); }
+		if (reason !== -1 && this.getPreferredTrackMode() === 'selected') {
+			throttlePaint();
+		} else {
+			this.reset();
+			if (reason !== 2) { throttlePaint(); }
+		}
 	};
 	/**
 	 * Called on_playback_pause. Resets painting.
@@ -1273,7 +1403,7 @@ function _seekbar({
 		// Panel background
 		if (colors.bg !== -1) { gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg); }
 		// In case paint has been delayed after playback has stopped...
-		if (!fb.IsPlaying) {
+		if (!this.getHandle()) {
 			this.reset();
 			return;
 		} else if (this.frames === 0) {
@@ -1283,7 +1413,8 @@ function _seekbar({
 		const displayChannels = this.getDisplayChannels();
 		const channelsNum = displayChannels.length;
 		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
-		if (channelsNum && (fb.PlaybackLength > 1 || bVisualizer)) {
+		if (channelsNum && (this.getHandleLength() > 1 || bVisualizer)) {
+			const bIsTrackPlaying = this.isTrackPlaying();
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
@@ -1295,8 +1426,8 @@ function _seekbar({
 			let bPaintedVu = false;
 			let bFilledVu = framesVu.length >= this.maxStepVu;
 			let bPaintedBg = this.ui.colors.bg === this.ui.colors.bgFuture && !bPrePaint;
-			const currX = Number.isFinite(fb.PlaybackTime)
-				? this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / fb.PlaybackLength) || 0)
+			const currX = bIsTrackPlaying && Number.isFinite(fb.PlaybackTime)
+				? this.x + this.marginW + (this.w - this.marginW * 2) * ((fb.PlaybackTime / this.getHandleLength()) || 0)
 				: 0;
 			const margin = channelsNum > 1 ? _scale(5) : 0;
 			const size = (this.h - this.y - margin) * this.scaleH / channelsNum;
@@ -1316,7 +1447,7 @@ function _seekbar({
 					current = timeConstant * n;
 					const bIsfuture = current > this.time;
 					const bIsfutureAllowed = (current - this.time) < this.preset.futureSecs;
-					if (bPartial && !bPrePaint && bIsfuture) {
+					if (bPartial && !bPrePaint && bIsfuture && bIsTrackPlaying) {
 						if (colors.bgFuture !== -1) { gr.FillSolidRect(currX, this.y, this.w, this.h, colors.bgFuture); }
 						break;
 					} else if (bPrePaint && bIsfuture && !bIsfutureAllowed) { break; }
@@ -1326,7 +1457,7 @@ function _seekbar({
 						: frame;
 					const x = this.x + this.marginW + barW * n;
 					// Paint the alt background at the proper point
-					if (bIsfuture && bPrePaint && !bPaintedBg) {
+					if (bIsfuture && bPrePaint && !bPaintedBg && bIsTrackPlaying) {
 						if (colors.bgFuture !== -1) { gr.FillSolidRect(currX, this.y, this.w, this.h, colors.bgFuture); }
 						bPaintedBg = true;
 					}
@@ -1339,7 +1470,7 @@ function _seekbar({
 					// Ensure points don't overlap too much without normalization
 					if (bVuMeter) {
 						if (this.stepVu >= this.maxStepVu) { this.stepVu = 0; }
-						if (!bFilledVu && Math.abs(current - this.time) / fb.PlaybackLength <= 0.001) {
+						if (!bFilledVu && Math.abs(current - this.time) / this.getHandleLength() <= 0.001) {
 							framesVu.push(Math.abs(scale));
 							bFilledVu = framesVu.length >= this.maxStepVu;
 						}
@@ -1373,12 +1504,12 @@ function _seekbar({
 				}
 				gr.SetSmoothingMode(0);
 				// Current position
-				if (bFfProbe || bWaveForm || bPoints || bVuMeter) {
+				if ((bFfProbe || bWaveForm || bPoints || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
 			// Animate smoothly, Repaint by zone when possible. Only when not in pause!
-			if (!fb.IsPaused) {
+			if (bIsTrackPlaying && !fb.IsPaused) {
 				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter);
 			}
 		}
@@ -1724,16 +1855,35 @@ function _seekbar({
 		this.mouseDown = false;
 		if (!this.active) { return; }
 		if (!this.trace(x, y)) { return false; }
-		const handle = fb.GetSelection();
-		if (handle && fb.IsPlaying) { // Seek
+		if (this.currentHandle) { // Seek
 			const frames = this.frames;
 			if (frames !== 0) {
+				const len = this.getHandleLength();
 				const barW = (this.w - this.marginW * 2) / frames;
-				let time = Math.round(fb.PlaybackLength / frames * (x - this.x - this.marginW) / barW);
+				let time = Math.round(len / frames * (x - this.x - this.marginW) / barW);
 				if (time < 0) { time = 0; }
-				else if (time > fb.PlaybackLength) { time = fb.PlaybackLength; }
-				fb.PlaybackTime = time;
-				throttlePaint(true);
+				else if (time > len) { time = len; }
+				if (!this.isTrackPlaying()) {
+					if (fb.GetNowPlaying().Compare(this.currentHandle)) {
+						fb.Play();
+						setTimeout(() => {
+							fb.PlaybackTime = time;
+							throttlePaint(true);
+						}, 100);
+					} else {
+						const queue = plman.GetPlaybackQueueHandles();
+						plman.FlushPlaybackQueue();
+						[this.currentHandle, queue.Convert()].forEach((handle) => plman.AddItemToPlaybackQueue(handle));
+						fb.Play();
+						setTimeout(() => {
+							fb.PlaybackTime = time;
+							throttlePaint(true);
+						}, 100);
+					}
+				} else {
+					fb.PlaybackTime = time;
+					throttlePaint(true);
+				}
 				return true;
 			}
 		}
@@ -1751,20 +1901,19 @@ function _seekbar({
 	*/
 	this.wheel = (step) => { // eslint-disable-line no-unused-vars
 		if (!this.active) { return; }
-		const handle = fb.GetSelection();
-		if (handle && fb.IsPlaying) { // Seek
+		if (this.currentHandle && this.isTrackPlaying()) { // Seek
 			const frames = this.frames;
 			if (frames !== 0) {
 				const scroll = step * this.ui.wheel.step * (this.ui.wheel.bReversed ? -1 : 1);
 				let time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0;
 				switch (this.ui.wheel.unit.toLowerCase()) {
 					case 'ms': time += scroll / 1000; break;
-					case '%': time += scroll / 100 * fb.PlaybackLength; break;
+					case '%': time += scroll / 100 * this.getHandleLength(); break;
 					case 's':
 					default: time += scroll; break;
 				}
 				if (time < 0) { time = 0; }
-				else if (time > fb.PlaybackLength) { time = fb.PlaybackLength; }
+				else if (time > this.getHandleLength()) { time = this.getHandleLength(); }
 				fb.PlaybackTime = time;
 				throttlePaint(true);
 				return true;
@@ -1977,8 +2126,7 @@ function _seekbar({
 				? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
 				: this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
-			const nowPlaying = fb.IsPlaying ? fb.GetNowPlaying() : null;
-			const bPlayingSameHandle = !!nowPlaying && handle.Compare(nowPlaying);
+			const bPlayingSameHandle = this.currentHandle && handle.Compare(this.currentHandle);
 			if (data) {
 				const bNotFallback = cmd && !this.isFallback && !bFallbackMode.analysis;
 				if (bNotFallback) {
@@ -2022,7 +2170,7 @@ function _seekbar({
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.aw');
 					}
-				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && fb.IsPlaying) {
+				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && this.isTrackPlaying()) {
 					this.current = data;
 				}
 			}

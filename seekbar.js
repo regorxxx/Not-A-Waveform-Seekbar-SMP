@@ -43,6 +43,7 @@ let seekbarProperties = {
 			resolution: 2,
 			compressionMode: 'utf-16',
 			storeMode: 'library',
+			trackMode: ['playing', 'selected', 'blank'],
 			bAutoAnalysis: true,
 			bAutoRemove: false,
 			bVisualizerFallback: true,
@@ -262,11 +263,19 @@ addEventListener('on_selection_changed', () => {
 	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
 		background.updateImageBg();
 	}
+	if (seekbar.getPreferredTrackMode() === 'selected') {
+		const handle = seekbar.getHandle();
+		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
+	}
 });
 
 addEventListener('on_item_focus_change', () => {
 	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
 		background.updateImageBg();
+	}
+	if (seekbar.getPreferredTrackMode() === 'selected') {
+		const handle = seekbar.getHandle();
+		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
 	}
 });
 
@@ -274,32 +283,51 @@ addEventListener('on_playlist_switch', () => {
 	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
 		background.updateImageBg();
 	}
+	if (seekbar.getPreferredTrackMode() === 'selected') {
+		const handle = seekbar.getHandle();
+		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
+	}
 });
 
 addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
 	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
 		background.updateImageBg();
 	}
+	if (seekbar.getPreferredTrackMode() === 'selected') {
+		const handle = seekbar.getHandle();
+		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
+	}
 });
 
 addEventListener('on_playback_new_track', (handle) => {
 	if (background.coverMode.toLowerCase() !== 'none') { background.updateImageBg(); }
-	seekbar.newTrackQueue(handle);
+	if (seekbar.getPreferredTrackMode() === 'playing' && !seekbar.compareTrack(handle)) {
+		seekbar.newTrackQueue(handle);
+	}
 });
 
 addEventListener('on_playback_time', (time) => {
-	if (!fb.IsPaused) { seekbar.updateTime(time); }
+	if (seekbar.isTrackPlaying() && !fb.IsPaused) {
+		seekbar.updateTime(time);
+	}
 });
 
 addEventListener('on_playback_seek', (time) => {
-	seekbar.updateTime(time);
+	if (seekbar.isTrackPlaying()) {
+		seekbar.updateTime(time);
+	}
 });
 
 addEventListener('on_playback_stop', (reason) => {
 	if (reason !== 2) { // Invoked by user or Starting another track
 		if (background.coverMode.toLowerCase() !== 'none' && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
 	}
-	seekbar.stop(reason);
+	if (seekbar.getPreferredTrackMode() !== 'blank') { seekbar.stop(reason); }
+	if (seekbar.getPreferredTrackMode() === 'selected') {
+		const handle = seekbar.getHandle();
+		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
+		else { seekbar.updateTime(0); }
+	}
 });
 
 addEventListener('on_playback_pause', (state) => {
@@ -352,6 +380,16 @@ addEventListener('on_notify_data', (name, info) => {
 	}
 });
 
-if (fb.IsPlaying) { window.Repaint(); setTimeout(() => { on_playback_new_track(fb.GetNowPlaying()); seekbar.updateTime(fb.PlaybackTime); }, 0); }
+{
+	const initHandle = seekbar.getHandle();
+	if (initHandle) {
+		window.Repaint();
+		if (seekbar.getPreferredTrackMode() === 'selected') {
+			setTimeout(() => { on_item_focus_change(); }, 0);
+		} else {
+			setTimeout(() => { on_playback_new_track(initHandle); }, 0);
+		}
+	}
+}
 
 globProfiler.Print('callbacks');

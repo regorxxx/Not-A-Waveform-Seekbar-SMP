@@ -39,6 +39,14 @@ function settingsMenu(bClear = true) {
 		menu.newCheckMenuLast(() => this.active);
 		menu.newSeparator();
 	}
+	if (this.analysis.trackMode.length <= 1 && (this.analysis.trackMode[0] || '').toLowerCase() === 'blank') {
+		menu.newEntry({
+			entryText: 'Render current track', func: () => {
+				this.newTrackQueue(fb.GetFocusItem(1));
+			}
+		});
+		menu.newSeparator();
+	}
 	// Menus
 	{
 		const subMenu = menu.newMenu('Mode');
@@ -178,6 +186,28 @@ function settingsMenu(bClear = true) {
 				});
 			});
 		}
+	}
+	{
+		const subMenu = menu.newMenu('Track');
+		const options = [
+			{ name: 'Playing track, selected otherwise', key: ['playing', 'selected', 'blank'] },
+			{ name: 'Playing track, blank otherwise', key: ['playing', 'blank'] },
+			{ name: 'Selected track, playing otherwise', key: ['selected', 'playing', 'blank'] },
+			{ name: 'Selected track, blank otherwise', key: ['selected', 'blank'] },
+			{ name: 'On demand', key: ['blank'] },
+		];
+		options.forEach((o) => {
+			menu.newEntry({
+				menuName: subMenu, entryText: o.name, func: () => {
+					this.updateConfig({ analysis: { trackMode: o.key } });
+					this.saveProperties();
+				}
+			});
+		});
+		menu.newCheckMenuLast((options, len) => {
+			const idx = options.findIndex(o => JSON.stringify(o.key) === JSON.stringify(this.analysis.trackMode));
+			return idx !== -1 ? idx : (len - 1);
+		}, options);
 	}
 	menu.newSeparator();
 	{
