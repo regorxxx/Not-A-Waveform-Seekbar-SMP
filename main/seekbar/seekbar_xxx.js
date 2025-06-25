@@ -2129,8 +2129,8 @@ function _seekbar({
 				: this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
 			const bPlayingSameHandle = this.currentHandle && handle.Compare(this.currentHandle);
+			const bNotFallback = cmd && !this.isFallback && !bFallbackMode.analysis;
 			if (data) {
-				const bNotFallback = cmd && !this.isFallback && !bFallbackMode.analysis;
 				if (bNotFallback) {
 					if (bFfProbe && data.frames) { data = data.frames; }
 					else if (bAuWav && data.data) { data = data.data; }
@@ -2152,6 +2152,7 @@ function _seekbar({
 					// Save data and optionally compress it
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.ff');
+						console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff');
 					}
 				} else if (bNotFallback && bAuWav && data.length) {
 					const processedData = Array.from({ length: channels }, () => []);
@@ -2171,6 +2172,7 @@ function _seekbar({
 					if (bPlayingSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.aw');
+						console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw');
 					}
 				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && this.isTrackPlaying()) {
 					this.current = data;
@@ -2187,7 +2189,7 @@ function _seekbar({
 				if (this.current.length && this.current.some((channel) => channel.length)) {
 					if (window.IsVisible) { throttlePaint(); }
 				}
-				else { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
+				else if (bNotFallback) { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
 			}
 		}
 		return bDone;
