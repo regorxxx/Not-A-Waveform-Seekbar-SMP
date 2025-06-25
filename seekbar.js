@@ -1,5 +1,5 @@
 'use strict';
-//21/06/25
+//22/06/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable */
 include('helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, RGB:readable, _gdiFont:readable */
+/* global _scale:readable, RGB:readable, _gdiFont:readable, _tt:readable */
 include('helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, _save:readable */
 include('helpers\\helpers_xxx_prototypes.js');
@@ -231,6 +231,9 @@ seekbar.applyUiSettings = function (settings, bForce) {
 	window.Repaint();
 };
 
+seekbar.tooltip = new _tt(null);
+seekbar.tooltip.SetDelayTime(3, 1500);
+seekbar.tooltip.SetDelayTime(2, 3000);
 
 globProfiler.Print('seekbar');
 
@@ -351,6 +354,10 @@ addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 
 addEventListener('on_mouse_move', (x, y, mask) => {
 	seekbar.move(x, y, mask);
+	seekbar.tooltip.SetValue('Click to seek to position' +
+		'\n' + '-'.repeat(60) +
+		'\n(R. Click to open settings menu)' +
+		'\n(Shift + Win + R. Click for SMP panel menu)', true);
 });
 
 addEventListener('on_script_unload', () => {
