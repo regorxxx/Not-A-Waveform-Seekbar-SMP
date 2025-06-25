@@ -1,5 +1,5 @@
 'use strict';
-//22/06/25
+//23/06/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -357,7 +357,9 @@ addEventListener('on_mouse_move', (x, y, mask) => {
 	seekbar.tooltip.SetValue('Click to seek to position' +
 		'\n' + '-'.repeat(60) +
 		'\n(R. Click to open settings menu)' +
-		'\n(Shift + Win + R. Click for SMP panel menu)', true);
+		'\n(Shift + Win + R. Click for SMP panel menu)' +
+		'\n(Ctrl + Win + R. Click for script panel menu)'
+	, true);
 });
 
 addEventListener('on_script_unload', () => {
