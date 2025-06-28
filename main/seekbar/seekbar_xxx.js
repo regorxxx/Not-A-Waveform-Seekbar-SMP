@@ -1951,7 +1951,8 @@ function _seekbar({
 	 * @param {number} h
 	 * @returns {void}
 	*/
-	this.resize = (w, h) => {
+	this.resize = (w, h, bResizeAll = false) => {
+		if (bResizeAll) { this.marginW *= w / this.w; }
 		this.w = w;
 		this.h = h;
 	};

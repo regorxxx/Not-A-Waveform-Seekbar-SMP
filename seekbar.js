@@ -1,5 +1,5 @@
 'use strict';
-//23/06/25
+//28/06/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -259,7 +259,7 @@ if (seekbarProperties.bAutoUpdateCheck[1]) {
 
 addEventListener('on_size', (width, height) => {
 	background.resize({ w: width, h: height, bPaint: false });
-	seekbar.resize(width, height);
+	seekbar.resize(width, height, true);
 });
 
 addEventListener('on_selection_changed', () => {
