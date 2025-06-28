@@ -694,7 +694,7 @@ function _seekbar({
 	 * @returns {boolean} True when tracks match
 	*/
 	this.compareTrack = function (handle = this.getHandle()) {
-		return this.currentHandle && handle && handle.Compare(this.currentHandle);
+		return !!this.currentHandle && !!handle && handle.Compare(this.currentHandle);
 	};
 	/**
 	 * Outputs wether the currently displayed track is also the playing track or not
@@ -706,8 +706,7 @@ function _seekbar({
 	 * @returns {boolean} True when tracks match
 	*/
 	this.isTrackPlaying = function () {
-		const np = fb.IsPlaying ? fb.GetNowPlaying() : null;
-		return this.currentHandle && np && np.Compare(this.currentHandle);
+		return this.compareTrack(fb.GetNowPlaying());
 	};
 	/**
 	 * Process a track to get its data and use it to paint the panel afterwards.
