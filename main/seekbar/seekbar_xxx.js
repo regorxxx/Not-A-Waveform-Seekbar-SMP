@@ -1866,7 +1866,7 @@ function _seekbar({
 				if (time < 0) { time = 0; }
 				else if (time > len) { time = len; }
 				if (!this.isTrackPlaying()) {
-					if (fb.GetNowPlaying().Compare(this.currentHandle)) {
+					if (this.compareTrack(fb.GetNowPlaying())) {
 						fb.Play();
 						setTimeout(() => {
 							fb.PlaybackTime = time;
@@ -1875,7 +1875,7 @@ function _seekbar({
 					} else {
 						const queue = plman.GetPlaybackQueueHandles();
 						plman.FlushPlaybackQueue();
-						[this.currentHandle, queue.Convert()].forEach((handle) => plman.AddItemToPlaybackQueue(handle));
+						[this.currentHandle, ...queue.Convert()].forEach((handle) => plman.AddItemToPlaybackQueue(handle));
 						fb.Play();
 						setTimeout(() => {
 							fb.PlaybackTime = time;
