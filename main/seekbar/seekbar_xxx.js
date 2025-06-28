@@ -943,7 +943,7 @@ function _seekbar({
 				const barW = this.ui.normalizeWidth;
 				newFrames = Math.floor((this.w - this.marginW * 2) / barW);
 			}
-			if (newFrames !== frames) {
+			if (newFrames && newFrames !== frames) {
 				for (let c = 0; c < this.channels; c++) {
 					let data;
 					if (newFrames < frames) {
