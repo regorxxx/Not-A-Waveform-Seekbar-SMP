@@ -635,13 +635,13 @@ function _seekbar({
 		this.analysis.trackMode.some((mode) => {
 			switch (mode.toLowerCase()) {
 				case 'playing': {
-					if (fb.IsPlaying) { handle = fb.GetNowPlaying(); return true; }
+					if (fb.IsPlaying) { handle = fb.GetNowPlaying(); return !!handle; }
 					break;
 				}
 				case 'selected': {
 					const sel = fb.GetSelectionType() > 0 ? fb.GetSelections(1) : null;
 					const h = sel && sel.Count ? sel[0] : fb.GetFocusItem(true);
-					if (h) { handle = h; return true; }
+					if (h) { handle = h; return !!handle; }
 					break;
 				}
 				case 'blank': {
