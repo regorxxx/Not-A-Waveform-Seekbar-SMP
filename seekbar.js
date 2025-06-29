@@ -1,5 +1,5 @@
 'use strict';
-//28/06/25
+//29/06/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -163,7 +163,7 @@ const seekbar = new _seekbar({
 	binaries: JSON.parse(seekbarProperties.binaries[1]),
 	analysis: JSON.parse(seekbarProperties.analysis[1], (key, value) => value === null ? Infinity : value),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => value === null ? Infinity : value),
-	ui: { ...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: { scaleH: 0.9, marginW: window.Width / 30 } },
+	ui: { ...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: { scaleH: 0.9, scaleW: 1 / 30 } },
 	callbacks: { backgroundColor: () => background.getColors()[0] }
 });
 if (!seekbarProperties.bEnabled[1]) { seekbar.switch(); }
@@ -354,12 +354,13 @@ addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 
 addEventListener('on_mouse_move', (x, y, mask) => {
 	seekbar.move(x, y, mask);
-	seekbar.tooltip.SetValue('Click to seek to position' +
+	seekbar.tooltip.SetValue(
+		'Click to seek to position' +
 		'\n' + '-'.repeat(60) +
 		'\n(R. Click to open settings menu)' +
 		'\n(Shift + Win + R. Click for SMP panel menu)' +
-		'\n(Ctrl + Win + R. Click for script panel menu)'
-	, true);
+		'\n(Ctrl + Win + R. Click for script panel menu)',
+		true);
 });
 
 addEventListener('on_script_unload', () => {

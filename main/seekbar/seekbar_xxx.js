@@ -1,5 +1,5 @@
 'use strict';
-//22/06/25
+//29/06/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -35,7 +35,7 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {GdiFont} [o.ui.gFont] - [=_gdiFont('Segoe UI', _scale(15))] Font used in panel
  * @param {{bg?:number, main?:number, alt?:number, bgFuture?:number, mainFuture?:number, altFuture?:number, currPos?:number}} [o.ui.colors] - Color settings for background (bg), waveform (main|alt) and current time indicator (currPos). Additionally colors for the region after current time (future) and alternate accent (alt) may be set.
  * @param {{bg?:number, main?:number, alt?:number, bgFuture?:number, mainFuture?:number, altFuture?:number, currPos?:number}} [o.ui.transparency] - Transparency settings (see colors for key meanings).
- * @param {{x?:number, y?:number, w?:number, h?:number, scaleH?:number, marginW?:number}} o.ui.pos - Window related position
+ * @param {{x?:number, y?:number, w?:number, h?:number, scaleH?:number, scaleW?:number|null, marginW?:number|null}} o.ui.pos - Window related position
  * @param {{unit?:('s'|'ms'|'%'), step?:number, bReversed?:boolean}} [o.ui.wheel] - Mouse wheel settings to control playback seeking
  * @param {number} [o.ui.refreshRate] - [=200] ms when using animations of any type. 100 is smooth enough but the performance hit is high
  * @param {boolean} [o.ui.bVariableRefreshRate] - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
@@ -98,7 +98,7 @@ function _seekbar({
 			altFuture: 75,
 			currPos: 50
 		},
-		pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30 },
+		pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, scaleW: 1 / 30, marginW: null },
 		wheel: {
 			unit: 's',
 			step: 5,
@@ -166,7 +166,7 @@ function _seekbar({
 				altFuture: 100,
 				currPos: 100
 			},
-			pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, marginW: window.Width / 30 },
+			pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, scaleW: 1 / 30, marginW: null },
 			wheel: { unit: 's', step: 5, bReversed: false },
 			refreshRate: 200,
 			bVariableRefreshRate: false,
@@ -277,7 +277,8 @@ function _seekbar({
 	 * @property {number} pos.w - X-Axis width
 	 * @property {number} pos.h - X-Axis width
 	 * @property {number} pos.scaleH - Y-Axis panel fill in % of height
-	 * @property {number} pos.marginW - X-axis margin in px
+	 * @property {number|null} pos.scaleW - X-Axis panel fill in % of weight
+	 * @property {number|null} pos.marginW - X-axis margin in px
 	 * @property {object} wheel - Mouse wheel settings to control playback seeking
 	 * @property {'s'|'ms'|'%'} wheel.unit - Seeking per second, ms or % of total playback
 	 * @property {number} wheel.step - Wheel steps seeking ratio
@@ -339,13 +340,25 @@ function _seekbar({
 	this.h = this.ui.pos.h;
 	/** @type {number} - Y-Axis panel fill in % of height */
 	this.scaleH = this.ui.pos.scaleH;
+	/** @type {number|null} - X-Axis panel fill in % of weight */
+	this.scaleW = this.ui.pos.scaleW;
 	/** @type {number} - X-axis margin in px */
-	this.marginW = this.ui.pos.marginW;
-	['x', 'y', 'w', 'h', 'scaleH', 'marginW'].forEach((key) => {
+	this.marginW = this.scaleW !== null
+		? this.ui.pos.scaleW * this.w
+		: this.ui.pos.marginW;
+	['x', 'y', 'w', 'h', 'scaleH', 'scaleW'].forEach((key) => {
 		Object.defineProperty(this, key, {
 			get() { return this.ui.pos[key]; },
 			set(val) { this.ui.pos[key] = val; }
 		});
+	});
+	Object.defineProperty(this, 'marginW', {
+		get() {
+			return this.scaleW !== null
+				? this.ui.pos.scaleW * this.w
+				: this.ui.pos.marginW;
+		},
+		set(val) { this.ui.pos.marginW = val; }
 	});
 	// Internals
 	/** @type {number|null} - Queue interval id */
@@ -519,7 +532,7 @@ function _seekbar({
 		for (const key in this.ui) {
 			if (key === 'pos') {
 				if (bSkipPanelDependent) { continue; }
-				config.ui.pos = { scaleH: this.ui.pos.scaleH, marginW: this.ui.pos.marginW };
+				config.ui.pos = { scaleH: this.ui.pos.scaleH, scaleW: this.ui.posScaleW, marginW: this.ui.marginW };
 			} else if (!notAllowed.has(key)) { config.ui[key] = clone(this.ui[key]); }
 		}
 		config.preset = clone(this.preset);
@@ -1950,10 +1963,10 @@ function _seekbar({
 	 * @param {number} h
 	 * @returns {void}
 	*/
-	this.resize = (w, h, bResizeAll = false) => {
-		if (bResizeAll) { this.marginW *= w / this.w; }
+	this.resize = (w, h) => {
 		this.w = w;
 		this.h = h;
+		if (this.scaleW !== null) { this.marginW = this.scaleW * this.w; }
 	};
 	/**
 	 * Called on on_script_unload. Removes data files if such setting is enabled.
