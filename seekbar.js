@@ -259,7 +259,7 @@ if (seekbarProperties.bAutoUpdateCheck[1]) {
 
 addEventListener('on_size', (width, height) => {
 	background.resize({ w: width, h: height, bPaint: false });
-	seekbar.resize(width, height, true);
+	seekbar.resize(width, height);
 });
 
 addEventListener('on_selection_changed', () => {
