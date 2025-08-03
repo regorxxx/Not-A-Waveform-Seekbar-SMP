@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//01/08/25
 
 /* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, _resolvePath */
 
@@ -218,8 +218,8 @@ function _textWidth(value, font) {
 	Objects
 */
 function clone(obj) {
-	const raw = new Set(['function', 'number', 'boolean', 'string']);
-	if (raw.has(typeof obj)) { return obj; }
+	const raw = new Set(['function', 'number', 'boolean', 'string', 'undefined']);
+	if (raw.has(typeof obj) || obj === null) { return obj; }
 	let result;
 	if (obj instanceof Set) {
 		result = new Set();
