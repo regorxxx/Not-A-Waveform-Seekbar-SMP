@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/12/23
+//06/08/25
 
 /* global setProperties:readable, getPropertiesPairs:readable, _createFolder:readable, folders:readable, seekbar:readable, overwriteProperties:readable, seekbarProperties:readable, isJSON:readable, _menu:readable */
 
@@ -9,7 +9,7 @@ include('..\\window\\window_xxx.js');
 // Set default properties (used on data later)
 let propertiesOptions = {
 	bOptions: ['Options panel opened?', false], // To maintain the same window on script reload (would be an ID when having multiple windows)
-	tabWidth: ['Options tab width: full / text', 'full'], // Tab behaviour
+	tabWidth: ['Options tab width: full / text', 'full'], // Tab behavior
 	UI: ['Options theme: default / material', 'material'], // Theme
 };
 setProperties(propertiesOptions, '', 0);

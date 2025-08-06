@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/08/25
+//06/08/25
 
 /* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, _resolvePath */
 
@@ -116,7 +116,7 @@ function _tt(value, font = 'Segoe UI', fontSize = _scale(10), width = 1200) {
 }
 
 /*
-	Colours
+	Colors
 */
 
 function RGBA(r, g, b, a) {

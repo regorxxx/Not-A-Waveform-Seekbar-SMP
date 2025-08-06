@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/25
+//06/08/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -110,7 +110,7 @@ function settingsMenu(bClear = true) {
 				menu.newEntry({
 					menuName: subMenuTwo, entryText: o.name, func: () => {
 						this.updateConfig({ analysis: { storeMode: o.key } });
-						if (o.key === 'none') { fb.ShowPopupMessage('In this mode new data files are never saved. Everytime a track is shown, it will be (re)analyzed, no matter if it was analyzed before too -even during the same session-.\n\nNote already created data files will not be deleted. If that\'s desired, use \'Auto-delete analysis files\' setting.\n\nIf wou want data files to be cleaned when closing foobar2000 but available to be reused during the same session, then check the auto-delete option and any of the other storage modes.', 'Not-A-Waveform-seekbar-SMP'); }
+						if (o.key === 'none') { fb.ShowPopupMessage('In this mode new data files are never saved. Every time a track is shown, it will be (re)analyzed, no matter if it was analyzed before too -even during the same session-.\n\nNote already created data files will not be deleted. If that\'s desired, use \'Auto-delete analysis files\' setting.\n\nIf wou want data files to be cleaned when closing foobar2000 but available to be reused during the same session, then check the auto-delete option and any of the other storage modes.', 'Not-A-Waveform-seekbar-SMP'); }
 						this.saveProperties();
 					}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
 				});
@@ -663,7 +663,7 @@ function settingsMenu(bClear = true) {
 			});
 			{
 				const subMenuThree = menu.newMenu('Unit\t' + _b(this.ui.wheel.unit), subMenuTwo);
-				const options = [{ entryText: 'Seconds', val: 's' }, { entryText: 'Miliseconds', val: 'ms' }, { entryText: '% of length', val: '%' }];
+				const options = [{ entryText: 'Seconds', val: 's' }, { entryText: 'Milliseconds', val: 'ms' }, { entryText: '% of length', val: '%' }];
 				options.forEach((opt) => {
 					menu.newEntry({
 						menuName: subMenuThree, entryText: opt.entryText, func: () => {
