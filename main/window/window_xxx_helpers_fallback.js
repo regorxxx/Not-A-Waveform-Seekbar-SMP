@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//07/08/25
 
 /* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, _resolvePath */
 
@@ -28,7 +28,7 @@ if (on_script_unload) {
 
 // Cache
 const scaleDPI = {}; // Caches _scale() values;
-const fonts = {}; // Caches _gdifont() values;
+const fonts = {}; // Caches _gdiFont() values;
 
 
 function _scale(size) {
