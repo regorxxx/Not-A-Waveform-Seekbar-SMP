@@ -1,5 +1,5 @@
 'use strict';
-//06/08/25
+//09/08/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -16,8 +16,6 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @constructor
  * @param {object} o - argument
  * @param {string} [o.matchPattern] - [='$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)'] Match pattern used to create analysis file path.
- * @param {boolean} [o.bDebug] - [=false] Enable debug logging.
- * @param {boolean} [o.bProfile] - [=false] Enable profiling logging.
  * @param {{ffprobe: string?, audiowaveform: string?, visualizer: null}} [o.binaries] - Paths to binaries. May be relative paths to profile folder (.//profile//) or foobar folder (.//), root will be replaced on execution.
  * @param {object} [o.preset] - Waveform display related settings.
  * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} [o.preset.waveMode] - [='waveform'] Waveform display design.
@@ -55,11 +53,15 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @param {boolean} [o.analysis.bMultiChannel] - [=false] Wether output analysis data files are combined into a single waveform or not. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via o.preset.bDownMixToMono without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to track channels).
  * @param {object} [o.callbacks] - Panel callbacks related settings.
  * @param {() => number} [o.callbacks.backgroundColor] - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
+ * @param {object} [o.logging] - Panel callbacks related settings.
+ * @param {boolean} [o.logging.bDebug] - [=false] Debug logging flag.
+ * @param {boolean} [o.logging.bProfile] - [=false] Profiling logging flag.
+ * @param {boolean} [o.logging.bLoad] - [=true] On seekbar file load logging flag.
+ * @param {boolean} [o.logging.bSave] - [=true] On seekbar file save logging flag.
+ * @param {boolean} [o.logging.bError] - [=true] On seekbar errors logging flag.
  */
 function _seekbar({
 	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUMARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\[%TRACKNUMBER% - ][$replace(%TITLE%,$char(92),-,/,-,$char(41),,$char(40),,:,, ?$char(92),,?,,¿,,/,-,$char(36),,$char(37),,# ,,#,,*,,!,,¡,,|,-,",$char(39)$char(39),<,,>,,^,,... ,,...,,.,)])), ?,,= ,,?,)',
-	bDebug = false,
-	bProfile = false,
 	binaries = {
 		ffprobe: '.\\profile\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
 		audiowaveform: '.\\profile\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
@@ -124,6 +126,13 @@ function _seekbar({
 	},
 	callbacks = {
 		backgroundColor: null
+	},
+	logging = {
+		bDebug: false,
+		bProfile: false,
+		bLoad: true,
+		bSave: true,
+		bError: true,
 	}
 } = {}) {
 
@@ -189,7 +198,14 @@ function _seekbar({
 		const defCallbacks = {
 			backgroundColor: null,
 		};
-		const options = [{ from: defBinaries, to: binaries }, { from: defPreset, to: preset }, { from: defUi, to: ui }, { from: defAnalysis, to: analysis }, { from: defCallbacks, to: callbacks }];
+		const defLogging = {
+			bDebug: false,
+			bProfile: false,
+			bLoad: true,
+			bSave: true,
+			bError: true
+		};
+		const options = [{ from: defBinaries, to: binaries }, { from: defPreset, to: preset }, { from: defUi, to: ui }, { from: defAnalysis, to: analysis }, { from: defCallbacks, to: callbacks }, { from: defLogging, to: logging }];
 		options.forEach((option) => {
 			for (const key in option.from) {
 				const subOption = option.from[key];
@@ -329,6 +345,16 @@ function _seekbar({
 	 */
 	/** @type {Callbacks} - Panel callbacks related settings. */
 	this.callbacks = callbacks;
+	/**
+	 * @typedef {object} Logging - Panel logging related settings.
+	 * @property {boolean} [bDebug] - Debug logging flag.
+	 * @property {boolean} [bProfile] - Profiling logging flag.
+	 * @property {boolean} [bLoad] - On seekbar file load logging flag.
+	 * @property {boolean} [bSave] - On seekbar file save logging flag.
+	 * @property {boolean} [bError] - On seekbar errors logging flag.
+	 */
+	/** @type {Logging} - Panel logging related settings. */
+	this.logging = logging;
 	// Easy access
 	/** @type {number} - X-Axis position */
 	this.x = this.ui.pos.x;
@@ -373,10 +399,6 @@ function _seekbar({
 	this.Tf = fb.TitleFormat(matchPattern);
 	/** @type {FbTitleFormat} - Animation steps pattern */
 	this.TfMaxStep = fb.TitleFormat('[%BPM%]');
-	/** @type {boolean} - Debug logging flag */
-	this.bDebug = bDebug;
-	/** @type {boolean} - Profiling logging flag */
-	this.bProfile = bProfile;
 	/** @type {string} - Analysis data files root */
 	this.folder = fb.ProfilePath + 'js_data\\seekbar\\';
 	/** @type {number} - UTF-8 codepage */
@@ -448,7 +470,7 @@ function _seekbar({
 	let throttlePaint;
 	/** @type {(x:number, y:number, w:number, h:number, bForce = false) => void(0)} - Repaint part of window throttled */
 	let throttlePaintRect;
-	/** @type {FbProfiler} - Used for profiling when this.bProfile is true */
+	/** @type {FbProfiler} - Used for profiling when this.logging.bProfile is true */
 	const profilerPaint = new FbProfiler('paint');
 
 	// Check & Init
@@ -537,6 +559,7 @@ function _seekbar({
 		}
 		config.preset = clone(this.preset);
 		config.analysis = clone(this.analysis);
+		config.logging = clone(this.logging);
 		return config;
 	};
 	/**
@@ -552,7 +575,7 @@ function _seekbar({
 	*/
 	this.loadDataFile = (file, ext) => {
 		let data = [];
-		console.log('Seekbar: Analysis file path -> ' + file.replace(fb.ProfilePath, '.\\') + ext);
+		if (this.logging.bLoad) { console.log('Seekbar: Analysis file path -> ' + file.replace(fb.ProfilePath, '.\\') + ext); }
 		if (ext.endsWith('.json')) {
 			data = _jsonParseFile(file + ext, this.codePage) || [];
 		} else if (ext.endsWith('.lz')) {
@@ -2081,7 +2104,7 @@ function _seekbar({
 		const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 		const sampleRate = fb.TitleFormat('%SAMPLERATE%').EvalWithMetadb(handle);
 		if (this.isAllowedFile && !bFallbackMode.analysis && bAuWav) {
-			if (this.bProfile) { profiler = new FbProfiler('audiowaveform'); }
+			if (this.logging.bProfile) { profiler = new FbProfiler('audiowaveform'); }
 			const extension = RegExp(/(?:\.)(\w+$)/i).exec(handleFileName)[1];
 			const pxPerSecond = this.analysis.resolution <= sampleRate / 2
 				? this.analysis.resolution || 1
@@ -2093,7 +2116,7 @@ function _seekbar({
 				(this.analysis.bMultiChannel ? ' --split-channels' : '') +
 				' -o ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isAllowedFile && !bFallbackMode.analysis && bFfProbe) {
-			if (this.bProfile) { profiler = new FbProfiler('ffprobe'); }
+			if (this.logging.bProfile) { profiler = new FbProfiler('ffprobe'); }
 			handleFileName = handleFileName.replace(/[,:%.*+?^${}()|[\]\\]/g, '\\$&')
 				.replace(/'/g, '\\\\\\\''); // And here we go again...
 			// https://ayosec.github.io/ffmpeg-filters-docs/3.0/Filters/Audio/astats.html
@@ -2116,7 +2139,7 @@ function _seekbar({
 		}
 		if (cmd) {
 			console.log('Seekbar: Scanning -> ' + sourceFile);
-			if (this.bDebug) { console.log(cmd); }
+			if (this.logging.bDebug) { console.log(cmd); }
 		} else if (!this.isAllowedFile && !bVisualizer && !bFallbackMode.analysis) {
 			console.log('Seekbar: Skipping incompatible file -> ' + sourceFile);
 		}
@@ -2165,7 +2188,7 @@ function _seekbar({
 					// Save data and optionally compress it
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.ff');
-						console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff');
+						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff'); }
 					}
 				} else if (bNotFallback && bAuWav && data.length) {
 					const processedData = Array.from({ length: channels }, () => []);
@@ -2185,7 +2208,7 @@ function _seekbar({
 					if (bPlayingSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.aw');
-						console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw');
+						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw'); }
 					}
 				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && this.isTrackPlaying()) {
 					this.current = data;
@@ -2194,7 +2217,7 @@ function _seekbar({
 			// Set animation using BPM if possible
 			if (bPlayingSameHandle && this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 			// Console and paint
-			if (this.bProfile) {
+			if (this.logging.bProfile) {
 				if (cmd) { profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.'); }
 				else { profiler.Print('Visualizer.'); }
 			}

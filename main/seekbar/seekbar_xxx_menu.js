@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//09/08/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -682,6 +682,21 @@ function settingsMenu(bClear = true) {
 				}
 			});
 			menu.newCheckMenuLast(() => this.ui.wheel.bReversed);
+		}
+		menu.newSeparator(subMenu);
+		{
+			const subMenuTwo = menu.newMenu('Logging', subMenu);
+			menu.newEntry({ menuName: subMenuTwo, entryText: 'Console logging', flags: MF_GRAYED });
+			menu.newSeparator(subMenuTwo);
+			Object.keys(this.logging).forEach((key) => {
+				menu.newEntry({
+					menuName: subMenuTwo, entryText: key.replace(/^b/, ''), func: () => {
+						this.updateConfig({ logging: { [key]: !this.logging[key] } });
+						this.saveProperties();
+					}
+				});
+				menu.newCheckMenuLast(() => this.logging[key]);
+			});
 		}
 		menu.newSeparator(subMenu);
 		menu.newEntry({

@@ -1,5 +1,5 @@
 'use strict';
-//29/06/25
+//09/08/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -89,6 +89,14 @@ let seekbarProperties = {
 			normalizeWidth: _scale(4),
 			bLogScale: true
 		}), { func: isJSON }],
+	logging: ['Logging config',
+		JSON.stringify({
+			bDebug: false,
+			bProfile: false,
+			bLoad: false,
+			bSave: true,
+			bError: true
+		}), { func: isJSON }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
 	matchPattern: ['File name TF format', '$lower(' +
 		globTags.artistAlbumTrackTitleSanitize
@@ -164,7 +172,8 @@ const seekbar = new _seekbar({
 	analysis: JSON.parse(seekbarProperties.analysis[1], (key, value) => value === null ? Infinity : value),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => value === null ? Infinity : value),
 	ui: { ...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: { scaleH: 0.9, scaleW: 1 / 30 } },
-	callbacks: { backgroundColor: () => background.getColors()[0] }
+	callbacks: { backgroundColor: () => background.getColors()[0] },
+	logging: JSON.parse(seekbarProperties.logging[1]),
 });
 if (!seekbarProperties.bEnabled[1]) { seekbar.switch(); }
 _menu.bindInstance(seekbar, settingsMenu);

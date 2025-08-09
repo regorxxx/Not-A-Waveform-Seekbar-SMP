@@ -43,6 +43,7 @@
 - UI: added tooltip to panel adjusted to be shown only after 1.5 seconds and disappear again after that time so it doesn't annoy during seeking.
 - Storage: added 3 storage modes to control if data files are saved for any track, only tracks from library or nothing.
 - Readme: readme is shown as popup on first installation and available at the settings menu.
+- Console: added selective console logging settings.
 ### Changed
 - Installation: added popup warnings when scripts are installed outside foobar2000 profile folder. These checks can be tweaked at globSettings.json.
 - Installation: script may now be installed at any path within the foobar profile folder, no longer limited to '[FOOBAR PROFILE FOLDER]\scripts\SMP\xxx-scripts\' folder. Obviously it may still be installed at such place, which may be preferred if updating an older version.
