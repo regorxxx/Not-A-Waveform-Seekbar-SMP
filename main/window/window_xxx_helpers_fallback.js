@@ -27,18 +27,39 @@ if (on_script_unload) {
 
 
 // Cache
-const scaleDPI = {}; // Caches _scale() values;
-const fonts = {}; // Caches _gdiFont() values;
+const scaleDPI = { factor: -1, reference: 72 }; // Caches _scale() values;
+const fonts = { notFound: [] }; // Caches _gdiFont() values;iFont() values;
 
 
-function _scale(size) {
-	if (!scaleDPI[size]) {
-		let DPI;
-		try { DPI = WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI'); }
-		catch (e) { DPI = 96; } // eslint-disable-line no-unused-vars
-		scaleDPI[size] = Math.round(size * DPI / 72);
+function _scale(size, bRound = true) {
+	if (scaleDPI.factor === -1) {
+		if (typeof window.DPI === 'number') {
+			scaleDPI.factor = window.DPI / scaleDPI.reference;
+		} else {
+			try {
+				scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')) / scaleDPI.reference;
+			} catch (e) { // eslint-disable-line no-unused-vars
+				try {
+					scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Control Panel\\Desktop\\LogPixels')) / scaleDPI.reference;
+				} catch (e) { // eslint-disable-line no-unused-vars
+					try {
+						scaleDPI.factor = Number(WshShellUI.RegRead('HKCU\\Software\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\\LogPixels')) / scaleDPI.reference;
+					} catch (e) { // eslint-disable-line no-unused-vars
+						try {
+							scaleDPI.factor = Number(WshShellUI.RegRead('HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI\\LogPixels')) / scaleDPI.reference;
+						} catch (e) { // eslint-disable-line no-unused-vars
+							try {
+								scaleDPI.factor = Number(WshShellUI.RegRead('HKLM\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\\LogPixels')) / scaleDPI.reference;
+							} catch (e) { // eslint-disable-line no-unused-vars
+								scaleDPI.factor = 1;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	return scaleDPI[size];
+	return (bRound ? Math.round(size * scaleDPI.factor) : size * scaleDPI.factor);
 }
 
 /*

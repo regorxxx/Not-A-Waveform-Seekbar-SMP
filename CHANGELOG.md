@@ -55,6 +55,7 @@
 - UI: changed FFprobe default display mode to linear scaling (like Audiowaveform).
 - UI: renamed some settings to better show which ones affect the 'unplayed' section. They should be more familiar now to people using [foo_wave_minibar_mod](https://www.foobar2000.org/components/view/foo_wave_minibar_mod) component.
 - UI: dead items now show a 'Dead or not found item.' message instead of non compatible or being stuck on analyzing. URLs still show the non compatible format.
+- UI: workaround for DPI checking under multiple OSes, specially for Wine (Unix).
 - Readme: added FAQ section.
 - Helpers: updated helpers.
 - Helpers: general code cleanup on menus internal code. Please report any bug on extra separators or menu entries not working as expected.
