@@ -1,5 +1,5 @@
 'use strict';
-//09/08/25
+//07/09/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -107,7 +107,7 @@ let seekbarProperties = {
 		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }
 	)), { func: isJSON }],
 	bDynamicColors: ['Adjust colors to artwork', false, { func: isBoolean }],
-	bAutoUpdateCheck: ['Automatically check updates?', globSettings.bAutoUpdateCheck, { func: isBoolean }],
+	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	firstPopup: ['Seekbar: Fired once', false, { func: isBoolean }, false],
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
