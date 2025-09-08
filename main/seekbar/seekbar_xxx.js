@@ -1,5 +1,5 @@
 'use strict';
-//09/08/25
+//08/09/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -1148,7 +1148,7 @@ function _seekbar({
 	this.verifyData = (handle, file, bIsRetry = false) => {
 		if (!this.isDataValid(handle)) {
 			if (bIsRetry) {
-				console.log('Seekbar: Track was not successfully analyzed after retrying');
+				if (this.logging.bError) { console.log('Seekbar: Track was not successfully analyzed after retrying'); }
 				file && _deleteFile(file);
 				this.isAllowedFile = false;
 				this.isFallback = this.analysis.bVisualizerFallback;
@@ -1157,7 +1157,7 @@ function _seekbar({
 				this.frames = 0;
 				this.timeConstant = 0;
 			} else {
-				console.log('Seekbar: Analysis file not valid.' + (file ? ' Creating new one -> ' + file : ''));
+				if (this.logging.bError) { console.log('Seekbar: Analysis file not valid.' + (file ? ' Creating new one -> ' + file : '')); }
 				file && _deleteFile(file);
 				this.newTrack(handle, true, true);
 			}
@@ -2138,10 +2138,10 @@ function _seekbar({
 			profiler = new FbProfiler('visualizer');
 		}
 		if (cmd) {
-			console.log('Seekbar: Scanning -> ' + sourceFile);
+			if (this.logging.bSave) { console.log('Seekbar: Scanning -> ' + sourceFile); }
 			if (this.logging.bDebug) { console.log(cmd); }
 		} else if (!this.isAllowedFile && !bVisualizer && !bFallbackMode.analysis) {
-			console.log('Seekbar: Skipping incompatible file -> ' + sourceFile);
+			if (this.logging.bError) { console.log('Seekbar: Skipping incompatible file -> ' + sourceFile); }
 		}
 		const channels = this.channels; // If playback is changed during analysis it may change
 		let bDone = cmd ? _runCmd(cmd, false) : true;
@@ -2224,8 +2224,7 @@ function _seekbar({
 			if (bPlayingSameHandle) {
 				if (this.current.length && this.current.some((channel) => channel.length)) {
 					if (window.IsVisible) { throttlePaint(); }
-				}
-				else if (bNotFallback) { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
+				} else if (bNotFallback && this.logging.bError) { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }
 			}
 		}
 		return bDone;
