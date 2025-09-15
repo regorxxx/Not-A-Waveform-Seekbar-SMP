@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/05/25
+//12/09/25
 
 /* exported _background */
 
@@ -45,7 +45,7 @@ function _background({
 		};
 	};
 
-	this.updateImageBg = debounce((bForce = false) => {
+	this.updateImageBg = debounce((bForce = false, onDone) => {
 		const path = _resolvePath(this.coverModeOptions.path || '');
 		const bPath = this.coverMode.toLowerCase() === 'path' && path.length;
 		if (this.coverMode.toLowerCase() === 'none') {
@@ -59,7 +59,10 @@ function _background({
 		if (this.coverModeOptions.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
 			id = tf.EvalWithMetadb(handle);
-			if (!bForce && id === this.coverImg.id) { return; }
+			if (!bForce && id === this.coverImg.id) {
+				if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
+				return;
+			}
 		}
 		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
 		const promise = bPath
@@ -91,7 +94,8 @@ function _background({
 			if (this.callbacks.artColors) {
 				this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
 			}
-			return this.repaint();
+			this.repaint();
+			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
 		});
 	}, 250);
 
