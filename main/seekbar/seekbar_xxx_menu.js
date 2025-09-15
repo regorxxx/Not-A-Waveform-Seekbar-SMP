@@ -813,5 +813,16 @@ function importSettingsMenu() {
 			this.shareUiSettings('popup');
 		}
 	});
+	menu.newSeparator();
+	menu.newEntry({
+		entryText: 'Configure panel...', func: () => window.ShowConfigureV2()
+	});
+	menu.newEntry({
+		entryText: 'Panel properties...', func: () => window.ShowProperties()
+	});
+	menu.newSeparator();
+	menu.newEntry({
+		entryText: 'Reload panel', func: () => window.Reload()
+	});
 	return menu;
 }
