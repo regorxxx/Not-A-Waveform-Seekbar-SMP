@@ -1,5 +1,5 @@
 'use strict';
-//07/09/25
+//16/09/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -138,8 +138,8 @@ const background = new _background({
 				overwriteProperties(seekbarProperties);
 			}
 		},
-		artColors: (colArray) => {
-			if (!seekbarProperties.bDynamicColors[1]) { return; }
+		artColors: (colArray, bForced) => {
+			if (!bForced && !seekbarProperties.bDynamicColors[1]) { return; }
 			if (colArray) {
 				const { main, sec, note, mainAlt, secAlt } = dynamicColors(
 					colArray,
@@ -394,8 +394,32 @@ addEventListener('on_mouse_wheel_h', (step) => {
 
 addEventListener('on_notify_data', (name, info) => {
 	if (name === 'bio_imgChange' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
-	if (name === 'Seekbar: share UI settings') {
-		if (info) { seekbar.applyUiSettings(clone(info)); }
+	switch (name) { // NOSONAR
+		case 'Seekbar: share UI settings': {
+			if (info) { seekbar.applyUiSettings(clone(info)); }
+			break;
+		}
+		case 'Seekbar: set colors': { // Needs an array of 6 colors or an object {background, main, alt, currPos, mainFuture, altFuture}
+			if (info) {
+				const colors = clone(info);
+				const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'main', 'alt', 'currPos', 'mainFuture', 'altFuture'].indexOf(key)];
+				const hasColor = (key) => typeof getColor(key) !== 'undefined';
+				if (background.colorMode !== 'none' && hasColor('background')) {
+					background.changeConfig({ config: { colorModeOptions: { color: getColor('background') } }, callbackArgs: { bSaveProperties: false } });
+				}
+				if (seekbar.ui.colors.main !== -1 && hasColor('main')) { seekbar.ui.colors.main = getColor('main'); }
+				if (seekbar.ui.colors.alt !== -1 && hasColor('alt')) { seekbar.ui.colors.alt = getColor('alt'); }
+				if (seekbar.ui.colors.currPos !== -1 && hasColor('currPos')) { seekbar.ui.colors.currPos = getColor('currPos'); }
+				if (seekbar.ui.colors.mainFuture !== -1 && hasColor('mainFuture')) { seekbar.ui.colors.mainFuture = getColor('mainFuture'); }
+				if (seekbar.ui.colors.altFuture !== -1 && hasColor('altFuture')) { seekbar.ui.colors.altFuture = getColor('altFuture'); }
+			}
+			break;
+		}
+		case 'Colors: set color scheme':
+		case 'Seekbar: set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
+			if (info) { background.artColors(clone(info), true); }
+			break;
+		}
 	}
 });
 

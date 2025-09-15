@@ -41,6 +41,7 @@
 - UI: added scrolling using the mouse wheel (horizontal or vertical). Seek ahead/back steps, unit (s, ms or % of length) and reverse scrolling may be tweaked at the settings (see 'Other settings').
 - UI: exposed background gradient focus setting, i.e. where the center color will be at its highest intensity.
 - UI: added tooltip to panel adjusted to be shown only after 1.5 seconds and disappear again after that time so it doesn't annoy during seeking.
+- UI: exposed color settings via window.NotifyOthers() method for themes/multi-panel support. You may pass a color scheme -size 6 recommended- (output from GetColourScheme()) at 'Colors: set color scheme' (applies to all compatible panels) or 'Seekbar: set color scheme' (applies only to this script), which will set appropriate colors following panel's color logic; alternatively you may set direct color settings at 'Seekbar: set colors' which needs an array of 6 colors or an object {background, main, alt, currPos, mainFuture, altFuture}. [See](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/issues/4).
 - Storage: added 3 storage modes to control if data files are saved for any track, only tracks from library or nothing.
 - Readme: readme is shown as popup on first installation and available at the settings menu.
 - Console: added selective console logging settings.
