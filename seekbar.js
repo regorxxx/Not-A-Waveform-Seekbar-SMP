@@ -106,9 +106,11 @@ let seekbarProperties = {
 		(new _background).defaults(),
 		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }
 	)), { func: isJSON }],
-	bDynamicColors: ['Adjust colors to artwork', false, { func: isBoolean }],
+	bDynamicColors: ['Adjust colors to artwork', true, { func: isBoolean }],
 	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	firstPopup: ['Seekbar: Fired once', false, { func: isBoolean }, false],
+	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
+	bNotifyColors: ['Notify colors to other panels', false, { func: isBoolean }]
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
@@ -140,7 +142,7 @@ const background = new _background({
 		},
 		artColors: (colArray, bForced) => {
 			if (!bForced && !seekbarProperties.bDynamicColors[1]) { return; }
-			if (colArray) {
+			else if (colArray) {
 				const { main, sec, note, mainAlt, secAlt } = dynamicColors(
 					colArray,
 					seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getColors()[0],
@@ -156,6 +158,13 @@ const background = new _background({
 				for (const key in seekbar.ui.colors.colors) {
 					seekbar.ui.colors[key] = defColors[key];
 				}
+			}
+			window.Repaint();
+		},
+		artColorsNotify: (colArray, bForced) => {
+			if (!bForced && seekbarProperties.bNotifyColors[1]) { return; }
+			else if (colArray) {
+				window.NotifyOthers('Colors: set color scheme', colArray);
 			}
 		}
 	},
@@ -400,7 +409,7 @@ addEventListener('on_notify_data', (name, info) => {
 			break;
 		}
 		case 'Seekbar: set colors': { // Needs an array of 6 colors or an object {background, main, alt, currPos, mainFuture, altFuture}
-			if (info) {
+			if (info && seekbarProperties.bOnNotifyColors[1]) {
 				const colors = clone(info);
 				const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'main', 'alt', 'currPos', 'mainFuture', 'altFuture'].indexOf(key)];
 				const hasColor = (key) => typeof getColor(key) !== 'undefined';
@@ -412,12 +421,13 @@ addEventListener('on_notify_data', (name, info) => {
 				if (seekbar.ui.colors.currPos !== -1 && hasColor('currPos')) { seekbar.ui.colors.currPos = getColor('currPos'); }
 				if (seekbar.ui.colors.mainFuture !== -1 && hasColor('mainFuture')) { seekbar.ui.colors.mainFuture = getColor('mainFuture'); }
 				if (seekbar.ui.colors.altFuture !== -1 && hasColor('altFuture')) { seekbar.ui.colors.altFuture = getColor('altFuture'); }
+				window.Repaint();
 			}
 			break;
 		}
 		case 'Colors: set color scheme':
 		case 'Seekbar: set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
-			if (info) { background.artColors(clone(info), true); }
+			if (info && seekbarProperties.bOnNotifyColors[1]) { background.callbacks.artColors(clone(info), true); }
 			break;
 		}
 	}

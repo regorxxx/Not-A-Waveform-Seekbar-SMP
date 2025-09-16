@@ -609,6 +609,7 @@ function settingsMenu(bClear = true) {
 				if (seekbarProperties.bDynamicColors[1]) {
 					this.saveProperties();
 					// Ensure it's applied with compatible settings
+					background.coverModeOptions.bProcessColors = true;
 					if (background.coverMode === 'none') {
 						background.coverModeOptions.alpha = 0;
 						background.coverMode = 'front';

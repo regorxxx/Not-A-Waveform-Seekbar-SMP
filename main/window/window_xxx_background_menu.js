@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//16/09/25
 
 /* exported createBackgroundMenu */
 
@@ -106,6 +106,10 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		[
 			{ isEq: null, key: this.coverModeOptions.bFill, value: null, newValue: !this.coverModeOptions.bFill, entryText: 'Fill panel' }
 		].forEach(createMenuOption('coverModeOptions', 'bFill', subMenu, true));
+		[
+			{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
+		].forEach(createMenuOption('coverModeOptions', 'bProcessColors', subMenu, true));
+		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
 		menu.newSeparator(subMenu);
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },

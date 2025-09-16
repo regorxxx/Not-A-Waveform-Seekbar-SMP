@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/25
+//16/09/25
 
 /* exported _background */
 
@@ -30,14 +30,15 @@ function _background({
 			offsetH: _scale(1),
 			timer: 60,
 			coverMode: 'none', // none | front | back | disc | icon | artist | path
-			coverModeOptions: { blur: 50, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true },
+			coverModeOptions: { blur: 50, angle: 0, alpha: 153, path: '', bNowPlaying: true, bProportions: true, bFill: true, bCacheAlbum: true, bProcessColors: true },
 			colorMode: 'none', // none | single | gradient | bigradient
 			colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [] },
 			...(bCallbacks
 				? {
 					callbacks: {
 						change: null, /* (config, arguments, callbackArgs) => void(0) */
-						artColors: null /* (colArray) => void(0) */
+						artColors: null /* (colorArray, bForced) => void(0) */,
+						artColorsNotify: null /* (colorArray, bForced) => void(0) */,
 					}
 				}
 				: {}
@@ -52,6 +53,7 @@ function _background({
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}
+		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
 		if (this.colorMode.toLowerCase() === 'none') { this.colorImg = null; }
 		const handle = (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null) || fb.GetFocusItem(true);
 		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === path)) { return; }
@@ -84,7 +86,7 @@ function _background({
 			if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
 				this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
 			}
-			if (this.coverImg.art.image) {
+			if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
 				this.coverImg.art.colors = this.coverImg.art.image.GetColourScheme(6);
 			}
 		}).catch(() => {
@@ -93,6 +95,9 @@ function _background({
 		}).finally(() => {
 			if (this.callbacks.artColors) {
 				this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
+			}
+			if (this.callbacks.artColorsNotify) {
+				this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
 			}
 			this.repaint();
 			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
@@ -284,7 +289,7 @@ function _background({
 	this.offsetH = 0;
 	/** @type {('none'|'front'|'back'|'disc'|'icon'|'artist'|'path')} */
 	this.coverMode = '';
-	/** @type {{ blur:Number, angle:Number, alpha:Number, path:String, bNowPlaying:Boolean, bProportions:Boolean, bFill:Boolean }} */
+	/** @type {{ blur:Number, angle:Number, alpha:Number, path:String, bNowPlaying:Boolean, bProportions:Boolean, bFill:Boolean, bProcessColors:Boolean }} */
 	this.coverModeOptions = {};
 	/** @type {('single'|'gradient'|'bigradient'|'none')} */
 	this.colorMode = '';
@@ -292,7 +297,7 @@ function _background({
 	this.colorModeOptions = {};
 	/** @type {Number} */
 	this.timer = 0;
-	/** @type {{ change: function(config, arguments, callbackArgs), artColors: function() }} */
+	/** @type {{ change: function(config, arguments, callbackArgs), artColors: function(colorArray, bForced), artColorsNotify: function(colorArray, bForced) }} */
 	this.callbacks = {};
 
 	this.init();
