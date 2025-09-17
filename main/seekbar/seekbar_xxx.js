@@ -1,5 +1,5 @@
 'use strict';
-//11/09/25
+//17/09/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -1291,10 +1291,12 @@ function _seekbar({
 		if (!window.IsVisible) { return; }
 		// Repaint by zone when possible
 		const frames = this.frames;
-		const bPrePaint = this.preset.paintMode === 'partial' && this.preset.bPrePaint;
-		if (this.analysis.binaryMode === 'visualizer' || this.preset.waveMode === 'vumeter' || !frames || bFull) {
+		const bPartial = this.preset.paintMode === 'partial';
+		const bPrePaint = bPartial && this.preset.bPrePaint;
+		const bFullAnimated = !bPartial && this.preset.bAnimate;
+		if (this.analysis.binaryMode === 'visualizer' || bFullAnimated || this.preset.waveMode === 'vumeter' || !frames || bFull) {
 			throttlePaint(bFull);
-		} else if (bPrePaint || this.preset.bPaintCurrent || this.preset.paintMode === 'partial') {
+		} else if (bPrePaint || this.preset.bPaintCurrent || bPartial) {
 			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
@@ -1591,7 +1593,7 @@ function _seekbar({
 	*/
 	this.paintWave = (gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
-		this.offset[n] += (bPrePaint && bIsFuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
 		const y = scaledSize > 0
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
@@ -1835,15 +1837,16 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter) => { // NOSONAR
+		const bFullAnimated = !bPartial && this.preset.bAnimate;
 		// Incrementally draw animation on small steps
-		if ((bPrePaint && this.preset.bAnimate) || bVisualizer) {
+		if ((bPrePaint && this.preset.bAnimate) || bFullAnimated || bVisualizer) {
 			if (this.step >= this.maxStep) { this.step = - this.step; }
 			else {
 				if (this.step === 0) { this.offset = []; }
 				this.step++;
 			}
 		}
-		if (bVisualizer || (bVuMeter && frames)) { throttlePaint(); }
+		if (bVisualizer || bFullAnimated || (bVuMeter && frames)) { throttlePaint(); }
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
 			const widerModesScale = (bBars || bHalfBars ? 2 : 1);
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;

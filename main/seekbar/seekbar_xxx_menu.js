@@ -372,12 +372,12 @@ function settingsMenu(bClear = true) {
 		menu.newCheckMenuLast(() => this.preset.bDownMixToMono);
 	}
 	{
-		const subMenu = menu.newMenu('Animation' + (this.preset.waveMode === 'vumeter' ? '\t(not VU Meter)' : ''), void (0), ((this.preset.paintMode === 'partial' && this.preset.bPrePaint) || this.analysis.binaryMode === 'visualizer') && this.preset.waveMode !== 'vumeter' ? MF_STRING : MF_GRAYED);
+		const subMenu = menu.newMenu('Animation' + (this.preset.waveMode === 'vumeter' ? '\t(not VU Meter)' : ''), void (0), (this.preset.paintMode === 'full' || this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer') && this.preset.waveMode !== 'vumeter' ? MF_STRING : MF_GRAYED);
 		[
 			{ name: 'Enable animation', key: 'bAnimate', flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING },
 			{
-				name: 'Animate with BPM' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), key: 'bUseBPM',
-				flags: (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED
+				name: 'Animate with BPM', key: 'bUseBPM',
+				flags: (this.preset.paintMode === 'full' || this.preset.bPrePaint) && this.preset.bAnimate || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED
 			},
 		].forEach((o) => {
 			menu.newEntry({
@@ -389,7 +389,7 @@ function settingsMenu(bClear = true) {
 			menu.newCheckMenuLast(() => { return this.preset[o.key] || o.key === 'bAnimate' && this.analysis.binaryMode === 'visualizer'; });
 		});
 		menu.newSeparator(subMenu);
-		const subMenuTwo = menu.newMenu('Refresh rate' + (this.preset.paintMode === 'full' && this.analysis.binaryMode !== 'visualizer' ? '\t(partial only)' : ''), subMenu, () => (this.preset.paintMode === 'partial' && this.preset.bPrePaint && this.preset.bAnimate) || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
+		const subMenuTwo = menu.newMenu('Refresh rate', subMenu, () => (this.preset.paintMode === 'full' || this.preset.bPrePaint) && this.preset.bAnimate || this.analysis.binaryMode === 'visualizer' ? MF_STRING : MF_GRAYED);
 		[1000, 500, 200, 100, 80, 60, 30]
 			.forEach((s) => {
 				const entryText = s + ' ms';
