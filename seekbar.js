@@ -8,7 +8,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable */
 include('helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, RGB:readable, _gdiFont:readable, _tt:readable */
+/* global _scale:readable, RGB:readable, _gdiFont:readable, _tt:readable, blendColors */
 include('helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, _save:readable */
 include('helpers\\helpers_xxx_prototypes.js');
@@ -27,7 +27,7 @@ include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
 include('main\\window\\window_xxx_dynamic_colors.js');
-/* global dynamicColors:readable */
+/* global dynamicColors:readable, mostContrastColor */
 
 globProfiler.Print('helpers');
 
@@ -150,7 +150,12 @@ const background = new _background({
 				);
 				if (seekbar.ui.colors.main !== -1) { seekbar.ui.colors.main = main; }
 				if (seekbar.ui.colors.alt !== -1) { seekbar.ui.colors.alt = sec; }
-				if (seekbar.ui.colors.currPos !== -1) { seekbar.ui.colors.currPos = note; }
+				if (seekbar.ui.colors.currPos !== -1) {
+					seekbar.ui.colors.currPos = mostContrastColor(
+						seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getColors()[0],
+						[note, blendColors(note, RGB(0, 0, 0), 0.4), blendColors(note, RGB(255, 255, 255), 0.4)]
+					).color;
+				}
 				if (seekbar.ui.colors.mainFuture !== -1) { seekbar.ui.colors.mainFuture = mainAlt; }
 				if (seekbar.ui.colors.altFuture !== -1) { seekbar.ui.colors.altFuture = secAlt; }
 			} else {
