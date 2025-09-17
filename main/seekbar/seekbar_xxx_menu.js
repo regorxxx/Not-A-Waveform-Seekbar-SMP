@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/25
+//17/09/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -606,18 +606,18 @@ function settingsMenu(bClear = true) {
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Dynamic (background cover mode)', func: () => {
 				seekbarProperties.bDynamicColors[1] = !seekbarProperties.bDynamicColors[1];
+				this.saveProperties();
 				if (seekbarProperties.bDynamicColors[1]) {
-					this.saveProperties();
 					// Ensure it's applied with compatible settings
-					background.coverModeOptions.bProcessColors = true;
+					background.changeConfig({ config: { coverModeOptions: { bProcessColors: true } }, callbackArgs: { bSaveProperties: true } });
 					if (background.coverMode === 'none') {
-						background.coverModeOptions.alpha = 0;
-						background.coverMode = 'front';
+						background.changeConfig({ config: { coverMode: 'front', coverModeOptions: { alpha: 0 } }, callbackArgs: { bSaveProperties: true } });
 					}
 					background.updateImageBg(true);
 				} else {
 					const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
 					this.updateConfig({ ui: { colors: defColors } });
+					background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(seekbarProperties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
 					this.saveProperties();
 				}
 			}

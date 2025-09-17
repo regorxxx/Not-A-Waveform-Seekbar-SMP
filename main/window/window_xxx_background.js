@@ -259,7 +259,7 @@ function _background({
 	};
 	this.getColors = () => {
 		if (['front', 'back', 'disc', 'icon', 'artist', 'path'].includes(this.coverMode.toLowerCase())) {
-			if (this.coverImg.art.image && this.coverImg.art.colors.length && this.coverModeOptions.alpha !== 0) {
+			if (this.coverImg.art.colors && this.coverImg.art.colors.length && this.coverModeOptions.alpha !== 0) {
 				return this.coverImg.art.colors.slice(0, 2);
 			}
 		}

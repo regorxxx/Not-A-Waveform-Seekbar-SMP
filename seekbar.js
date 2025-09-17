@@ -1,5 +1,5 @@
 'use strict';
-//16/09/25
+//17/09/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -164,6 +164,7 @@ const background = new _background({
 		artColorsNotify: (colArray, bForced) => {
 			if (!bForced && seekbarProperties.bNotifyColors[1]) { return; }
 			else if (colArray) {
+				background.scheme = colArray;
 				window.NotifyOthers('Colors: set color scheme', colArray);
 			}
 		}
@@ -430,6 +431,12 @@ addEventListener('on_notify_data', (name, info) => {
 			if (info && seekbarProperties.bOnNotifyColors[1]) { background.callbacks.artColors(clone(info), true); }
 			break;
 		}
+		case 'Colors: ask color scheme': {
+			if (info && seekbarProperties.bNotifyColors[1] && background.scheme) {
+				window.NotifyOthers(String(info), background.scheme);
+			}
+			break;
+		}
 	}
 });
 
@@ -443,6 +450,13 @@ addEventListener('on_notify_data', (name, info) => {
 			setTimeout(() => { on_playback_new_track(initHandle); }, 0);
 		}
 	}
+}
+
+if (seekbarProperties.bOnNotifyColors[1]) { // Ask color-servers at init
+	setTimeout(() => {
+		window.NotifyOthers('Colors: ask color scheme', 'Seekbar: set color scheme');
+		window.NotifyOthers('Colors: ask colors', 'Seekbar: set colors');
+	}, 1000);
 }
 
 globProfiler.Print('callbacks');
