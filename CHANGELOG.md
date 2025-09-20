@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.0.0](#300---2025-09-20)
 - [2.6.0](#260---2024-10-09)
 - [2.5.1](#251---2024-08-13)
 - [2.5.0](#250---2024-07-30)
@@ -29,6 +30,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [3.0.0] - 2025-09-20
 ### Added
 - Track: added settings for the track displayed, no longer limited to the playing track. Allows to set playing track, selected track and blank as options which can be sorted by priority.
 - Track: added an additional option to only render tracks on-demand. In this mode, a new menu entry appears which must be clicked to render the waveform for the selected tack. This waveform will be statically displayed even if selecting changes or other tacks are played (animations and time update will be disabled in such cases). Seeking will play the original source track.
@@ -300,7 +307,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.6.0...v3.0.0
 [2.6.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.4.0...v2.5.0
