@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/09/25
+//20/09/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -603,26 +603,51 @@ function settingsMenu(bClear = true) {
 				}
 			});
 		}
-		menu.newEntry({
-			menuName: subMenu, entryText: 'Dynamic (background cover mode)', func: () => {
-				seekbarProperties.bDynamicColors[1] = !seekbarProperties.bDynamicColors[1];
-				this.saveProperties();
-				if (seekbarProperties.bDynamicColors[1]) {
-					// Ensure it's applied with compatible settings
-					background.changeConfig({ config: { coverModeOptions: { bProcessColors: true } }, callbackArgs: { bSaveProperties: true } });
-					if (background.coverMode === 'none') {
-						background.changeConfig({ config: { coverMode: 'front', coverModeOptions: { alpha: 0 } }, callbackArgs: { bSaveProperties: true } });
-					}
-					background.updateImageBg(true);
-				} else {
-					const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
-					this.updateConfig({ ui: { colors: defColors } });
-					background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(seekbarProperties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
+		{
+			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
+			menu.newEntry({
+				menuName: subMenuTwo, entryText: 'Dynamic (background cover mode)', func: () => {
+					seekbarProperties.bDynamicColors[1] = !seekbarProperties.bDynamicColors[1];
 					this.saveProperties();
+					if (seekbarProperties.bDynamicColors[1]) {
+						// Ensure it's applied with compatible settings
+						background.changeConfig({ config: { coverModeOptions: { bProcessColors: true } }, callbackArgs: { bSaveProperties: true } });
+						if (background.coverMode === 'none') {
+							background.changeConfig({ config: { coverMode: 'front', coverModeOptions: { alpha: 0 } }, callbackArgs: { bSaveProperties: true } });
+						}
+						background.updateImageBg(true);
+					} else {
+						const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
+						this.updateConfig({ ui: { colors: defColors } });
+						background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(seekbarProperties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
+						this.saveProperties();
+					}
 				}
-			}
-		});
-		menu.newCheckMenuLast(() => seekbarProperties.bDynamicColors[1]);
+			});
+			menu.newCheckMenuLast(() => seekbarProperties.bDynamicColors[1]);
+			menu.newSeparator(subMenuTwo);
+			menu.newEntry({
+				menuName: subMenuTwo, entryText: 'Listen to color-servers', func: () => {
+					seekbarProperties.bOnNotifyColors[1] = !seekbarProperties.bOnNotifyColors[1];
+					this.saveProperties();
+					if (seekbarProperties.bOnNotifyColors[1]) {
+						window.NotifyOthers('Colors: ask color scheme', 'Seekbar: set color scheme');
+						window.NotifyOthers('Colors: ask color', 'Seekbar: set colors');
+					}
+				}
+			});
+			menu.newCheckMenuLast(() => seekbarProperties.bOnNotifyColors[1]);
+			menu.newEntry({
+				menuName: subMenuTwo, entryText: 'Act as color-server', func: () => {
+					seekbarProperties.bNotifyColors[1] = !seekbarProperties.bNotifyColors[1];
+					this.saveProperties();
+					if (seekbarProperties.bNotifyColors[1] && background.scheme) {
+						window.NotifyOthers('Colors: set color scheme', background.scheme);
+					}
+				}
+			});
+			menu.newCheckMenuLast(() => seekbarProperties.bNotifyColors[1]);
+		}
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Share UI settings...', func: () => {

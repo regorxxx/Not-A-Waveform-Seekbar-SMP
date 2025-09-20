@@ -1,5 +1,5 @@
 'use strict';
-//17/09/25
+//20/09/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.0' }); }
 
@@ -166,8 +166,8 @@ const background = new _background({
 			}
 			window.Repaint();
 		},
-		artColorsNotify: (colArray, bForced) => {
-			if (!bForced && seekbarProperties.bNotifyColors[1]) { return; }
+		artColorsNotify: (colArray, bForced = false) => {
+			if (!bForced && !seekbarProperties.bNotifyColors[1]) { return; }
 			else if (colArray) {
 				background.scheme = colArray;
 				window.NotifyOthers('Colors: set color scheme', colArray);
