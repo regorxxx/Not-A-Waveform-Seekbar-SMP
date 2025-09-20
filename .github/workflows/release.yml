@@ -13,6 +13,13 @@ on:
         type: string
 
 jobs:
+  # Display input
+  Input:
+    name: 'Input'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Result
+        run: echo "Version - Title:" ${{ inputs.tag }} " - " ${{ inputs.title }}
   # Check signing key
   check-key:
     name: 'Check key'
