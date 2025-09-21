@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/25
+//21/09/25
 
 /* exported _background */
 
@@ -83,11 +83,11 @@ function _background({
 				this.coverImg.handle = handle.RawPath;
 				this.coverImg.id = id;
 			}
-			if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
-				this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
-			}
 			if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
 				this.coverImg.art.colors = this.coverImg.art.image.GetColourScheme(6);
+			}
+			if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
+				this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
 			}
 		}).catch(() => {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
