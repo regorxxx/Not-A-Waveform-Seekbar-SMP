@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/25
+//25/09/25
 
 /* exported createBackgroundMenu */
 
@@ -90,7 +90,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		].forEach(createMenuOption('coverMode', void (0), subMenu, true, (option) => {
 			if (option.newValue === 'path') {
 				const bLoadXXX = typeof folders !== 'undefined' && Object.hasOwn(folders, 'xxxRootName');
-				const input = Input.string('string', this.coverModeOptions.path, 'Enter TF expression or File Path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\nFor example:\n$lower([$replace(%ALBUM ARTIST%,\\,)]).jpg', window.Name, '%FILENAME%.jpg');
+				const input = Input.string('string', this.coverModeOptions.path, 'Enter TF expression or File Path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\nFor example:\n$lower([$replace(%ALBUM ARTIST%,\\,)]).jpg', window.Name + ' (' + window.ScriptInfo.Name + ')', '%FILENAME%.jpg');
 				if (input === null) { return; }
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}
@@ -119,7 +119,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 			const prevVal = option.key === 'alpha' ? Math.round(this.coverModeOptions[option.key] * 100 / 255) : this.coverModeOptions[option.key];
 			menu.newEntry({
 				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + ']', func: () => {
-					const input = Input.number('int positive', prevVal, 'Enter number:' + option.inputHint, window.Name, 100, option.checks);
+					const input = Input.number('int positive', prevVal, 'Enter number:' + option.inputHint, window.Name + ' (' + window.ScriptInfo.Name + ')', 100, option.checks);
 					if (input === null) { return; }
 					const newVal = option.key === 'alpha' ? Math.round(input * 255 / 100) : input;
 					this.changeConfig({ config: { coverModeOptions: { [option.key]: newVal } }, callbackArgs: { bSaveProperties: true } });
@@ -139,10 +139,10 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 				let input;
 				if (option.newValue === 'single') {
 					input = [utils.ColourPicker(0, this.colorModeOptions.color[0]), this.colorModeOptions.color[1]];
-					console.log('Background (' + window.Name + '): Selected color ->\n\t Android: ' + input[0] + ' - RGB: ' + Chroma(input[0]).rgb());
+					console.log('Background (' + window.Name + ' (' + window.ScriptInfo.Name + ')' + '): Selected color ->\n\t Android: ' + input[0] + ' - RGB: ' + Chroma(input[0]).rgb());
 				} else {
 					input = this.colorModeOptions.color.map((color) => utils.ColourPicker(0, color));
-					console.log('Background (' + window.Name + '): Selected color ->' + input.map((col) => '\n\t Android: ' + col + ' - RGB: ' + Chroma(col).rgb()).join(''));
+					console.log('Background (' + window.Name + ' (' + window.ScriptInfo.Name + ')' + '): Selected color ->' + input.map((col) => '\n\t Android: ' + col + ' - RGB: ' + Chroma(col).rgb()).join(''));
 				}
 
 				this.changeConfig({ config: { colorModeOptions: { color: input } }, callbackArgs: { bSaveProperties: true } });
@@ -159,7 +159,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		].forEach((option) => {
 			menu.newEntry({
 				menuName: subMenu, entryText: option.entryText + '\t[' + this.colorModeOptions[option.key] + ']', func: () => {
-					const input = Input.number(option.type, this.colorModeOptions[option.key], 'Enter number:' + option.inputHint, window.Name, 100, option.checks);
+					const input = Input.number(option.type, this.colorModeOptions[option.key], 'Enter number:' + option.inputHint, window.Name + ' (' + window.ScriptInfo.Name + ')', 100, option.checks);
 					if (input === null) { return; }
 					this.changeConfig({ config: { colorModeOptions: { [option.key]: input } }, callbackArgs: { bSaveProperties: true } });
 				}, flags: ['gradient', 'bigradient'].includes(this.colorMode.toLowerCase()) ? MF_STRING : MF_GRAYED
