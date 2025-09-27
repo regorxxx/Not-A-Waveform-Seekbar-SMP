@@ -1,5 +1,5 @@
 'use strict';
-//25/09/25
+//27/09/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
@@ -1037,13 +1037,27 @@ function _seekbar({
 					// Normalize
 					this.current[c] = data.map((el) => el.val / el.count);
 					// Some combinations of bar widths and number of points may affect the bias to the upper or lower part of the waveform
-					// Lower or upper side can be normalized to the max value of the other side to account for this
 					const bias = Math.abs(upper[c] / lower[c]);
 					upper[c] = lower[c] = 0;
-					this.current[c].forEach((frame) => {
+					let upperAvg = 0, lowerAvg = 0;
+					this.current[c].forEach((frame, i) => {
+						if (i === 0) { return; } // spurious first point
 						upper[c] = Math.max(upper[c], frame);
 						lower[c] = Math.min(lower[c], frame);
+						if (frame > 0) { upperAvg += frame; }
+						else { lowerAvg += frame; }
 					});
+					// Some combinations also throw an spurious first point which should not be taken into account sometimes
+					if (this.current[c][0] > 0) {
+						upperAvg /= newFrames / 2;
+						const diff = this.current[c][0] - upperAvg;
+						if (diff < 0.3) { upper[c] = Math.max(upper[c], this.current[c][0]); }
+					} else {
+						lowerAvg /= newFrames / 2;
+						const diff = Math.abs(this.current[c][0]) - Math.abs(lowerAvg);
+						if (diff < 0.3) { lower[c] = Math.min(lower[c], this.current[c][0]); }
+					}
+					// Lower or upper side can be normalized to the max value of the other side to account for this
 					const newBias = Math.abs(upper[c] / lower[c]);
 					const diff = bias - newBias;
 					if (diff > 0.1) {

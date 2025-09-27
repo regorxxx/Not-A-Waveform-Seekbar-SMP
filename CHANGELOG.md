@@ -36,6 +36,7 @@
 ### Removed
 - Installation: fonts are no longer bundled at '_resources' folder, but found at: https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts
 ### Fixed
+- UI: fixed some cases where first point showed a false huge amplitude difference, compared to the rest of the waveform, when using normalize width feature.
 - Auto-update: fix error including a file when enabling auto-updates if it was previously disabled.
 
 ## [3.0.0] - 2025-09-20
