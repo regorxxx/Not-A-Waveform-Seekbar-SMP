@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/25
+//26/09/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -631,8 +631,8 @@ function settingsMenu(bClear = true) {
 					seekbarProperties.bOnNotifyColors[1] = !seekbarProperties.bOnNotifyColors[1];
 					this.saveProperties();
 					if (seekbarProperties.bOnNotifyColors[1]) {
-						window.NotifyOthers('Colors: ask color scheme', 'Seekbar: set color scheme');
-						window.NotifyOthers('Colors: ask color', 'Seekbar: set colors');
+						window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
+						window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
 					}
 				}
 			});
@@ -760,7 +760,7 @@ function settingsMenu(bClear = true) {
 			menuName: subMenu, entryText: 'Check for updates...', func: () => {
 				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', 'Seekbar: Update check'));
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name + _ps(window.ScriptInfo.Name) + ': Update check'));
 			}
 		});
 	}
@@ -794,13 +794,13 @@ function importSettingsMenu() {
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Export panel settings...', func: () => {
-			const bData = WshShell.Popup('Also export track\'s analysis data files?', 0, 'Seekbar: Export panel settings', popup.question + popup.yes_no);
+			const bData = WshShell.Popup('Also export track\'s analysis data files?', 0, window.ScriptInfo.Name + ': Export panel settings', popup.question + popup.yes_no);
 			exportSettings(
 				seekbarProperties,
 				bData
 					? [folders.temp + 'settings.json', folders.data + 'seekbar\\']
 					: [],
-				'Seekbar'
+				window.ScriptInfo.Name
 			);
 		}
 	});
@@ -829,7 +829,7 @@ function importSettingsMenu() {
 					}
 				},
 				seekbarProperties,
-				'Seekbar'
+				window.ScriptInfo.Name
 			);
 		}
 	});

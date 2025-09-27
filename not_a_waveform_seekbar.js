@@ -1,5 +1,5 @@
 'use strict';
-//25/09/25
+//26/09/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.0' }); }
 
@@ -218,15 +218,15 @@ seekbar.shareUiSettings = function (mode = 'popup') {
 	switch (mode.toLowerCase()) {
 		case 'popup': {
 			const keys = ['Colors', 'Preset', 'Background'];
-			const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, 'Seekbar: share UI settings', popup.question + popup.yes_no);
+			const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, window.ScriptInfo.Name + ': share UI settings', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
-				window.NotifyOthers('Seekbar: share UI settings', settings);
+				window.NotifyOthers(window.ScriptInfo.Name + ': share UI settings', settings);
 				return true;
 			}
 			return false;
 		}
 		case 'path': {
-			const input = Input.string('file', folders.data + 'ui_settings_' + window.Name + '.json', 'File name name:', 'Seekbar: export UI settings', folders.data + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+			const input = Input.string('file', folders.data + 'ui_settings_' + window.Name + '.json', 'File name name:', window.ScriptInfo.Name + ': export UI settings', folders.data + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
 			if (input === null) { return null; }
 			return _save(input, JSON.stringify(settings, null, '\t').replace(/\n/g, '\r\n'))
 				? input
@@ -416,11 +416,11 @@ addEventListener('on_mouse_wheel_h', (step) => {
 addEventListener('on_notify_data', (name, info) => {
 	if (name === 'bio_imgChange' || name === 'bio_chkTrackRev' || name === 'xxx-scripts: panel name reply') { return; }
 	switch (name) { // NOSONAR
-		case 'Seekbar: share UI settings': {
+		case window.ScriptInfo.Name + ': share UI settings': {
 			if (info) { seekbar.applyUiSettings(clone(info)); }
 			break;
 		}
-		case 'Seekbar: set colors': { // Needs an array of 6 colors or an object {background, main, alt, currPos, mainFuture, altFuture}
+		case window.ScriptInfo.Name + ': set colors': { // Needs an array of 6 colors or an object {background, main, alt, currPos, mainFuture, altFuture}
 			if (info && seekbarProperties.bOnNotifyColors[1]) {
 				const colors = clone(info);
 				const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'main', 'alt', 'currPos', 'mainFuture', 'altFuture'].indexOf(key)];
@@ -438,7 +438,7 @@ addEventListener('on_notify_data', (name, info) => {
 			break;
 		}
 		case 'Colors: set color scheme':
-		case 'Seekbar: set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
+		case window.ScriptInfo.Name + ': set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
 			if (info && seekbarProperties.bOnNotifyColors[1]) { background.callbacks.artColors(clone(info), true); }
 			break;
 		}
@@ -465,8 +465,8 @@ addEventListener('on_notify_data', (name, info) => {
 
 if (seekbarProperties.bOnNotifyColors[1]) { // Ask color-servers at init
 	setTimeout(() => {
-		window.NotifyOthers('Colors: ask color scheme', 'Seekbar: set color scheme');
-		window.NotifyOthers('Colors: ask colors', 'Seekbar: set colors');
+		window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
+		window.NotifyOthers('Colors: ask colors', window.ScriptInfo.Name + ': set colors');
 	}, 1000);
 }
 
