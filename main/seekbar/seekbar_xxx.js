@@ -63,8 +63,8 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
 function _seekbar({
 	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\[%TRACKNUMBER% - ][$replace(%TITLE%,$char(92),-,/,-,$char(41),,$char(40),,:,, ?$char(92),,?,,¿,,/,-,$char(36),,$char(37),,# ,,#,,*,,!,,¡,,|,-,",$char(39)$char(39),<,,>,,^,,... ,,...,,.,)])), ?,,= ,,?,)',
 	binaries = {
-		ffprobe: '.\\profile\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
-		audiowaveform: '.\\profile\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+		ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
+		audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
 		visualizer: null,
 	},
 	preset = {
