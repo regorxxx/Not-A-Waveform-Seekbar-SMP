@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.0.1](#301---2025-09-29)
 - [3.0.0](#300---2025-09-20)
 - [2.6.0](#260---2024-10-09)
 - [2.5.1](#251---2024-08-13)
@@ -30,6 +31,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [3.0.1] - 2025-09-29
 ### Added
 ### Changed
 - UI: color extraction from background art is now done before blur is applied. Done after blur returned gray tones in so many unintended cases.
@@ -311,7 +318,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.6.0...v3.0.0
 [2.6.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.5.0...v2.5.1
