@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/09/25
+//29/09/25
 
 /* exported _background */
 
@@ -45,8 +45,18 @@ function _background({
 			)
 		};
 	};
-
-	this.updateImageBg = debounce((bForce = false, onDone) => {
+	/**
+	 * Updates background image based from preferred handle and calls color callbacks.
+	 * @property
+	 * @name updateImageBg
+	 * @kind method
+	 * @memberof _background
+	 * @type {function}
+	 * @param {Boolean} bForce - [=false]
+	 * @param {Function?} onDone - [=null]
+	 * @returns {void}
+	 */
+	this.updateImageBg = debounce((bForce = false, onDone = null) => {
 		const path = _resolvePath(this.coverModeOptions.path || '');
 		const bPath = this.coverMode.toLowerCase() === 'path' && path.length;
 		if (this.coverMode.toLowerCase() === 'none') {

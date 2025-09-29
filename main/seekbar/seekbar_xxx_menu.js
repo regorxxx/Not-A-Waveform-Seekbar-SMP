@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/09/25
+//29/09/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -780,7 +780,7 @@ function settingsMenu(bClear = true) {
 		menu.newEntry({
 			entryText: 'Open readme...', func: () => {
 				const readme = _open(path, utf8);
-				if (readme.length) { fb.ShowPopupMessage(readme, 'Not-A-Waveform-seekbar-SMP'); }
+				if (readme.length) { fb.ShowPopupMessage(readme, window.ScriptInfo.Name); }
 				else { console.log('Seekbar: Readme not found\n\t ' + path); }
 			}
 		});
