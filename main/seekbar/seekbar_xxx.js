@@ -1,8 +1,8 @@
 'use strict';
-//27/09/25
+//01/10/25
 
 /* exported _seekbar */
-/* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable */
+/* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
 
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 /* global LZUTF8:readable */
@@ -138,8 +138,8 @@ function _seekbar({
 
 	this.defaults = () => {
 		const defBinaries = {
-			ffprobe: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\ffprobe\\ffprobe.exe',
-			audiowaveform: fb.ProfilePath + 'scripts\\SMP\\xxx-scripts\\helpers-external\\audiowaveform\\audiowaveform.exe',
+			ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
+			audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
 			visualizer: null,
 		};
 		const defPreset = {
@@ -575,7 +575,7 @@ function _seekbar({
 	*/
 	this.loadDataFile = (file, ext) => {
 		let data = [];
-		if (this.logging.bLoad) { console.log('Seekbar: Analysis file path -> ' + file.replace(fb.ProfilePath, '.\\') + ext); }
+		if (this.logging.bLoad) { console.log('Seekbar: Analysis file path -> ' + _foldPath(file) + ext); }
 		if (ext.endsWith('.json')) {
 			data = _jsonParseFile(file + ext, this.codePage) || [];
 		} else if (ext.endsWith('.lz')) {
@@ -2205,7 +2205,7 @@ function _seekbar({
 					// Save data and optionally compress it
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.ff');
-						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.ff'); }
+						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + '.ff'); }
 					}
 				} else if (bNotFallback && bAuWav && data.length) {
 					const processedData = Array.from({ length: channels }, () => []);
@@ -2225,7 +2225,7 @@ function _seekbar({
 					if (bPlayingSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.aw');
-						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + seekbarFile.replace(fb.ProfilePath, '.\\') + '.aw'); }
+						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + '.aw'); }
 					}
 				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && this.isTrackPlaying()) {
 					this.current = data;
