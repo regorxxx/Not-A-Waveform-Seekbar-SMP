@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//01/10/25
 
 /* exported fso, debounce, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, _gdiFont, _textWidth, clone, getNested, setNested, _resolvePath */
 
@@ -83,6 +83,7 @@ const debounce = (fn, delay, immediate = false, parent = this) => {
 function _resolvePath(path) {
 	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
 	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
+	else { path = path.replace(/%fb2k_component_path%/gi, fb.ComponentPath).replace(/%fb2k_profile_path%/gi, fb.ProfilePath).replace(/%fb2k_path%/gi, fb.FoobarPath); }
 	return path;
 }
 
