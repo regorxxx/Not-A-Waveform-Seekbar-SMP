@@ -1,7 +1,7 @@
 'use strict';
-//29/09/25
+//01/10/25
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.0.1' }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.0' }); }
 
 include('helpers\\helpers_xxx.js');
 /* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable */
@@ -10,7 +10,7 @@ include('helpers\\helpers_xxx_flags.js');
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable, _tt:readable, blendColors */
 include('helpers\\helpers_xxx_file.js');
-/* global _open:readable, utf8:readable, WshShell:readable, _save:readable */
+/* global _open:readable, utf8:readable, WshShell:readable, _save:readable, _foldPath:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable, clone:readable, _ps:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
@@ -34,12 +34,9 @@ globProfiler.Print('helpers');
 let seekbarProperties = {
 	binaries: ['Binaries paths',
 		JSON.stringify({
-			ffprobe: (folders.JsPackageDirs
-				? folders.binaries.replace(fb.ProfilePath, '.\\profile\\')
-				: folders.xxxRootName + 'helpers-external\\'
-			) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
+			ffprobe: _foldPath(folders.binaries) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
 			audiowaveform: (folders.JsPackageDirs
-				? folders.binaries.replace(fb.ProfilePath, '.\\profile\\')
+				? _foldPath(folders.binaries)
 				: folders.xxxRootName + 'helpers-external\\'
 			) + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
 		}), { func: isJSON }],

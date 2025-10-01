@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/09/25
+//01/10/25
 
 /* exported _background */
 
@@ -146,7 +146,7 @@ function _background({
 	};
 
 	this.paint = (gr) => {
-		if (this.w <= 0 || this.h <= 0) { return; }
+		if (this.w <= 1 || this.h <= 1) { return; }
 		const colorMode = this.colorMode.toLowerCase();
 		let grImg, bCreateImg;
 		if (this.colorModeOptions.bDither && !['single', 'none'].includes(colorMode)) {
