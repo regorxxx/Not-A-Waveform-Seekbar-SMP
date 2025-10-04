@@ -1,5 +1,5 @@
 'use strict';
-//01/10/25
+//05/10/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.0' }); }
 
@@ -101,10 +101,7 @@ let seekbarProperties = {
 			bError: true
 		}), { func: isJSON }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
-	matchPattern: ['File name TF format', '$lower(' +
-		globTags.artistAlbumTrackTitleSanitize
-			.replace(/(\[\$replace\(%ALBUM%,\$char\(92\),-\)\])/i, '$1[ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]')
-		+ ')', { func: isString }],
+	matchPattern: ['File name TF format', globTags.artistAlbumTrackIdPath, { func: isString }],
 	background: ['Background options', JSON.stringify(deepAssign()(
 		(new _background).defaults(),
 		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }
