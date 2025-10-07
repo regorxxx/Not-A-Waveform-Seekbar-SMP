@@ -1397,9 +1397,9 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.pause = (state) => {
-		if (!state) { this.resetAnimation(); }
 		if (!window.IsVisible) { return; }
 		throttlePaint(true);
+		if (!state) { [60, 250, 500, 750, 1000].forEach((time) => setTimeout(throttlePaint, time)); }
 	};
 	/**
 	 * Retrieves current panel colors with transparency applied
