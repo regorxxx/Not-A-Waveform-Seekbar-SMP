@@ -1,5 +1,5 @@
 'use strict';
-//01/10/25
+//07/10/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -500,6 +500,7 @@ function _seekbar({
 			if (Object.hasOwn(newConfig.preset, 'bUseBPM') || Object.hasOwn(newConfig.preset, 'bAnimate')) {
 				if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(); }
 				else { this.defaultSteps(); }
+				this.resetAnimation();
 			}
 			if (Object.hasOwn(newConfig.preset, 'bDownMixToMono') || this.preset.bDownMixToMono && Object.hasOwn(newConfig.preset, 'displayChannels')) {
 				bRecalculate = true;

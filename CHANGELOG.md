@@ -38,6 +38,7 @@
 - Export settings: now uses '[FOOBAR PROFILE FOLDER]\js_data\export' folder at exporting.
 ### Removed
 ### Fixed
+- UI: waveform not updating when switching animation setting.
 
 ## [3.0.1] - 2025-09-29
 ### Added
