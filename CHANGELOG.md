@@ -35,6 +35,7 @@
 ### Changed
 - Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
 - Analysis: default TF path pattern for analysis files changed to use abbreviations for album and title, which enhances compatibility on systems which can't properly handle +256 characters in paths.
+- Export settings: now uses '[FOOBAR PROFILE FOLDER]\js_data\export' folder at exporting.
 ### Removed
 ### Fixed
 

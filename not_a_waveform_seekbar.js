@@ -1,5 +1,5 @@
 'use strict';
-//05/10/25
+//07/10/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.0' }); }
 
@@ -220,7 +220,7 @@ seekbar.shareUiSettings = function (mode = 'popup') {
 			return false;
 		}
 		case 'path': {
-			const input = Input.string('file', folders.data + 'ui_settings_' + window.Name + '.json', 'File name name:', window.ScriptInfo.Name + ': export UI settings', folders.data + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
+			const input = Input.string('file', folders.export + 'ui_settings_' + window.Name + '.json', 'File name name:', window.ScriptInfo.Name + ': export UI settings', folders.export + 'ui_settings.json', void (0), true) || (Input.isLastEqual ? Input.lastInput : null);
 			if (input === null) { return null; }
 			return _save(input, JSON.stringify(settings, null, '\t').replace(/\n/g, '\r\n'))
 				? input
