@@ -493,9 +493,8 @@ function _seekbar({
 		this.checkConfig();
 		let bRecalculate = false;
 		if (newConfig.preset) {
-			if (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer') {
-				this.offset = [];
-				this.step = 0;
+			if (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer' || Object.hasOwn(newConfig.preset, 'paintMode') || Object.hasOwn(newConfig.preset, 'bPrePaint')) {
+				this.resetAnimation();
 			}
 			if (Object.hasOwn(newConfig.preset, 'bUseBPM') || Object.hasOwn(newConfig.preset, 'bAnimate')) {
 				if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(); }
