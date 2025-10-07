@@ -1856,7 +1856,7 @@ function _seekbar({
 		if ((bPrePaint && this.preset.bAnimate) || bFullAnimated || bVisualizer) {
 			if (this.step >= this.maxStep) { this.step = - this.step; }
 			else {
-				if (this.step === 0) { this.offset = []; }
+				if (this.step === 0) { this.offset = this.offset.map((n) => Math.max(Math.min(n, 10), -5)); }
 				this.step++;
 			}
 		}
