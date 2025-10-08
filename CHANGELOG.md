@@ -38,6 +38,7 @@
 - Export settings: now uses '[FOOBAR PROFILE FOLDER]\js_data\export' folder at exporting.
 - UI: smoother animations with softer jumps between steps.
 - UI: smoother transitions when pausing/playing using animations.
+- UI: animation support to all style modes (previously only working on 'waveform').
 ### Removed
 ### Fixed
 - UI: waveform not updating when switching animation setting.

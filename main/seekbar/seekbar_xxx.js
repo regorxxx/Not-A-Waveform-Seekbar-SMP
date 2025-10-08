@@ -1,5 +1,5 @@
 'use strict';
-//07/10/25
+//08/10/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -493,7 +493,9 @@ function _seekbar({
 		this.checkConfig();
 		let bRecalculate = false;
 		if (newConfig.preset) {
-			if (this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer' || Object.hasOwn(newConfig.preset, 'paintMode') || Object.hasOwn(newConfig.preset, 'bPrePaint')) {
+			const bStyle = Object.hasOwn(newConfig.preset, 'waveMode');
+			const bPaintMethod = this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer' || Object.hasOwn(newConfig.preset, 'paintMode') || Object.hasOwn(newConfig.preset, 'bPrePaint');
+			if (bStyle || bPaintMethod) {
 				this.resetAnimation();
 			}
 			if (Object.hasOwn(newConfig.preset, 'bUseBPM') || Object.hasOwn(newConfig.preset, 'bAnimate')) {
@@ -1652,7 +1654,7 @@ function _seekbar({
 	*/
 	this.paintHalfBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
-		this.offset[n] += (bPrePaint && bIsFuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
 		let y = scaledSize > 0
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
@@ -1694,7 +1696,7 @@ function _seekbar({
 	*/
 	this.paintBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
-		this.offset[n] += (bPrePaint && bIsFuture && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
 		const y = scaledSize > 0
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
@@ -1748,7 +1750,7 @@ function _seekbar({
 			: Math.min(scaledSize, -1);
 		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
-		this.offset[n] += (bPrePaint && bIsFuture && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? Math.random() * Math.abs(this.step / this.maxStep) : 0); // Add movement when painting future
 		const rand = this.offset[n];
 		const step = Math.max(size / 80, 5) + (rand || 1); // Point density
 		const circleSize = Math.max(step / 25, 1);
