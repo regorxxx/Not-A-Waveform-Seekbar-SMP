@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/09/25
+//09/10/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -724,6 +724,14 @@ function settingsMenu(bClear = true) {
 				menu.newCheckMenuLast(() => this.logging[key]);
 			});
 		}
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Show tooltip', func: () => {
+				seekbarProperties.bShowTooltip[1] = !seekbarProperties.bShowTooltip[1];
+				this.saveProperties();
+			}
+		});
+		menu.newCheckMenuLast(() => seekbarProperties.bShowTooltip[1]);
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {

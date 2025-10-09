@@ -1,5 +1,5 @@
 'use strict';
-//08/10/25
+//09/10/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -445,6 +445,10 @@ function _seekbar({
 	this.isError = false;
 	/** @type {FbMetadbHandle} - Current handle being displayed */
 	this.currentHandle = null;
+	/** @type {number} - Last x mouse position within panel */
+	this.mx = -1;
+	/** @type {number} - Last y mouse position within panel */
+	this.my = -1;
 	// Private
 	/** @type {{paint: boolean, analysis: boolean}} - Used when this.analysis.bVisualizerFallbackAnalysis is true, to track current step on processing */
 	const bFallbackMode = { paint: false, analysis: false };
@@ -720,6 +724,64 @@ function _seekbar({
 			}
 		});
 		return len;
+	};
+	/**
+	 * Retrieves time associated to any x-coordinate within panel, for seeking purposes.
+	 *
+	 * @property
+	 * @name getPlaybackTimeAt
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} [x] - X position within panel
+	 * @returns {number}
+	*/
+	this.getPlaybackTimeAt = function (x) {
+		if (this.frames !== 0) {
+			const len = this.getHandleLength();
+			const barW = (this.w - this.marginW * 2) / this.frames;
+			let time = Math.round(len / this.frames * (x - this.x - this.marginW) / barW);
+			if (time < 0) { time = 0; }
+			else if (time > len) { time = len; }
+			return time;
+		}
+		return 0;
+	};
+	/**
+	 * Sets playback time at given value (in seconds). If playback is stopped, it plays the current track.
+	 *
+	 * @property
+	 * @name setPlaybackTime
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} [time] - Time in seconds
+	 * @returns {number}
+	*/
+	this.setPlaybackTime = function (time) {
+		if (this.frames !== 0) {
+			if (!this.isTrackPlaying()) {
+				if (this.compareTrack(fb.GetNowPlaying())) {
+					fb.Play();
+					setTimeout(() => {
+						fb.PlaybackTime = time;
+						if (window.IsVisible) { throttlePaint(true); }
+					}, 100);
+				} else {
+					const queue = plman.GetPlaybackQueueHandles();
+					plman.FlushPlaybackQueue();
+					[this.currentHandle, ...queue.Convert()].forEach((handle) => plman.AddItemToPlaybackQueue(handle));
+					fb.Play();
+					setTimeout(() => {
+						fb.PlaybackTime = time;
+						if (window.IsVisible) { throttlePaint(true); }
+					}, 100);
+				}
+			} else {
+				fb.PlaybackTime = time;
+				if (window.IsVisible) { throttlePaint(true); }
+			}
+			return true;
+		}
+		return false;
 	};
 	/**
 	 * Compares handle to process to current one.
@@ -1914,33 +1976,8 @@ function _seekbar({
 		if (this.currentHandle) { // Seek
 			const frames = this.frames;
 			if (frames !== 0) {
-				const len = this.getHandleLength();
-				const barW = (this.w - this.marginW * 2) / frames;
-				let time = Math.round(len / frames * (x - this.x - this.marginW) / barW);
-				if (time < 0) { time = 0; }
-				else if (time > len) { time = len; }
-				if (!this.isTrackPlaying()) {
-					if (this.compareTrack(fb.GetNowPlaying())) {
-						fb.Play();
-						setTimeout(() => {
-							fb.PlaybackTime = time;
-							if (window.IsVisible) { throttlePaint(true); }
-						}, 100);
-					} else {
-						const queue = plman.GetPlaybackQueueHandles();
-						plman.FlushPlaybackQueue();
-						[this.currentHandle, ...queue.Convert()].forEach((handle) => plman.AddItemToPlaybackQueue(handle));
-						fb.Play();
-						setTimeout(() => {
-							fb.PlaybackTime = time;
-							if (window.IsVisible) { throttlePaint(true); }
-						}, 100);
-					}
-				} else {
-					fb.PlaybackTime = time;
-					if (window.IsVisible) { throttlePaint(true); }
-				}
-				return true;
+				const time = this.getPlaybackTimeAt(x);
+				return this.setPlaybackTime(time);
 			}
 		}
 		return false;
@@ -1990,9 +2027,24 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.move = (x, y, mask) => {
+		this.mx = x;
+		this.my = y;
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}
+	};
+	/**
+	 * Called on on_mouse_leave
+	 *
+	 * @property
+	 * @name leave
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
+	this.leave = () => {
+		this.mx = -1;
+		this.my = -1;
 	};
 	/**
 	 * Called on on_size. Resizes panel.

@@ -32,6 +32,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: new setting to enable/disable tooltip.
 ### Changed
 - Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
 - Analysis: default TF path pattern for analysis files changed to use abbreviations for album and title, which enhances compatibility on systems which can't properly handle +256 characters in paths.
@@ -39,6 +40,8 @@
 - UI: smoother animations with softer jumps between steps.
 - UI: smoother transitions when pausing/playing using animations.
 - UI: animation support to all style modes (previously only working on 'waveform').
+- UI: smoother tooltip when moving mouse over panel.
+- UI: tooltip now shows current playback position under mouse for seeking purposes.
 ### Removed
 ### Fixed
 - UI: waveform not updating when switching animation setting.
