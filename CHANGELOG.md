@@ -34,7 +34,8 @@
 ### Added
 - UI: new setting to enable/disable tooltip.
 ### Changed
-- Settings: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
+- Configuration: global support for %fb2k_component_path%, %fb2k_profile_path% and %fb2k_path% in any input asking for paths.
+- Configuration: improved handling of user definition files found at '[FOOBAR PROFILE FOLDER]\js_data\presets\global\' in case they got corrupted. The corrupted file will be backed up at the same folder and a new one created. Popups will warn about it, no longer requiring user actions. See [here](https://hydrogenaudio.org/index.php/topic,120978.msg1071225.html#msg1071225).
 - Analysis: default TF path pattern for analysis files changed to use abbreviations for album and title, which enhances compatibility on systems which can't properly handle +256 characters in paths.
 - Export settings: now uses '[FOOBAR PROFILE FOLDER]\js_data\export' folder at exporting.
 - UI: smoother animations with softer jumps between steps.
