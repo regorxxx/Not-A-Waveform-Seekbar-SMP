@@ -345,8 +345,6 @@ addEventListener('on_playback_stop', (reason) => {
 	if (reason !== 2) { // Invoked by user or Starting another track
 		if (background.useCover && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
 	}
-	if (seekbar.getPreferredTrackMode() !== 'blank') { seekbar.stop(reason); }
-	else if (seekbar.analysis.binaryMode === 'visualizer') { seekbar.resetAnimation(); }
 	queueSelection() || seekbar.updateTime(0);
 });
 

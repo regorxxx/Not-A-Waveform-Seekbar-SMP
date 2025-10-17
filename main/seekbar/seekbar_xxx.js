@@ -1367,6 +1367,7 @@ function _seekbar({
 		framesVu.length = 0;
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') { return; }
+			if (this.getPreferredTrackMode() === 'blank' && this.analysis.binaryMode === 'visualizer' && !this.isTrackPlaying()) { return; }
 		} else { this.cache = this.current; }
 		if (!window.IsVisible) { return; }
 		// Repaint by zone when possible
@@ -1447,6 +1448,8 @@ function _seekbar({
 		if (reason !== -1 && !this.active) { return; }
 		if (reason !== -1 && this.getPreferredTrackMode() === 'selected') {
 			if (window.IsVisible) { throttlePaint(); }
+		} else if (this.getPreferredTrackMode() === 'blank' && this.analysis.binaryMode === 'visualizer') {
+			this.resetAnimation();
 		} else {
 			this.reset();
 			if (reason !== 2 && window.IsVisible) { throttlePaint(); }
