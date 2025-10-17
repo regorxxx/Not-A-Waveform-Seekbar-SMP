@@ -714,13 +714,15 @@ function _seekbar({
 				len = this.currentHandle.Length; return true;
 			} else {
 				const handle = this.getHandle();
-				if (fb.IsPlaying) {
-					const np = fb.GetNowPlaying();
-					if (np && np.Compare(handle)) {
-						len = fb.PlaybackLength; return true;
+				if (handle) {
+					if (fb.IsPlaying) {
+						const np = fb.GetNowPlaying();
+						if (np && np.Compare(handle)) {
+							len = fb.PlaybackLength; return true;
+						}
 					}
+					len = handle.Length; return true;
 				}
-				if (handle) { len = handle.Length; return true; }
 			}
 		});
 		return len;

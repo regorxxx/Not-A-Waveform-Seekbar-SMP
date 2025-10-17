@@ -46,6 +46,7 @@
 ### Removed
 ### Fixed
 - UI: waveform not updating when switching animation setting.
+- Fix crash using 'On demand' track mode while playing a track.
 
 ## [3.0.1] - 2025-09-29
 ### Added
