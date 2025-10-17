@@ -56,7 +56,7 @@ function _background({
 	 * @param {Function?} onDone - [=null]
 	 * @returns {void}
 	 */
-	this.updateImageBg = debounce((bForce = false, onDone = null) => {
+	this.updateImageBg = debounce((bForce = false, onDone = null, bRepaint = true) => {
 		const path = _resolvePath(this.coverModeOptions.path || '');
 		const bPath = this.coverMode.toLowerCase() === 'path' && path.length;
 		if (this.coverMode.toLowerCase() === 'none') {
@@ -104,12 +104,12 @@ function _background({
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}).finally(() => {
 			if (this.callbacks.artColors) {
-				this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
+				this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null, void(0), bRepaint);
 			}
 			if (this.callbacks.artColorsNotify) {
 				this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
 			}
-			this.repaint();
+			if (bRepaint) { this.repaint(); }
 			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
 		});
 	}, 250);
@@ -282,6 +282,13 @@ function _background({
 				window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1)
 			);
 	};
+	/** @type {boolean} */
+	this.useCover;
+	Object.defineProperty(this, 'useCover', {
+		enumerable: true,
+		configurable: false,
+		get: () => this.coverMode.toLowerCase() !== 'none'
+	});
 	this.init = () => {
 		Object.entries(this.defaults()).forEach((pair) => {
 			const key = pair[0];
@@ -307,7 +314,7 @@ function _background({
 	this.colorModeOptions = {};
 	/** @type {Number} */
 	this.timer = 0;
-	/** @type {{ change: function(config, arguments, callbackArgs), artColors: function(colorArray, bForced), artColorsNotify: function(colorArray, bForced) }} */
+	/** @type {{ change: function(config, arguments, callbackArgs), artColors: function(colorArray, bForced, bRepaint), artColorsNotify: function(colorArray, bForced) }} */
 	this.callbacks = {};
 
 	this.init();

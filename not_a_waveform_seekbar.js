@@ -1,5 +1,5 @@
 'use strict';
-//09/10/25
+//17/10/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.0' }); }
 
@@ -141,7 +141,7 @@ const background = new _background({
 				overwriteProperties(seekbarProperties);
 			}
 		},
-		artColors: (colArray, bForced) => {
+		artColors: (colArray, bForced, bRepaint = true) => {
 			if (!bForced && !seekbarProperties.bDynamicColors[1]) { return; }
 			else if (colArray) {
 				const { main, sec, note, mainAlt, secAlt } = dynamicColors(
@@ -165,7 +165,7 @@ const background = new _background({
 					seekbar.ui.colors[key] = defColors[key];
 				}
 			}
-			window.Repaint();
+			if (bRepaint) { window.Repaint(); }
 		},
 		artColorsNotify: (colArray, bForced = false) => {
 			if (!bForced && !seekbarProperties.bNotifyColors[1]) { return; }
@@ -282,80 +282,72 @@ if (seekbarProperties.bAutoUpdateCheck[1]) {
 	Callbacks
 */
 
+const queueSelection = () => {
+	if (seekbar.getPreferredTrackMode() === 'selected') {
+		const handle = seekbar.getHandle();
+		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); return true; }
+		else { return false; }
+	}
+};
+
 addEventListener('on_size', (width, height) => {
 	background.resize({ w: width, h: height, bPaint: false });
 	seekbar.resize(width, height);
 });
 
 addEventListener('on_selection_changed', () => {
-	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg();
+	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
+		background.updateImageBg(void (0), void (0), seekbar.getPreferredTrackMode() === 'blank');
 	}
-	if (seekbar.getPreferredTrackMode() === 'selected') {
-		const handle = seekbar.getHandle();
-		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
-	}
+	queueSelection();
 });
 
 addEventListener('on_item_focus_change', () => {
-	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg();
+	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
+		background.updateImageBg(void (0), void (0), seekbar.getPreferredTrackMode() === 'blank');
 	}
-	if (seekbar.getPreferredTrackMode() === 'selected') {
-		const handle = seekbar.getHandle();
-		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
-	}
+	queueSelection();
 });
 
 addEventListener('on_playlist_switch', () => {
-	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg();
+	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
+		background.updateImageBg(void (0), void (0), seekbar.getPreferredTrackMode() === 'blank');
 	}
-	if (seekbar.getPreferredTrackMode() === 'selected') {
-		const handle = seekbar.getHandle();
-		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
-	}
+	queueSelection();
 });
 
 addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
-	if (background.coverMode.toLowerCase() !== 'none' && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg();
+	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
+		background.updateImageBg(void (0), void (0), seekbar.getPreferredTrackMode() === 'blank');
 	}
-	if (seekbar.getPreferredTrackMode() === 'selected') {
-		const handle = seekbar.getHandle();
-		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
-	}
+	queueSelection();
 });
 
 addEventListener('on_playback_new_track', (handle) => {
-	if (background.coverMode.toLowerCase() !== 'none') { background.updateImageBg(); }
-	if (seekbar.getPreferredTrackMode() === 'playing' && !seekbar.compareTrack(handle)) {
-		seekbar.newTrackQueue(handle);
-	}
+	const bChangeTrack = seekbar.getPreferredTrackMode() === 'playing' && !seekbar.compareTrack(handle);
+	if (background.useCover && background.coverModeOptions.bNowPlaying) { background.updateImageBg(void (0), void (0), bChangeTrack || seekbar.getPreferredTrackMode() === 'blank'); }
+	if (bChangeTrack) { seekbar.newTrackQueue(handle); }
 });
 
 addEventListener('on_playback_time', (time) => {
-	if (seekbar.isTrackPlaying() && !fb.IsPaused) {
+	if ((seekbar.analysis.binaryMode === 'visualizer' || seekbar.isTrackPlaying()) && !fb.IsPaused) {
 		seekbar.updateTime(time);
 	}
 });
 
 addEventListener('on_playback_seek', (time) => {
-	if (seekbar.isTrackPlaying()) {
+	if (seekbar.isTrackPlaying() || seekbar.analysis.binaryMode === 'visualizer' && seekbar.getPreferredTrackMode() !== 'blank') {
 		seekbar.updateTime(time);
 	}
 });
 
 addEventListener('on_playback_stop', (reason) => {
 	if (reason !== 2) { // Invoked by user or Starting another track
-		if (background.coverMode.toLowerCase() !== 'none' && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
+		if (background.useCover && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
 	}
 	if (seekbar.getPreferredTrackMode() !== 'blank') { seekbar.stop(reason); }
-	if (seekbar.getPreferredTrackMode() === 'selected') {
-		const handle = seekbar.getHandle();
-		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); }
-		else { seekbar.updateTime(0); }
-	}
+	else if (seekbar.analysis.binaryMode === 'visualizer') { seekbar.resetAnimation(); }
+	queueSelection() || seekbar.updateTime(0);
 });
 
 addEventListener('on_playback_pause', (state) => {
@@ -381,7 +373,7 @@ addEventListener('on_mouse_move', (x, y, mask) => {
 	if (seekbarProperties.bShowTooltip[1] && (seekbar.mx !== x || seekbar.my !== y)) {
 		seekbar.tooltip.tooltip.TrackPosition(x, y);
 		seekbar.tooltip.SetValueDebounced(
-			'Click to seek to: ' + utils.FormatDuration(seekbar.getPlaybackTimeAt(x)) + '/' +  utils.FormatDuration(seekbar.getHandleLength()) +
+			'Click to seek to: ' + utils.FormatDuration(seekbar.getPlaybackTimeAt(x)) + '/' + utils.FormatDuration(seekbar.getHandleLength()) +
 			'\n' + '-'.repeat(60) +
 			'\n(R. Click to open settings menu)' +
 			'\n(Shift + Win + R. Click for SMP panel menu)' +

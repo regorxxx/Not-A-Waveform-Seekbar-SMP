@@ -39,10 +39,10 @@ function settingsMenu(bClear = true) {
 		menu.newCheckMenuLast(() => this.active);
 		menu.newSeparator();
 	}
-	if (this.analysis.trackMode.length <= 1 && (this.analysis.trackMode[0] || '').toLowerCase() === 'blank') {
+	if (this.getPreferredTrackMode() === 'blank') {
 		menu.newEntry({
 			entryText: 'Render current track', func: () => {
-				this.newTrackQueue(fb.GetFocusItem(1));
+				this.newTrackQueue(fb.GetFocusItem(1), void(0), true);
 			}
 		});
 		menu.newSeparator();

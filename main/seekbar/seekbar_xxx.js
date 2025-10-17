@@ -1,5 +1,5 @@
 'use strict';
-//09/10/25
+//17/10/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -1523,6 +1523,7 @@ function _seekbar({
 		if (colors.bg !== -1) { gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg); }
 		// In case paint has been delayed after playback has stopped...
 		if (!this.getHandle()) {
+			if (this.analysis.binaryMode === 'visualizer' && this.getPreferredTrackMode() === 'blank') { return; }
 			this.reset();
 			return;
 		} else if (this.frames === 0) {
@@ -1532,6 +1533,7 @@ function _seekbar({
 		const displayChannels = this.getDisplayChannels();
 		const channelsNum = displayChannels.length;
 		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
+		if (!bVisualizer && !this.isTrackPlaying()) { this.resetAnimation(); }
 		if (channelsNum && (this.getHandleLength() > 1 || bVisualizer)) {
 			const bIsTrackPlaying = this.isTrackPlaying();
 			const bPartial = this.preset.paintMode === 'partial';
@@ -1887,7 +1889,11 @@ function _seekbar({
 		if (!this.bBinaryFound) {
 			gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
-			gr.GdiDrawText('File can not be analyzed', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			if (this.analysis.binaryMode === 'visualizer' && this.getPreferredTrackMode() === 'blank' && !fb.IsPlaying) {
+				gr.GdiDrawText('Visualizer only works while playing', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			} else {
+				gr.GdiDrawText('File can not be analyzed', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			}
 		} else if (!this.isAllowedFile && !this.isFallback && (this.isFile || this.isLink) && this.analysis.binaryMode !== 'visualizer') {
 			gr.GdiDrawText('Not compatible file format', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (!this.analysis.bAutoAnalysis) {

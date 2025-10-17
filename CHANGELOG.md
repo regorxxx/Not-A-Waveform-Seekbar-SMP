@@ -43,9 +43,13 @@
 - UI: animation support to all style modes (previously only working on 'waveform').
 - UI: smoother tooltip when moving mouse over panel.
 - UI: tooltip now shows current playback position under mouse for seeking purposes.
+- UI: dynamic colors are not applied until a new file (on track change) is scanned and displayed.
+- UI: multiple minor fixes using and enhancements 'On demand' track mode.
 ### Removed
 ### Fixed
 - UI: waveform not updating when switching animation setting.
+- UI: fix animation when displayed waveform doesn't match the current track on 'On demand' track mode.
+- UI: multiple minor fixes using and enhancements 'On demand' track mode.
 - Fix crash using 'On demand' track mode while playing a track.
 
 ## [3.0.1] - 2025-09-29
