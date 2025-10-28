@@ -1,5 +1,5 @@
 'use strict';
-//17/10/25
+//28/10/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -635,7 +635,9 @@ function _seekbar({
 	*/
 	this.newTrackQueue = function () {
 		if (this.queueId) { clearTimeout(this.queueId); }
-		this.queueId = setTimeout(() => { this.newTrack(...arguments); }, this.queueMs); // Arguments points to the first non arrow func
+		this.queueId = setTimeout(() => {
+			this.newTrack(...arguments);
+		}, this.queueMs); // Arguments points to the first non arrow func
 	};
 	/**
 	 * Retrieves preferred track mode for usage in callbacks.
@@ -691,7 +693,7 @@ function _seekbar({
 				}
 			}
 		});
-		if (this.analysis.trackMode.length <= 1 && (this.analysis.trackMode[0] || '').toLowerCase() === 'blank' && this.currentHandle) {
+		if (this.analysis.trackMode.length <= 1 && this.isOnDemandTrack() && this.currentHandle) {
 			handle = this.currentHandle;
 		}
 		return handle;
@@ -761,7 +763,7 @@ function _seekbar({
 	this.setPlaybackTime = function (time) {
 		if (this.frames !== 0) {
 			if (!this.isTrackPlaying()) {
-				if (this.compareTrack(fb.GetNowPlaying())) {
+				if (this.isTrackPlaying()) {
 					fb.Play();
 					setTimeout(() => {
 						fb.PlaybackTime = time;
@@ -875,7 +877,7 @@ function _seekbar({
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
-					if (this.currentHandle && !handle.Compare(this.currentHandle)) { return; }
+					if (this.currentHandle && !this.compareTrack(handle)) { return; }
 					// Calculate waveform on the fly
 					if (this.current[0]) { this.normalizePoints(); }
 					// Set animation using BPM if possible
@@ -886,7 +888,7 @@ function _seekbar({
 				if (window.IsVisible) { throttlePaint(true); }
 				if (this.analysis.bVisualizerFallbackAnalysis) { bFallbackMode.analysis = false; }
 				await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
-				if (this.currentHandle && !handle.Compare(this.currentHandle)) { return; }
+				if (this.currentHandle && !this.compareTrack(handle)) { return; }
 				if (!this.verifyData(handle, void (0), bIsRetry)) { return; }
 				bFallbackMode.analysis = bFallbackMode.paint = false;
 				bAnalysis = true;
@@ -1236,6 +1238,13 @@ function _seekbar({
 				this.current = [];
 				this.frames = 0;
 				this.timeConstant = 0;
+			} else if (this.analysis.binaryMode === 'visualizer') {
+				this.isAllowedFile = true;
+				this.isFallback = false;
+				this.isError = true;
+				this.current = [];
+				this.frames = 0;
+				this.timeConstant = 0;
 			} else {
 				if (this.logging.bError) { console.log('Seekbar: Analysis file not valid.' + (file ? ' Creating new one -> ' + file : '')); }
 				file && _deleteFile(file);
@@ -1303,6 +1312,18 @@ function _seekbar({
 		return handle.SubSong !== 0 && !blackList.has(ext || handle.Path.split('.').pop());
 	};
 	/**
+	 * Checks if the preferred track mode is blank (i.e. on demand rendering)
+	 *
+	 * @property
+	 * @name isOnDemandTrack
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {boolean}
+	*/
+	this.isOnDemandTrack = () => {
+		return this.getPreferredTrackMode() === 'blank';
+	};
+	/**
 	 * Gets the compatible extensions for a given binary mode.
 	 *
 	 * @property
@@ -1367,7 +1388,7 @@ function _seekbar({
 		framesVu.length = 0;
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') { return; }
-			if (this.getPreferredTrackMode() === 'blank' && this.analysis.binaryMode === 'visualizer' && !this.isTrackPlaying()) { return; }
+			if (this.isOnDemandTrack() && this.analysis.binaryMode === 'visualizer' && !this.isTrackPlaying()) { return; }
 		} else { this.cache = this.current; }
 		if (!window.IsVisible) { return; }
 		// Repaint by zone when possible
@@ -1448,7 +1469,7 @@ function _seekbar({
 		if (reason !== -1 && !this.active) { return; }
 		if (reason !== -1 && this.getPreferredTrackMode() === 'selected') {
 			if (window.IsVisible) { throttlePaint(); }
-		} else if (this.getPreferredTrackMode() === 'blank' && this.analysis.binaryMode === 'visualizer') {
+		} else if (this.isOnDemandTrack() && this.analysis.binaryMode === 'visualizer') {
 			this.resetAnimation();
 		} else {
 			this.reset();
@@ -1526,7 +1547,7 @@ function _seekbar({
 		if (colors.bg !== -1) { gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg); }
 		// In case paint has been delayed after playback has stopped...
 		if (!this.getHandle()) {
-			if (this.analysis.binaryMode === 'visualizer' && this.getPreferredTrackMode() === 'blank') { return; }
+			if (this.isOnDemandTrack() && this.analysis.binaryMode === 'visualizer') { return; }
 			this.reset();
 			return;
 		} else if (this.frames === 0) {
@@ -1892,7 +1913,7 @@ function _seekbar({
 		if (!this.bBinaryFound) {
 			gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
-			if (this.analysis.binaryMode === 'visualizer' && this.getPreferredTrackMode() === 'blank' && !fb.IsPlaying) {
+			if (!fb.IsPlaying && this.analysis.binaryMode === 'visualizer') {
 				gr.GdiDrawText('Visualizer only works while playing', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 			} else {
 				gr.GdiDrawText('File can not be analyzed', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
@@ -2246,14 +2267,16 @@ function _seekbar({
 				? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
 				: this.visualizerData(handle);
 			_deleteFile(seekbarFolder + 'data.json');
-			const bPlayingSameHandle = this.currentHandle && handle.Compare(this.currentHandle);
+			const bSameHandle = this.compareTrack(handle);
 			const bNotFallback = cmd && !this.isFallback && !bFallbackMode.analysis;
+			const bDisplayVisualizer = this.isFallback || bVisualizer || bFallbackMode.analysis;
 			if (data) {
 				if (bNotFallback) {
 					if (bFfProbe && data.frames) { data = data.frames; }
 					else if (bAuWav && data.data) { data = data.data; }
 				}
-				if (bNotFallback && bFfProbe && data.length) {
+				const len = data.length;
+				if (bNotFallback && bFfProbe && len) {
 					const processedData = Array.from({ length: channels }, () => []);
 					if (this.analysis.bMultiChannel) {
 						for (let i = 1; i <= channels; i++) {
@@ -2266,13 +2289,13 @@ function _seekbar({
 							processedData[0].push(this.processFfmpegFrame(frame, 'Overall'));
 						});
 					}
-					if (bPlayingSameHandle) { this.current = processedData; }
+					if (bSameHandle) { this.current = processedData; }
 					// Save data and optionally compress it
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.ff');
 						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + '.ff'); }
 					}
-				} else if (bNotFallback && bAuWav && data.length) {
+				} else if (bNotFallback && bAuWav && len) {
 					const processedData = Array.from({ length: channels }, () => []);
 					if (this.analysis.bMultiChannel) {
 						let c = 0, i = 0;
@@ -2287,23 +2310,23 @@ function _seekbar({
 					} else {
 						processedData[0] = data;
 					}
-					if (bPlayingSameHandle) { this.current = processedData; }
+					if (bSameHandle) { this.current = processedData; }
 					if (this.allowedSaveData(handle)) {
 						this.saveData(processedData, seekbarFile, '.aw');
 						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + '.aw'); }
 					}
-				} else if ((this.isFallback || bVisualizer || bFallbackMode.analysis) && data.length && this.isTrackPlaying()) {
+				} else if (bDisplayVisualizer && len && (this.isTrackPlaying() || bSameHandle && this.isOnDemandTrack())) {
 					this.current = data;
 				}
 			}
 			// Set animation using BPM if possible
-			if (bPlayingSameHandle && this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
+			if (bSameHandle && this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 			// Console and paint
 			if (this.logging.bProfile) {
 				if (cmd) { profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.'); }
 				else { profiler.Print('Visualizer.'); }
 			}
-			if (bPlayingSameHandle) {
+			if (bSameHandle) {
 				if (this.current.length && this.current.some((channel) => channel.length)) {
 					if (window.IsVisible) { throttlePaint(); }
 				} else if (bNotFallback && this.logging.bError) { console.log('Seekbar: ' + this.analysis.binaryMode + ' - Failed analyzing file -> ' + sourceFile); }

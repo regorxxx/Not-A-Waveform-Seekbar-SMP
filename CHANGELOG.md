@@ -49,8 +49,10 @@
 ### Fixed
 - UI: waveform not updating when switching animation setting.
 - UI: fix animation when displayed waveform doesn't match the current track on 'On demand' track mode.
-- UI: multiple minor fixes using and enhancements 'On demand' track mode.
+- UI: multiple minor fixes and enhancements using 'On demand' track mode.
+- UI: multiple minor fixes and enhancements using 'Visualizer' binary mode.
 - Fix crash using 'On demand' track mode while playing a track.
+- Fix crash on new installations due to missing variable.
 
 ## [3.0.1] - 2025-09-29
 ### Added
