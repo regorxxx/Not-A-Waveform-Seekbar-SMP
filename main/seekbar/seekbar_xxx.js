@@ -1,5 +1,5 @@
 'use strict';
-//28/10/25
+//07/11/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -1271,7 +1271,7 @@ function _seekbar({
 		const bValidExt = this.isCompatibleFileExtension(handle);
 		this.isFile = _isFile(handle.Path);
 		this.isLink = _isLink(handle.Path);
-		this.isZippedFile = handle.RawPath.includes('unpack://');
+		this.isZippedFile = handle.RawPath.startsWith('unpack://');
 		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
 		this.channels = this.analysis.bMultiChannel
