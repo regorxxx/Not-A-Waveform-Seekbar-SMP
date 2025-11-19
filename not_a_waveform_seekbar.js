@@ -1,7 +1,7 @@
 'use strict';
-//28/10/25
+//19/11/25
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.0' }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.1' }); }
 
 include('helpers\\helpers_xxx.js');
 /* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable */

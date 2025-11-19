@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.1.1](#311---2025-11-19)
 - [3.1.0](#310---2025-10-28)
 - [3.0.1](#301---2025-09-29)
 - [3.0.0](#300---2025-09-20)
@@ -36,6 +37,14 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [3.1.1] - 2025-11-19
+### Added
+### Changed
+- Helpers: updated helpers.
+### Removed
+### Fixed
+- Analysis: changed default TF path pattern for analysis files to better handle non Latin chars.
 
 ## [3.1.0] - 2025-10-28
 ### Added
@@ -343,7 +352,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v2.6.0...v3.0.0
