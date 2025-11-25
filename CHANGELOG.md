@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.2.0](#320---2025-11-25)
 - [3.1.1](#311---2025-11-19)
 - [3.1.0](#310---2025-10-28)
 - [3.0.1](#301---2025-09-29)
@@ -34,6 +35,13 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [3.2.0] - 2025-11-25
+### Added
+- UI: UI elements are now resizable using Alt + Ctrl + Mouse wheel. Currently it applies to waveform points' size, using 'normalized width' setting.
 ### Changed
 ### Removed
 ### Fixed
@@ -352,7 +360,8 @@
 ### Fixed
 
 
-[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.1.1...HEAD
+[Unreleased]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.1.1...v3.2.0
 [3.1.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/compare/v3.0.0...v3.0.1

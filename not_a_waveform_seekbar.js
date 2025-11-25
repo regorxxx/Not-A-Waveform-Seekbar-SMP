@@ -1,10 +1,10 @@
 'use strict';
-//19/11/25
+//25/11/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.1.1' }); }
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable */
+/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable */
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable */
 include('helpers\\helpers_xxx_UI.js');
@@ -12,7 +12,7 @@ include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, _save:readable, _foldPath:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable, clone:readable, _ps:readable */
+/* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_properties.js');
@@ -237,7 +237,7 @@ seekbar.applyUiSettings = function (settings, bForce) {
 	window.Repaint();
 	const answer = bForce
 		? popup.yes
-		: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.Name + _ps(window.ScriptInfo.Name), popup.question + popup.yes_no);
+		: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.FullPanelName, popup.question + popup.yes_no);
 	if (answer === popup.yes) {
 		const newBg = JSON.parse(String(settings.background[1]));
 		['x', 'y', 'w', 'h', 'callbacks'].forEach((key) => delete newBg[key]);
@@ -401,7 +401,11 @@ addEventListener('on_mouse_rbtn_up', (x, y) => {
 });
 
 addEventListener('on_mouse_wheel', (step) => {
-	seekbar.wheel(step);
+	if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT) && seekbar.wheelResize(step)) {
+		seekbar.saveProperties();
+	} else {
+		seekbar.wheel(step);
+	}
 });
 
 addEventListener('on_mouse_wheel_h', (step) => {
