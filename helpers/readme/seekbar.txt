@@ -5,40 +5,41 @@ levels, the actual waveform or visualization presets.
 Mode:
 -----
 There are 3 possibilities:
-- Audiowaveform: faster. Displays the waveform as is.
-- ffprobe: slower. Multiple analysis options available (RMS, peak
+• Audiowaveform: faster. Displays the waveform as is.
+• ffprobe: slower. Multiple analysis options available (RMS, peak
  or RMS peaks).
-- Visualizer: may be used to show a random animation which changes
+• Visualizer: may be used to show a random animation which changes
 according to BPM (if %BPM% tag exists). This mode does not analyze
 tracks.
 
 Analysis data:
 --------------
-- Analysis data is cached on files which are saved according to a
+• Analysis data is cached on files which are saved according to a
 configurable TF expression.
-- There are multiple settings to control how analysis data files
+• There are multiple settings to control how analysis data files
 are saved or auto-deleted.
-- Files are heavily compressed, using less than 2Kb in most cases.
+• Files are heavily compressed, using less than 2Kb in most cases.
 File size is greatly reduced in comparison to other waveform UI
 components storing similar data.
-- Since the script tries to load data files first, non compatible
+• Since the script tries to load data files first, non compatible
 formats like SACD, ISO files or zipped files may be converted
 to compatible ones, analyzed and then deleted. As long as these
 incompatible tracks share the same path, the script will load the
 associated data files when playing them and display the seekbar
 properly (even if the track can not be analyzed on real time).
-- By default data is downmixed to mono, but there is also a
+• By default data is downmixed to mono, but there is also a
 setting to enable multi-channel analysis.
 
 UI usage:
 ---------
-- Fully configurable using the R. Click menu.
-- Mot recommended anything below 100 ms for refresh rate.
-- Variable refresh rate may be used to automatically adjust it
+• Fully configurable using the R. Click menu.
+• Ctrl + Alt + Mouse Wheel to resize UI elements under mouse.
+• Not recommended anything below 100 ms for refresh rate.
+• Variable refresh rate may be used to automatically adjust it
 according to system responsiveness.
-- There are multiple display options but all use the same data.
-- Background is fully configurable.
-- On multi-channel mode, channels shown may be selectively set.
+• There are multiple display options but all use the same data.
+• Background is fully configurable.
+• On multi-channel mode, channels shown may be selectively set.
 
 Other UI usage:
 ---------------
@@ -47,32 +48,32 @@ Press Shift + Win + R. Click to open SMP/JSplitter panel menu
 
 FAQ:
 ----
-- VU Meter smoothness:
-	+ It's recommended to use ffprobe instead of Audiowaveform
+• VU Meter smoothness:
+	◦ It's recommended to use ffprobe instead of Audiowaveform
 	when using the VU Meter preset, since it's analysis data has
 	higher precision, resulting on a smoother animation.
 
-- Some tracks are not analyzed:
-	+ Check 'Mode\Show Compatible extensions'. The list
+• Some tracks are not analyzed:
+	◦ Check 'Mode\Show Compatible extensions'. The list
 	of compatible files depends on the mode (binary) used. You
 	can convert them to a compatible format, analyze them and
 	delete the converted tracks afterwards though.
 
-	+ If tracks are within a compressed file. This is
+	◦ If tracks are within a compressed file. This is
 	not supported, although if associated analysis files are
 	found, they will be used.
 
-	+ Otherwise check the analysis files TF path at
+	◦ Otherwise check the analysis files TF path at
 	'Analysis\File name format...'. Exotic paths, chars, artist
 	names or setups should be handled by the user.
 
-- How to control dynamic colors artwork source:
-	+ It can be set at the background 'cover mode' sub-menu.
+• How to control dynamic colors artwork source:
+	◦ It can be set at the background 'cover mode' sub-menu.
 
-	+ Selection/now playing source can be set at same sub-menu.
+	◦ Selection/now playing source can be set at same sub-menu.
 
-- How to show the artwork as background instead of a solid color:
-	+ Cover mode transparency must be non-zero, and slider background
+• How to show the artwork as background instead of a solid color:
+	◦ Cover mode transparency must be non-zero, and slider background
 	color must be disabled (-none-) too. In such case the background
 	ill be governed only by the background sub-menu settings.
 	Adjusting the transparency and color mode, different overlays

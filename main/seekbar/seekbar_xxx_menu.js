@@ -1,9 +1,9 @@
 ﻿'use strict';
-//28/10/25
+//25/11/25
 
 /* exported settingsMenu, importSettingsMenu */
 
-/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable, _ps:readable */
+/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable */
 
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, popup:readable, _deleteFolder:readable, _isFolder:readable, _explorer:readable, _renameFolder:readable */
@@ -768,7 +768,7 @@ function settingsMenu(bClear = true) {
 			menuName: subMenu, entryText: 'Check for updates...', func: () => {
 				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
-					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.Name + _ps(window.ScriptInfo.Name) + ': Update check'));
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.FullPanelName + ': Update check'));
 			}
 		});
 	}
@@ -828,9 +828,9 @@ function importSettingsMenu() {
 								} else {
 									if (_isFolder(seekbarData)) { _deleteFolder(seekbarData); }
 									_renameFolder(importPath + 'back\\seekbar', folders.data);
-									console.popup(panelName + ': failed importing track\'s analysis data files.', window.Name + _ps(window.ScriptInfo.Name));
+									console.popup(panelName + ': failed importing track\'s analysis data files.', window.FullPanelName);
 								}
-							} else { console.popup(panelName + ': failed importing track\'s analysis data files.', window.Name + _ps(window.ScriptInfo.Name)); }
+							} else { console.popup(panelName + ': failed importing track\'s analysis data files.', window.FullPanelName); }
 							return bDone;
 						}
 						return true;
