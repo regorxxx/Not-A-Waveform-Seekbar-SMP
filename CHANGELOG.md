@@ -38,6 +38,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- JSplitter: fixed compatibility bug with JSplitter (any version) due to improper constructor used on JS Host as reported [here](https://github.com/regorxxx/Infinity-Tools-SMP/pull/6) and [here](https://hydrogenaudio.org/index.php/topic,126743.msg1073615.html#msg1073615).
 
 ## [3.2.0] - 2025-11-25
 ### Added
