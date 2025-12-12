@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.2.1](#321---2025-12-12)
 - [3.2.0](#320---2025-11-25)
 - [3.1.1](#311---2025-11-19)
 - [3.1.0](#310---2025-10-28)
@@ -34,6 +35,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [3.2.1] - 2025-12-12
 ### Added
 ### Changed
 ### Removed
@@ -361,7 +368,8 @@
 ### Fixed
 
 
-[Unreleased]: ../../compare/v3.2.0...HEAD
+[Unreleased]: ../../compare/v3.2.1...HEAD
+[3.2.1]: ../../compare/v3.2.0...v3.2.1
 [3.2.0]: ../../compare/v3.1.1...v3.2.0
 [3.1.1]: ../../compare/v3.1.0...v3.1.1
 [3.1.0]: ../../compare/v3.0.1...v3.1.0
