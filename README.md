@@ -54,22 +54,21 @@ Alternate colors:
 
 ### Integrated in
  1. [Georgia ReBORN](https://github.com/TT-ReBORN/Georgia-ReBORN): a Clean, Full Dynamic Color Reborn foobar2000 Theme.
+ 2. [Poobar](https://github.com/Choya5011/Poobar): a responsive and modular 64-bit CUI foobar2000 theme.
 
 ## Requirements (only one host component required)
- 1. [Spider Monkey Panel (foobar2000 v2.x)](hydrogenaudio.org/index.php/topic,116669.new.html#new): JavaScript host component required to install this. Both [x86](https://github.com/marc2k3/spider-monkey-panel-x86) and [x64](https://github.com/marc2k3/spider-monkey-panel-x64). **(host component)**
- 2. [Spider Monkey Panel (foobar2000 v1.6.x)](https://theqwertiest.github.io/foo_spider_monkey_panel):  JavaScript host component required to install this. Only x86. **(host component)**
- 3. [JSplitter (any foobar2000 version)](https://foobar2000.ru/forum/viewtopic.php?t=6378): JavaScript host component required to install this. Both x86 and x64. **(host component)**
- 4. [Required fonts](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts): FontAwesome, Segoe UI, Arial Unicode MS
- 5. [Optional binaries](https://github.com/regorxxx/foobar2000-assets/tree/main/binaries): ffprobe.
+ 1. [Spider Monkey Panel or JSplitter](../../wiki/SMP-vs-JSplitter-notes): JavaScript host component required to install this. Available in x86 and x64.
+ 2. [Required fonts](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts): FontAwesome, Segoe UI, Arial Unicode MS
+ 3. [Optional binaries](https://github.com/regorxxx/foobar2000-assets/tree/main/binaries): ffprobe.
 
 ## Installation
-See [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki/Installation) or the [_INSTALLATION (txt)](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/blob/main/_INSTALLATION.txt).
+See [Wiki](../../wiki/Installation) or the [_INSTALLATION (txt)](../main/_INSTALLATION.txt).
 Not properly following the installation instructions will result in scripts not working as intended. Please don't report errors before checking this.
 
 ## Support
- 1. [Issues tracker](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/issues).
+ 1. [Issues tracker](../../issues).
  2. [Hydrogenaudio forum](https://hydrogenaud.io/index.php/topic,124385.0.html).
- 3. [Wiki](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/wiki).
+ 3. [Wiki](../../wiki).
 
 ## Nightly releases
 Automatic package [built from GitHub](https://nightly.link/regorxxx/Not-A-Waveform-Seekbar-SMP/workflows/build/main/file.zip) (using the latest commit). Unzip 'file.zip' downloaded and load the '*-package.zip' inside as package within your JS host component.
