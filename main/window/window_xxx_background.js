@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/10/25
+//14/12/25
 
 /* exported _background */
 
@@ -103,12 +103,8 @@ function _background({
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}).finally(() => {
-			if (this.callbacks.artColors) {
-				this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null, void(0), bRepaint);
-			}
-			if (this.callbacks.artColorsNotify) {
-				this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
-			}
+			this.applyArtColors(bRepaint);
+			this.notifyArtColors();
 			if (bRepaint) { this.repaint(); }
 			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
 		});
@@ -281,6 +277,14 @@ function _background({
 			: [-1, -1].fill(
 				window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1)
 			);
+	};
+	this.applyArtColors = (bRepaint) => {
+		if (!this.callbacks.artColors) { return false; }
+		this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null, void(0), bRepaint);
+	};
+	this.notifyArtColors = () => {
+		if (!this.callbacks.artColorsNotify) { return false; }
+		return this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
 	};
 	/** @type {boolean} */
 	this.useCover;
