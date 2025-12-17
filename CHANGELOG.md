@@ -36,6 +36,7 @@
 
 ## [Unreleased][]
 ### Added
+- Styles: added 'Waveform (filled)' similar to waveform but with filled interior using poligons.
 - Styles: added 'Bars (filled)' similar to bars but with filled interior.
 - UI: added new setting to background to skip following selection if follow now playing is active.
 - UI: added new setting to background when using art to apply a special circular blur effect instead of an homogeneous blur.

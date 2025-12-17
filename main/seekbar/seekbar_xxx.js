@@ -191,6 +191,7 @@ function _seekbar({
 		} else if (!this.binaries[this.analysis.binaryMode]) {
 			this.bBinaryFound = this.analysis.binaryMode === 'visualizer';
 		} else { this.bBinaryFound = true; }
+		if (!this.isValidWaveMode(this.preset.waveMode)) { this.preset.waveMode = waveModes[0]; }
 		if (this.preset.waveMode === 'vumeter') {
 			this.ui.bNormalizeWidth = false;
 			this.preset.paintMode = 'full';
@@ -220,6 +221,19 @@ function _seekbar({
 			timer
 		);
 		return timer;
+	};
+	/**
+	 * Checks if the given waveMode is supported.
+	 *
+	 * @property
+	 * @name isValidWaveMode
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {string} waveMode - Preset to check
+	 * @returns {boolean}
+	*/
+	this.isValidWaveMode = (waveMode) => {
+		return waveModes.includes((waveMode || '').toLowerCase());
 	};
 	// Add default args
 	this.defaults();
@@ -273,7 +287,7 @@ function _seekbar({
 	this.ui = ui;
 	/**
 	 * @typedef {object} Preset - Waveform display related settings.
-	 * @property {'waveform'|'lines'|'bars'|'barsfilled'|'points'|'halfbars'|'vumeter'} waveMode - Waveform design.
+	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'points'|'halfbars'|'vumeter'} waveMode - Waveform design.
 	 * @property {'rms_level'|'rms_peak'|'peak_level'} analysisMode - Data analysis mode (only available using ffprobe).
 	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
 	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
@@ -429,6 +443,8 @@ function _seekbar({
 	['ffprobe', 'audiowaveform'].forEach((key) => {
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
+	/** @type {string[]} - Supported wavemodes */
+	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'vumeter'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -463,11 +479,13 @@ function _seekbar({
 			const bStyle = Object.hasOwn(newConfig.preset, 'waveMode');
 			const bPaintMethod = this.preset.paintMode === 'partial' && this.preset.bPrePaint || this.analysis.binaryMode === 'visualizer' || Object.hasOwn(newConfig.preset, 'paintMode') || Object.hasOwn(newConfig.preset, 'bPrePaint');
 			if (bStyle || bPaintMethod) {
+				this.resetPaintCache();
 				this.resetAnimation();
 			}
 			if (Object.hasOwn(newConfig.preset, 'bUseBPM') || Object.hasOwn(newConfig.preset, 'bAnimate')) {
 				if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(); }
 				else { this.defaultSteps(); }
+				this.resetPaintCache();
 				this.resetAnimation();
 			}
 			if (Object.hasOwn(newConfig.preset, 'bDownMixToMono') || this.preset.bDownMixToMono && Object.hasOwn(newConfig.preset, 'displayChannels')) {
@@ -865,6 +883,7 @@ function _seekbar({
 			}
 		}
 		this.resetAnimation();
+		this.resetPaintCache();
 		// Set animation using BPM if possible
 		if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 		// Update time if needed
@@ -1300,6 +1319,18 @@ function _seekbar({
 		return [...compatibleFiles[mode + 'List']];
 	};
 	/**
+	 * Gets the available preset waveModes.
+	 *
+	 * @property
+	 * @name reportWaveModes
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {string[]}
+	*/
+	this.reportWaveModes = () => {
+		return [...waveModes];
+	};
+	/**
 	 * Sets the steps required to draw the animation for the track's BPM. By default BPM is considered 100 if not available.
 	 *
 	 * @property
@@ -1401,6 +1432,7 @@ function _seekbar({
 		this.isError = false;
 		bFallbackMode.paint = bFallbackMode.analysis = false;
 		this.resetAnimation();
+		this.resetPaintCache();
 		if (this.queueId) { clearTimeout(this.queueId); }
 	};
 	/**
@@ -1419,6 +1451,18 @@ function _seekbar({
 		this.defaultSteps();
 	};
 	/**
+	 * Resets paint cache variables.
+	 *
+	 * @property
+	 * @name resetPaintCache
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
+	this.resetPaintCache = () => {
+		waveFillCache[0] = waveFillCache[1] = void (0);
+	};
+	/**
 	 * Called on_playback_stop. Resets data and painting.
 	 *
 	 * @property
@@ -1430,6 +1474,7 @@ function _seekbar({
 	*/
 	this.stop = (reason = -1) => {
 		if (reason !== -1 && !this.active) { return; }
+		this.resetPaintCache();
 		if (reason !== -1 && this.getPreferredTrackMode() === 'selected') {
 			if (window.IsVisible) { throttlePaint(); }
 		} else if (this.isOnDemandTrack() && this.analysis.binaryMode === 'visualizer') {
@@ -1531,6 +1576,7 @@ function _seekbar({
 			const bWaveForm = this.preset.waveMode === 'waveform';
 			const bPoints = this.preset.waveMode === 'points';
 			const bBarsFilled = this.preset.waveMode === 'barsfilled';
+			const bWaveFormFilled = this.preset.waveMode === 'waveformfilled';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
 			let bPaintedVu = false;
 			let bFilledVu = framesVu.length >= this.maxStepVu;
@@ -1607,6 +1653,8 @@ function _seekbar({
 							this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bBarsFilled) {
 							this.paintBarsFilled(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+						} else if (bWaveFormFilled) {
+							this.paintWaveFill(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -1615,7 +1663,7 @@ function _seekbar({
 				}
 				gr.SetSmoothingMode(0);
 				// Current position
-				if ((bFfProbe || bWaveForm || bPoints || bBarsFilled || bVuMeter) && bIsTrackPlaying) {
+				if ((bFfProbe || bWaveForm || bPoints || bBarsFilled || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
@@ -1848,6 +1896,7 @@ function _seekbar({
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {number} n - Point idx
 	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
 	 * @param {number} size - Panel point size
 	 * @param {number} scale - Point scaling
@@ -1880,6 +1929,60 @@ function _seekbar({
 				if (altColor !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY, barW, - z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY, barW, - z, color); }
 		}
+	};
+	const waveFillCache = [void (0), void (0)];
+	/**
+	 * Draws points wave mode.
+	 *
+	 * @property
+	 * @name paintWaveFill
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {number} prevScale - Previous point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintWaveFill = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+		barW = barW * 1.05;
+		const scaledSize = size / 2 * scale;
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		const rand = Math.sign(scale) * this.offset[n];
+		const y = scaledSize > 0
+			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
+			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
+		if (typeof waveFillCache[0] === 'undefined' || typeof waveFillCache[1] === 'undefined') { waveFillCache.shift(); waveFillCache.push(y); return; }
+		const yPrev = waveFillCache[0];
+		const axisY = this.h / 2 - offsetY;
+		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		let z = bVisualizer ? Math.abs(y) : y;
+		let zPrev = bVisualizer ? Math.abs(yPrev) : yPrev;
+		if (z > 0) {
+			if (altColor !== color) {
+				if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev, x + barW, axisY - z, x + barW, axisY - z + z / 2, x - barW, axisY - zPrev + zPrev / 2]); }
+				if (altColor !== -1) { gr.FillPolygon(altColor, 0, [x - barW, axisY - zPrev / 2, x + barW, axisY - z / 2, x + barW, axisY - z / 2 + z / 2, x - barW, axisY - zPrev / 2 + zPrev / 2]); }
+			} else if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev, x + barW, axisY - z, x + barW, axisY - z, x - barW, axisY - zPrev]); }
+		}
+		z = bVisualizer ? - Math.abs(y) : y;
+		zPrev = bVisualizer ? Math.abs(yPrev) : yPrev;
+		if (z < 0) {
+			if (altColor !== color) {
+				if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev / 2, x + barW, axisY - z / 2, x + barW, axisY - z, x - barW, axisY - zPrev]); }
+				if (altColor !== -1) { gr.FillPolygon(altColor, 0, [x - barW, axisY, x + barW, axisY, x + barW, axisY - z / 2, x - barW, axisY - zPrev / 2]); }
+			} else if (color !== -1) { gr.FillSolidRect(x, axisY, barW, - z, color); }
+		}
+		waveFillCache.shift();
+		waveFillCache.push(y);
 	};
 	/**
 	 * VU meter paint
@@ -2071,7 +2174,7 @@ function _seekbar({
 			let key, min, max;
 			switch (true) {
 				case true:
-					key = ['ui', 'normalizeWidth']; min = 0.5;  max = 100; break;
+					key = ['ui', 'normalizeWidth']; min = 0.5; max = 100; break;
 			}
 			if (!key) { return; }
 			else {
