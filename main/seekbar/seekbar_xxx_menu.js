@@ -214,6 +214,7 @@ function settingsMenu(bClear = true) {
 		const subMenu = menu.newMenu('Style');
 		const options = [
 			{ name: 'Waveform', key: 'waveform' },
+			{ name: 'Bars (filled)', key: 'barsfilled' },
 			{ name: 'Bars', key: 'bars' },
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
