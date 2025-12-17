@@ -36,8 +36,8 @@
 
 ## [Unreleased][]
 ### Added
-- Styles: added 'Waveform (filled)' similar to waveform but with filled interior using poligons.
-- Styles: added 'Bars (filled)' similar to bars but with filled interior.
+- Styles: added 'Waveform (filled)' similar to waveform but with filled interior using polygons. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
+- Styles: added 'Bars (filled)' similar to bars but with filled interior. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
 - UI: added new setting to background to skip following selection if follow now playing is active.
 - UI: added new setting to background when using art to apply a special circular blur effect instead of an homogeneous blur.
 ### Changed
