@@ -287,7 +287,7 @@ function _seekbar({
 	this.ui = ui;
 	/**
 	 * @typedef {object} Preset - Waveform display related settings.
-	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'points'|'halfbars'|'vumeter'} waveMode - Waveform design.
+	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'points'|'halfbars'|'tree'|'vumeter'} waveMode - Waveform design.
 	 * @property {'rms_level'|'rms_peak'|'peak_level'} analysisMode - Data analysis mode (only available using ffprobe).
 	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
 	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
@@ -444,7 +444,7 @@ function _seekbar({
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
 	/** @type {string[]} - Supported wavemodes */
-	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'tree', 'vumeter'];
+	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'tree', 'soundcloud', 'vumeter'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -1579,6 +1579,7 @@ function _seekbar({
 			const bBarsFilled = this.preset.waveMode === 'barsfilled';
 			const bWaveFormFilled = this.preset.waveMode === 'waveformfilled';
 			const bTree = this.preset.waveMode === 'tree';
+			const bSoundCloud = this.preset.waveMode === 'soundcloud';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
 			let bPaintedVu = false;
 			let bFilledVu = framesVu.length >= this.maxStepVu;
@@ -1659,6 +1660,8 @@ function _seekbar({
 							this.paintWaveFill(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bTree) {
 							this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+						} else if (bSoundCloud) {
+							this.paintSoundCloud(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -1667,7 +1670,7 @@ function _seekbar({
 				}
 				gr.SetSmoothingMode(0);
 				// Current position
-				if ((bFfProbe || bWaveForm || bPoints || bBarsFilled || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
+				if ((bFfProbe || bWaveForm || bPoints || bBarsFilled || bWaveFormFilled || bSoundCloud || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
@@ -2034,6 +2037,61 @@ function _seekbar({
 				if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev / 2, x + barW, axisY - z / 2, x + barW, axisY - z, x - barW, axisY - zPrev]); }
 				if (altColor !== -1) { gr.FillPolygon(altColor, 0, [x - barW, axisY, x + barW, axisY, x + barW, axisY - z / 2, x - barW, axisY - zPrev / 2]); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY, barW, - z, color); }
+		}
+	};
+	/**
+	 * Draws points wave mode.
+	 *
+	 * @property
+	 * @name paintSoundCloud
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {number} prevScale - Previous point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintSoundCloud = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+		barW = barW * 1.80;
+		const scaledSize = size / 2 * scale;
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		const rand = Math.sign(scale) * this.offset[n];
+		const y = scaledSize > 0
+			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
+			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
+		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		let z = bVisualizer ? Math.abs(y) : y;
+		if (z > 0) {
+			if (altColor !== color) {
+				if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z, barW, z / 2, color); }
+				if (altColor !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z / 2, barW, z / 2, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, this.h / 2 - offsetY - z, barW, z, color); }
+		}
+		z = bVisualizer ? - Math.abs(y) : y;
+		if (z < 0) {
+			if (altColor !== color) {
+				if (color !== -1) {
+					const reflectionColor = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
+					gr.FillSolidRect(x, this.h / 2 - offsetY - z / 4, barW, - z / 4, reflectionColor);
+				}
+				if (altColor !== -1) {
+					const reflectionColor = this.applyAlpha(altColor, this.getAlpha(altColor) / 2.5 / 255 * 100);
+					gr.FillSolidRect(x, this.h / 2 - offsetY, barW, - z / 4, reflectionColor);
+				}
+			} else if (color !== -1) {
+				const reflectionColor = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
+				gr.FillSolidRect(x, this.h / 2 - offsetY, barW, - z / 2, reflectionColor);
+			}
 		}
 	};
 	/**
@@ -2597,6 +2655,9 @@ function _seekbar({
 			}
 		}
 		return data;
+	};
+	this.getAlpha = (color) => {
+		return ((color >> 24) & 0xff);
 	};
 	/**
 	 * Applies transparency to a color. Uses a lookup table to be as efficient as possible.

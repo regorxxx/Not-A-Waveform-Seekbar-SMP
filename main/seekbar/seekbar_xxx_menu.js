@@ -220,6 +220,7 @@ function settingsMenu(bClear = true) {
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
 			{ name: 'Tree', key: 'tree' },
+			{ name: 'SoundCloud', key: 'soundcloud' },
 			{ name: 'VU Meter', key: 'vumeter' },
 		];
 		options.forEach((o) => {
