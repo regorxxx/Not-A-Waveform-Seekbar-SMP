@@ -597,7 +597,7 @@ function settingsMenu(bClear = true) {
 						menuName: subMenuTwo, entryText: o.name + '\t' + _b(this.ui.transparency[o.key]), func: () => {
 							const input = utils.IsKeyPressed(VK_CONTROL)
 								? 100
-								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', 'Seekbar: ' + o.name + ' transparency', 200, [(n) => n >= 0 && n <= 100]);
+								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', 'Seekbar: ' + o.name + ' transparency', 50, [(n) => n >= 0 && n <= 100]);
 							if (input === null) { return; }
 							this.updateConfig({ ui: { transparency: { [o.key]: input } } });
 							this.saveProperties();
