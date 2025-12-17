@@ -1,5 +1,5 @@
 'use strict';
-//25/11/25
+//17/12/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -15,50 +15,13 @@ include('..\\..\\helpers-external\\lz-string\\lz-string.min.js'); // For string 
  * @name _seekbar
  * @constructor
  * @param {object} o - argument
- * @param {string} [o.matchPattern] - [='$replace($ascii($lower([$replace($if2($meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)'] Match pattern used to create analysis file path.
- * @param {{ffprobe: string?, audiowaveform: string?, visualizer: null}} [o.binaries] - Paths to binaries. May be relative paths to profile folder (.//profile//) or foobar folder (.//), root will be replaced on execution.
- * @param {object} [o.preset] - Waveform display related settings.
- * @param {'waveform'|'bars'|'points'|'halfbars'|'vumeter'} [o.preset.waveMode] - [='waveform'] Waveform display design.
- * @param {'rms_level'|'rms_peak'|'peak_level'} [o.preset.analysisMode] - [='peak_level'] Data analysis mode (only available using ffprobe).
- * @param {'full'|'partial'} [o.preset.paintMode] - [='full'] Displays entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link o.preset.bPrePaint}
- * @param {boolean} [o.preset.bPrePaint] - [=false] Displays the region after the current time. How many seconds are shown is set by {@link o.preset.futureSecs}
- * @param {boolean} [o.preset.bPaintCurrent] - [=true] Paint current time indicator.
- * @param {boolean} [o.preset.bAnimate] - [=true] Adds animation to displayed waveform.
- * @param {boolean} [o.preset.bUseBPM] - [=true] Sync animation with %BPM% tag.
- * @param {number} [o.preset.futureSecs] - [=Infinity] Sets the length (in seconds) to show after the current time. Requires {@link o.preset.paintMode} set to 'partial' and {@link o.preset.bPrePaint} to true.
- * @param {boolean} [o.preset.bHalfBarsShowNeg] - [=true] Show (and invert) negative data values if using 'halfbars' {@link o.preset.waveMode}.
- * @param {Number[]} [o.preset.displayChannels] - [=[]] Set channels which will be displayed vertically stacked, 0-based. An empty array will display all.
- * @param {boolean} [o.preset.bDownMixToMono] - [=false] Downmix selected display channels into a single channel. May be used to mimic non-multichannel output with multichannel analysis files.
- * @param {object} [o.ui] - Panel display related settings.
- * @param {GdiFont} [o.ui.gFont] - [=_gdiFont('Segoe UI', _scale(15))] Font used in panel
- * @param {{bg?:number, main?:number, alt?:number, bgFuture?:number, mainFuture?:number, altFuture?:number, currPos?:number}} [o.ui.colors] - Color settings for background (bg), waveform (main|alt) and current time indicator (currPos). Additionally colors for the region after current time (future) and alternate accent (alt) may be set.
- * @param {{bg?:number, main?:number, alt?:number, bgFuture?:number, mainFuture?:number, altFuture?:number, currPos?:number}} [o.ui.transparency] - Transparency settings (see colors for key meanings).
- * @param {{x?:number, y?:number, w?:number, h?:number, scaleH?:number, scaleW?:number|null, marginW?:number|null}} o.ui.pos - Window related position
- * @param {{unit?:('s'|'ms'|'%'), step?:number, bReversed?:boolean}} [o.ui.wheel] - Mouse wheel settings to control playback seeking
- * @param {number} [o.ui.refreshRate] - [=200] ms when using animations of any type. 100 is smooth enough but the performance hit is high
- * @param {boolean} [o.ui.bVariableRefreshRate] - [=false] Changes refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
- * @param {boolean} [o.ui.bNormalizeWidth] - [=false] Interpolates waveform to display it normalized to the window width adjusted by o.ui.normalizeWidth set (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
- * @param {number} [o.ui.normalizeWidth] - [=_scale(4)] Size unit for normalization.
- * @param {boolean} [o.ui.bLogScale ]- [=true] Wether to display VU Meter scale in log (dB) or linear scale
- * @param {Object} [o.analysis] - Analysis related settings.
- * @param {'ffprobe'|'audiowaveform'|'visualizer'} [o.analysis.binaryMode] - [='audiowaveform'] Binary to use. Visualizer is processed internally.
- * @param {number} [o.analysis.resolution] - [=2] Data points per second (every point has 2 values, i.e. + and -). On visualizer mode is adjusted per window width. Changing this setting requires re-analysis of files to apply, but previous data files will be compatible too (just with different number of points).
- * @param {'none'|'utf-8'|'utf-16'} [o.analysis.compressionMode] - [='utf-16'] Set to anything but 'none' to apply compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70% compression) and 7zip (~80% compression).
- * @param {'library'|'all'|'none'} [o.analysis.storeMode] - [='library'] Controls wether analysis data files are saved to disk, for library items only, any item or none.
- * @param {Array.<'playing'|'selected'|'blank'>} [o.analysis.trackMode] - [=['playing', 'selected', 'blank']] Track preferred for visualization (order by priority).
- * @param {boolean} [o.analysis.bAutoAnalysis] - [=true] Wether automatically analyze tracks on playback or on demand. For usual seekbar usage it should be true, but may be set to false if the parent panel exposes some way to do it manually (for ex. for track analysis).
- * @param {boolean} [o.analysis.bAutoRemove] - [=true] Deletes analysis files when unloading the script, but they are kept during the session (to not recalculate them).
- * @param {boolean} [o.analysis.bVisualizerFallback] - [=true] Uses visualizer mode when file can not be processed (not compatible format).
- * @param {boolean} [o.analysis.bVisualizerFallbackAnalysis] - [=true] Uses visualizer mode while analyzing files.
- * @param {boolean} [o.analysis.bMultiChannel] - [=false] Wether output analysis data files are combined into a single waveform or not. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via o.preset.bDownMixToMono without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to track channels).
- * @param {object} [o.callbacks] - Panel callbacks related settings.
- * @param {() => number} [o.callbacks.backgroundColor] - [=null] Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
- * @param {object} [o.logging] - Panel callbacks related settings.
- * @param {boolean} [o.logging.bDebug] - [=false] Debug logging flag.
- * @param {boolean} [o.logging.bProfile] - [=false] Profiling logging flag.
- * @param {boolean} [o.logging.bLoad] - [=true] On seekbar file load logging flag.
- * @param {boolean} [o.logging.bSave] - [=true] On seekbar file save logging flag.
- * @param {boolean} [o.logging.bError] - [=true] On seekbar errors logging flag.
+ * @param {string} [o.matchPattern] - [='$replace($ascii($lower([$replace($if2($meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,)]\\[$replace(%ALBUM%,\\,)][ {$if2($replace(%COMMENT%,\\,),%MUSICBRAINZ_ALBUMID%)}]\\%TRACKNUMBER% - $replace(%TITLE%,\\,))), ?,,= ,,?,)'] Analysis data files match pattern
+ * @param {Binaries} [o.binaries] - Paths to binaries. May be relative paths to profile folder (.//profile//) or foobar folder (.//), root will be replaced on execution.
+ * @param {Preset} [o.preset] - Waveform display related settings.
+ * @param {UI} [o.ui] - Panel display related settings.
+ * @param {Analysis} [o.analysis] - Analysis related settings.
+ * @param {Callbacks} [o.callbacks] - Panel callbacks related settings.
+ * @param {Logging} [o.logging] - Panel callbacks related settings.
  */
 function _seekbar({
 	matchPattern = '$replace($ascii($lower([$replace($if2($meta(ALBUM ARTIST,0),$meta(ARTIST,0)),\\,,/,)]\\[$replace(%ALBUM%,\\,,/,)][ {$if2($replace(%COMMENT%,\\,,/,),%MUSICBRAINZ_ALBUMID%)}]\\[%TRACKNUMBER% - ][$replace(%TITLE%,$char(92),-,/,-,$char(41),,$char(40),,:,, ?$char(92),,?,,¿,,/,-,$char(36),,$char(37),,# ,,#,,*,,!,,¡,,|,-,",$char(39)$char(39),<,,>,,^,,... ,,...,,.,)])), ?,,= ,,?,)',
