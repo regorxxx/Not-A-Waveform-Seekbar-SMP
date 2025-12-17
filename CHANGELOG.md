@@ -36,7 +36,10 @@
 
 ## [Unreleased][]
 ### Added
+- UI: added new setting to background to skip following selection if follow now playing is active.
+- UI: added new setting to background when using art to apply a special circular blur effect instead of an homogeneous blur.
 ### Changed
+- UI: changed default background settings for a more cohesive experience along [Library-Tree-SMP](https://github.com/regorxxx/Library-Tree-SMP/), Biography and dark mode.
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
 ### Removed
 ### Fixed

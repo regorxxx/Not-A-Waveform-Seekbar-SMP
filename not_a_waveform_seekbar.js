@@ -1,5 +1,5 @@
 'use strict';
-//25/11/25
+//17/12/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.2.1' }); }
 
@@ -12,7 +12,7 @@ include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, _save:readable, _foldPath:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isJSON:readable, isBoolean:readable, deepAssign:readable, isString:readable, clone:readable */
+/* global isJSON:readable, isBoolean:readable, isString:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_properties.js');
@@ -39,7 +39,7 @@ let seekbarProperties = {
 				? _foldPath(folders.binaries)
 				: folders.xxxRootName + 'helpers-external\\'
 			) + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
-		}), { func: isJSON }],
+		}), { func: isJSON, forceDefaults: true }],
 	analysis: ['Analysis config',
 		JSON.stringify({
 			binaryMode: 'audiowaveform',
@@ -52,7 +52,7 @@ let seekbarProperties = {
 			bVisualizerFallback: true,
 			bVisualizerFallbackAnalysis: true,
 			bMultiChannel: false
-		}), { func: isJSON }],
+		}), { func: isJSON, forceDefaults: true }],
 	preset: ['Preset config',
 		JSON.stringify({
 			analysisMode: 'peak_level',
@@ -65,7 +65,7 @@ let seekbarProperties = {
 			futureSecs: Infinity,
 			bHalfBarsShowNeg: true,
 			displayChannels: []
-		}), { func: isJSON }],
+		}), { func: isJSON, forceDefaults: true }],
 	ui: ['UI config',
 		JSON.stringify({
 			colors: {
@@ -91,7 +91,7 @@ let seekbarProperties = {
 			bNormalizeWidth: false,
 			normalizeWidth: _scale(4),
 			bLogScale: true
-		}), { func: isJSON }],
+		}), { func: isJSON, forceDefaults: true }],
 	logging: ['Logging config',
 		JSON.stringify({
 			bDebug: false,
@@ -99,13 +99,10 @@ let seekbarProperties = {
 			bLoad: false,
 			bSave: true,
 			bError: true
-		}), { func: isJSON }],
+		}), { func: isJSON, forceDefaults: true }],
 	bEnabled: ['Enable panel', true, { func: isBoolean }],
 	matchPattern: ['File name TF format', globTags.artistAlbumTrackIdPath, { func: isString }],
-	background: ['Background options', JSON.stringify(deepAssign()(
-		(new _background).defaults(),
-		{ colorMode: 'bigradient', colorModeOptions: { color: [RGB(270, 270, 270), RGB(300, 300, 300)] }, coverMode: 'none' }
-	)), { func: isJSON }],
+	background: ['Background options', JSON.stringify(_background.defaults()), { func: isJSON, forceDefaults: true }],
 	bDynamicColors: ['Adjust colors to artwork', true, { func: isBoolean }],
 	bAutoUpdateCheck: ['Automatically check updates', globSettings.bAutoUpdateCheck, { func: isBoolean }],
 	firstPopup: ['Seekbar: Fired once', false, { func: isBoolean }, false],
