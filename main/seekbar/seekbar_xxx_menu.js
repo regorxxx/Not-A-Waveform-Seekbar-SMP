@@ -221,6 +221,7 @@ function settingsMenu(bClear = true) {
 			{ name: 'Half-Bars', key: 'halfbars' },
 			{ name: 'Tree', key: 'tree' },
 			{ name: 'SoundCloud', key: 'soundcloud' },
+			{ name: 'SoundCloud (gradient)', key: 'soundcloudgradient' },
 			{ name: 'VU Meter', key: 'vumeter' },
 		];
 		options.forEach((o) => {
