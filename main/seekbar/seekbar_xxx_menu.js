@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//17/12/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -219,6 +219,7 @@ function settingsMenu(bClear = true) {
 			{ name: 'Bars', key: 'bars' },
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
+			{ name: 'Tree', key: 'tree' },
 			{ name: 'VU Meter', key: 'vumeter' },
 		];
 		options.forEach((o) => {

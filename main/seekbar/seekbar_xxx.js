@@ -444,7 +444,7 @@ function _seekbar({
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
 	/** @type {string[]} - Supported wavemodes */
-	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'vumeter'];
+	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'tree', 'vumeter'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -473,6 +473,7 @@ function _seekbar({
 	*/
 	this.updateConfig = (newConfig) => {
 		if (newConfig) { deepAssign()(this, newConfig); }
+		this.preset.waveMode = (this.preset.waveMode || '').toLowerCase();
 		this.checkConfig();
 		let bRecalculate = false;
 		if (newConfig.preset) {
@@ -1577,6 +1578,7 @@ function _seekbar({
 			const bPoints = this.preset.waveMode === 'points';
 			const bBarsFilled = this.preset.waveMode === 'barsfilled';
 			const bWaveFormFilled = this.preset.waveMode === 'waveformfilled';
+			const bTree = this.preset.waveMode === 'tree';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
 			let bPaintedVu = false;
 			let bFilledVu = framesVu.length >= this.maxStepVu;
@@ -1655,6 +1657,8 @@ function _seekbar({
 							this.paintBarsFilled(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bWaveFormFilled) {
 							this.paintWaveFill(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+						} else if (bTree) {
+							this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -1887,7 +1891,7 @@ function _seekbar({
 		}
 	};
 	/**
-	 * Draws points wave mode.
+	 * Draws bars (filled) wave mode.
 	 *
 	 * @property
 	 * @name paintBarsFilled
@@ -1932,7 +1936,7 @@ function _seekbar({
 	};
 	const waveFillCache = [void (0), void (0)];
 	/**
-	 * Draws points wave mode.
+	 * Draws waveform (filled) wave mode.
 	 *
 	 * @property
 	 * @name paintWaveFill
@@ -1945,7 +1949,6 @@ function _seekbar({
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
 	 * @param {number} size - Panel point size
 	 * @param {number} scale - Point scaling
-	 * @param {number} prevScale - Previous point scaling
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
@@ -1983,6 +1986,55 @@ function _seekbar({
 		}
 		waveFillCache.shift();
 		waveFillCache.push(y);
+	};
+	/**
+	 * Draws tree wave mode.
+	 *
+	 * @property
+	 * @name paintTree
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintTree = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+		barW = barW * 1.05;
+		const scaledSize = size / 2 * scale;
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		const rand = Math.sign(scale) * this.offset[n];
+		const y = scaledSize > 0
+			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
+			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
+		const yPrev = 0;
+		const axisY = this.h / 2 - offsetY;
+		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		let z = bVisualizer ? Math.abs(y) : y;
+		let zPrev = bVisualizer ? Math.abs(yPrev) : yPrev;
+		if (z > 0) {
+			if (altColor !== color) {
+				if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev, x + barW, axisY - z, x + barW, axisY - z + z / 2, x - barW, axisY - zPrev + zPrev / 2]); }
+				if (altColor !== -1) { gr.FillPolygon(altColor, 0, [x - barW, axisY - zPrev / 2, x + barW, axisY - z / 2, x + barW, axisY - z / 2 + z / 2, x - barW, axisY - zPrev / 2 + zPrev / 2]); }
+			} else if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev, x + barW, axisY - z, x + barW, axisY - z, x - barW, axisY - zPrev]); }
+		}
+		z = bVisualizer ? - Math.abs(y) : y;
+		zPrev = bVisualizer ? Math.abs(yPrev) : yPrev;
+		if (z < 0) {
+			if (altColor !== color) {
+				if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev / 2, x + barW, axisY - z / 2, x + barW, axisY - z, x - barW, axisY - zPrev]); }
+				if (altColor !== -1) { gr.FillPolygon(altColor, 0, [x - barW, axisY, x + barW, axisY, x + barW, axisY - z / 2, x - barW, axisY - zPrev / 2]); }
+			} else if (color !== -1) { gr.FillSolidRect(x, axisY, barW, - z, color); }
+		}
 	};
 	/**
 	 * VU meter paint
