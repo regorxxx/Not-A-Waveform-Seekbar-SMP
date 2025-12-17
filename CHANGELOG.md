@@ -43,6 +43,7 @@
 ### Changed
 - UI: changed default background settings for a more cohesive experience along [Library-Tree-SMP](https://github.com/regorxxx/Library-Tree-SMP/), Biography and dark mode.
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
+- Styles: added safeguards against manual editing of the waveform styles at the properties panel, with fallback to default style if it's not recognized.
 ### Removed
 ### Fixed
 
