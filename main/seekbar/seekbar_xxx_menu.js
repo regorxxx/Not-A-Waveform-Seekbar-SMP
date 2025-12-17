@@ -481,6 +481,7 @@ function settingsMenu(bClear = true) {
 			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'Green', colors: { main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF } },
+				{ name: 'SoundCloud', colors: { main: 0XFFFF5400, alt: 0XFFFF2900, mainFuture: 0xFFFFFAFE, altFuture: 0xFFFCFCFC, currPos: 0xFFFFFFFF } },
 				{ name: 'Lavender', colors: { main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC } },
 				{ name: 'Forest', colors: { main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38 } },
 				{ name: 'Sienna', colors: { main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920 } },
