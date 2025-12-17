@@ -47,6 +47,8 @@
 - Styles: added safeguards against manual editing of the waveform styles at the properties panel, with fallback to default style if it's not recognized.
 ### Removed
 ### Fixed
+- UI: fix glitches in rare cases related to unplayed/played times recognition.
+- UI: fix internal transparency table producing glitches on some settings.
 
 ## [3.2.1] - 2025-12-12
 ### Added
