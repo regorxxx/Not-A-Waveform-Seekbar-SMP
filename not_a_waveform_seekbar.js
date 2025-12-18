@@ -114,6 +114,7 @@ let seekbarProperties = {
 	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
 	bNotifyColors: ['Notify colors to other panels', false, { func: isBoolean }],
 	bShowTooltip: ['Show tooltip', true, { func: isBoolean }],
+	bShowExtendedTooltip: ['Show extended info at tooltip', true, { func: isBoolean }],
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
@@ -381,11 +382,14 @@ addEventListener('on_mouse_move', (x, y, mask) => {
 	if (seekbarProperties.bShowTooltip[1] && (seekbar.mx !== x || seekbar.my !== y)) {
 		seekbar.tooltip.tooltip.TrackPosition(x, y);
 		seekbar.tooltip.SetValueDebounced(
-			'Click to seek to: ' + utils.FormatDuration(seekbar.getPlaybackTimeAt(x)) + '/' + utils.FormatDuration(seekbar.getHandleLength()) +
-			'\n' + '-'.repeat(60) +
-			'\n(R. Click to open settings menu)' +
-			'\n(Shift + Win + R. Click for SMP panel menu)' +
-			'\n(Ctrl + Win + R. Click for script panel menu)'
+			'Click to seek to: ' + utils.FormatDuration(seekbar.getPlaybackTimeAt(x)) + '/' + utils.FormatDuration(seekbar.getHandleLength()) + (
+				seekbarProperties.bShowExtendedTooltip[1]
+					? '\n' + '-'.repeat(60) +
+					'\n(R. Click to open settings menu)' +
+					'\n(Shift + Win + R. Click for SMP panel menu)' +
+					'\n(Ctrl + Win + R. Click for script panel menu)'
+					: ''
+			)
 		);
 	}
 	seekbar.move(x, y, mask);

@@ -750,6 +750,13 @@ function settingsMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => seekbarProperties.bShowTooltip[1]);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Extended info at tooltip', func: () => {
+				seekbarProperties.bShowExtendedTooltip[1] = !seekbarProperties.bShowExtendedTooltip[1];
+				this.saveProperties();
+			}, flags: seekbarProperties.bShowTooltip[1] ? MF_STRING : MF_GRAYED
+		});
+		menu.newCheckMenuLast(() => seekbarProperties.bShowTooltip[1] && seekbarProperties.bShowExtendedTooltip[1]);
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {

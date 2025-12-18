@@ -42,6 +42,7 @@
 - Styles: added 'Bars (filled)' similar to bars but with filled interior. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
 - Styles: added 'Tree' similar to a Christmas tree on X-axis. Note it's appearance is heavily influenced by resolution, i.e. point width (and the 'Normalize Width' setting).  See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
 - Colors: added 'SoundCloud' colors preset.
+- UI: added new setting to tweak whether extended info is shown at tooltip or not.
 - UI: added new setting to background to skip following selection if follow now playing is active.
 - UI: added new setting to background when using art to apply a special circular blur effect instead of an homogeneous blur.
 ### Changed
