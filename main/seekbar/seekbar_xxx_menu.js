@@ -757,6 +757,15 @@ function settingsMenu(bClear = true) {
 			}, flags: seekbarProperties.bShowTooltip[1] ? MF_STRING : MF_GRAYED
 		});
 		menu.newCheckMenuLast(() => seekbarProperties.bShowTooltip[1] && seekbarProperties.bShowExtendedTooltip[1]);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Show tooltip only click', func: () => {
+				seekbarProperties.bShowTooltipOnClick[1] = !seekbarProperties.bShowTooltipOnClick[1];
+				this.tooltip.SetDelayTime(3, seekbarProperties.bShowTooltipOnClick[1] ? 500 : 1500);
+				this.tooltip.SetDelayTime(2, seekbarProperties.bShowTooltipOnClick[1] ? Infinity : 3000);
+				this.saveProperties();
+			}, flags: seekbarProperties.bShowTooltip[1] ? MF_STRING : MF_GRAYED
+		});
+		menu.newCheckMenuLast(() => seekbarProperties.bShowTooltip[1] && seekbarProperties.bShowTooltipOnClick[1]);
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {

@@ -6,7 +6,7 @@ if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-
 include('helpers\\helpers_xxx.js');
 /* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable */
 include('helpers\\helpers_xxx_flags.js');
-/* global VK_LWIN:readable */
+/* global VK_LWIN:readable, MK_LBUTTON:readable */
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable, _tt:readable, blendColors */
 include('helpers\\helpers_xxx_file.js');
@@ -115,6 +115,7 @@ let seekbarProperties = {
 	bNotifyColors: ['Notify colors to other panels', false, { func: isBoolean }],
 	bShowTooltip: ['Show tooltip', true, { func: isBoolean }],
 	bShowExtendedTooltip: ['Show extended info at tooltip', true, { func: isBoolean }],
+	bShowTooltipOnClick: ['Show tooltip only on click', false, { func: isBoolean }]
 };
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
@@ -260,8 +261,8 @@ seekbar.applyUiSettings = function (settings, bForce) {
 };
 
 seekbar.tooltip = new _tt(null);
-seekbar.tooltip.SetDelayTime(3, 1500);
-seekbar.tooltip.SetDelayTime(2, 3000);
+seekbar.tooltip.SetDelayTime(3, seekbarProperties.bShowTooltipOnClick[1] ? 500 : 1500);
+seekbar.tooltip.SetDelayTime(2, seekbarProperties.bShowTooltipOnClick[1] ? Infinity : 3000);
 
 globProfiler.Print('seekbar');
 
@@ -379,19 +380,23 @@ addEventListener('on_playback_seek', (time) => { // Seeking outside panel
 });
 
 addEventListener('on_mouse_move', (x, y, mask) => {
-	if (seekbarProperties.bShowTooltip[1] && (seekbar.mx !== x || seekbar.my !== y)) {
-		seekbar.tooltip.tooltip.TrackPosition(x, y);
-		seekbar.tooltip.SetValueDebounced(
-			'Click to seek to: ' + utils.FormatDuration(seekbar.getPlaybackTimeAt(x)) + '/' + utils.FormatDuration(seekbar.getHandleLength()) + (
-				seekbarProperties.bShowExtendedTooltip[1]
-					? '\n' + '-'.repeat(60) +
-					'\n(R. Click to open settings menu)' +
-					'\n(Shift + Win + R. Click for SMP panel menu)' +
-					'\n(Ctrl + Win + R. Click for script panel menu)'
-					: ''
-			)
-		);
-	}
+	if (seekbarProperties.bShowTooltip[1]) {
+		if (seekbar.mx !== x || seekbar.my !== y) {
+			if (!seekbarProperties.bShowTooltipOnClick[1] || utils.IsKeyPressed(MK_LBUTTON)) {
+				seekbar.tooltip.tooltip.TrackPosition(x, y);
+				seekbar.tooltip.SetValueDebounced(
+					'Click to seek to: ' + utils.FormatDuration(seekbar.getPlaybackTimeAt(x)) + '/' + utils.FormatDuration(seekbar.getHandleLength()) + (
+						seekbarProperties.bShowExtendedTooltip[1]
+							? '\n' + '-'.repeat(60) +
+							'\n(R. Click to open settings menu)' +
+							'\n(Shift + Win + R. Click for SMP panel menu)' +
+							'\n(Ctrl + Win + R. Click for script panel menu)'
+							: ''
+					)
+				);
+			} else { seekbar.tooltip.Deactivate(); }
+		}
+	} else { seekbar.tooltip.Deactivate(); }
 	seekbar.move(x, y, mask);
 });
 
