@@ -371,6 +371,12 @@ addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 	seekbar.lbtnUp(x, y, mask);
 });
 
+addEventListener('on_playback_seek', (time) => { // Seeking outside panel
+	if (seekbar.mx === -1 || seekbar.my === -1) {
+		seekbar.updateTime(Math.round(time));
+	}
+});
+
 addEventListener('on_mouse_move', (x, y, mask) => {
 	if (seekbarProperties.bShowTooltip[1] && (seekbar.mx !== x || seekbar.my !== y)) {
 		seekbar.tooltip.tooltip.TrackPosition(x, y);
@@ -384,7 +390,6 @@ addEventListener('on_mouse_move', (x, y, mask) => {
 	}
 	seekbar.move(x, y, mask);
 });
-
 
 addEventListener('on_mouse_leave', () => {
 	seekbar.leave();
