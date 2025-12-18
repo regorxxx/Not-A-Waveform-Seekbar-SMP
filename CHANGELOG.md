@@ -50,6 +50,7 @@
 - Styles: added safeguards against manual editing of the waveform styles at the properties panel, with fallback to default style if it's not recognized.
 ### Removed
 ### Fixed
+- Dependencies: audiowaveform binary not being copied to required dir on first init.
 - UI: fix glitches in rare cases related to unplayed/played times recognition.
 - UI: fix internal transparency table producing glitches on some settings.
 
