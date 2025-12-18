@@ -14,7 +14,7 @@ include('helpers_xxx_web.js');
 
 function checkUpdate({
 	scriptName = window.ScriptInfo.Name,
-	repository = 'https://github.com/' + window.ScriptInfo.Author + '/' + (scriptName || window.ScriptInfo.Name).replace(/ /g, '-') + ((scriptName || window.ScriptInfo.Name).endsWith('-SMP') ? '' : '-SMP'),
+	repository = 'https://github.com/' + window.ScriptInfo.Author + '/' + (scriptName || '').replace(/ /g, '-') + ((scriptName || '').endsWith('-SMP') ? '' : '-SMP'),
 	version = window.ScriptInfo.Version,
 	bDownload = false,
 	bOpenWeb = true,
