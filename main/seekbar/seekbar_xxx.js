@@ -98,7 +98,15 @@ function _seekbar({
 		bError: true,
 	}
 } = {}) {
-
+	/**
+	 * Applies default setttings, overwriting anythign currently set
+	 *
+	 * @property
+	 * @name defaults
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.defaults = () => {
 		const defBinaries = {
 			ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
@@ -181,6 +189,15 @@ function _seekbar({
 			}
 		});
 	};
+	/**
+	 * Checks and applies some safe-guards to currently applied setttings
+	 *
+	 * @property
+	 * @name checkConfig
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {void}
+	*/
 	this.checkConfig = () => {
 		if (!Object.hasOwn(this.binaries, this.analysis.binaryMode)) {
 			throw new Error('Binary mode not recognized or path not set: ' + this.analysis.binaryMode);
