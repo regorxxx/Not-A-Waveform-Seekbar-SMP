@@ -462,6 +462,8 @@ function _seekbar({
 	});
 	/** @type {string[]} - Supported wavemodes */
 	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'tree', 'soundcloud', 'soundcloudgradient', 'vumeter'];
+	/** @type {string[]} - Wavemodes which require wider repainting */
+	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'waveformfilled', 'tree'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -1411,7 +1413,7 @@ function _seekbar({
 		if (this.analysis.binaryMode === 'visualizer' || bFullAnimated || this.preset.waveMode === 'vumeter' || !frames || bFull) {
 			throttlePaint(bFull);
 		} else if (bPrePaint || this.preset.bPaintCurrent || bPartial) {
-			const widerModesScale = (this.preset.waveMode === 'bars' || this.preset.waveMode === 'halfbars' ? 2 : 1);
+			const widerModesScale = waveModesWide.includes(this.preset.waveMode) ? 2 : 1;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const prePaintW = Math.min(
@@ -1696,7 +1698,7 @@ function _seekbar({
 			}
 			// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 			if (bIsTrackPlaying && !fb.IsPaused) {
-				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter);
+				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bVuMeter);
 			}
 		}
 	};
@@ -2251,12 +2253,10 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
 	 * @param {boolean} bPartial - Flag used when paint mode is partial
-	 * @param {boolean} bBars - Flag used when wave mode is bars
-	 * @param {boolean} bHalfBars - Flag used when wave mode is half bars
 	 * @param {boolean} bVuMeter - Flag used when wave mode is VU meter
 	 * @returns {void}
 	*/
-	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bBars, bHalfBars, bVuMeter) => { // NOSONAR
+	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bVuMeter) => {
 		const bFullAnimated = !bPartial && this.preset.bAnimate;
 		// Incrementally draw animation on small steps
 		if ((bPrePaint && this.preset.bAnimate) || bFullAnimated || bVisualizer) {
@@ -2268,7 +2268,7 @@ function _seekbar({
 		}
 		if (bVisualizer || bFullAnimated || (bVuMeter && frames)) { throttlePaint(); }
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
-			const widerModesScale = (bBars || bHalfBars ? 2 : 1);
+			const widerModesScale = waveModesWide.includes(this.preset.waveMode) ? 2 : 1;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
