@@ -2139,7 +2139,8 @@ function _seekbar({
 		if (z > 0) {
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
-					gr.FillGradRect(x, axisY - z, barW, z, 270.1, altColor, color);
+					const topColor = this.blendColors(altColor, color, scale);
+					gr.FillGradRect(x, axisY - z, barW, z, 270.1, altColor, topColor);
 				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z / 2, color); }
 				else if (altColor !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z, color); }
@@ -2726,6 +2727,67 @@ function _seekbar({
 		}
 		return data;
 	};
+	/**
+	 * Creates color by RGBA components
+	 *
+	 * @property
+	 * @name getRGBA
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} r - 0-255
+	 * @param {number} g - 0-255
+	 * @param {number} b - 0-255
+	 * @param {number} a - 0-255
+	 * @returns {[number, number, number, number]}
+	*/
+	this.RGBA = (r, g, b, a) => {
+		const res = 0xff000000 | (r << 16) | (g << 8) | (b);
+		if (typeof a !== 'undefined') { return (res & 0x00ffffff) | (a << 24); }
+		return res;
+	};
+	/**
+	 * Gets RGBA components of a color
+	 *
+	 * @property
+	 * @name getRGBA
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} color
+	 * @returns {[number, number, number, number]}
+	*/
+	this.getRGBA = (color) => {
+		const a = color - 0xFF000000;
+		return [a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF, this.getAlpha(color)];
+	};
+	/**
+	 * Blends two RGBA colors
+	 *
+	 * @property
+	 * @name blendColors
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} color1
+	 * @param {number} color2
+	 * @param {number} factor - If 0, then outputs 100% color1, for 1 outputs 100% color2
+	 * @returns {number}
+	*/
+	this.blendColors = (color1, color2, factor) => {
+		const [c1, c2] = [this.getRGBA(color1), this.getRGBA(color2)];
+		factor = c1[3] > 0
+			? ((c1[3] / 255) / (c2[3] / 255) || 1) * factor
+			: c2[3] / 255 * factor;
+		return this.RGBA(...c1.map((_, i) => Math.round(c1[i] + factor * (c2[i] - c1[i]))));
+	};
+	/**
+	 * Gets alpha component [0-255] of a color.
+	 *
+	 * @property
+	 * @name getAlpha
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} color
+	 * @returns {number}
+	*/
 	this.getAlpha = (color) => {
 		return ((color >> 24) & 0xff);
 	};
