@@ -60,7 +60,7 @@ function settingsMenu(bClear = true) {
 				const bFound = !this.binaries[o.key] || _isFile(this.binaries[o.key]);
 				const bBundled = !this.binaries[o.key] || bFound && this.binaries[o.key] .startsWith(folders.xxxRootName + 'helpers-external\\');
 				menu.newEntry({
-					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)': '')), func: () => {
+					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)': '\t(external)')), func: () => {
 						this.updateConfig({ analysis: { binaryMode: o.key } });
 						this.saveProperties();
 					}, flags: bFound ? MF_STRING : MF_GRAYED
@@ -79,6 +79,16 @@ function settingsMenu(bClear = true) {
 			if (handle && !this.isCompatibleFileExtension(handle)) {
 				menu.addTipLast('(incompatible file)');
 			}
+		}
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Open binaries folder...', func: () => {
+				_explorer(folders.binaries);
+			}
+		});
+		const handle = fb.GetNowPlaying() || fb.GetFocusItem();
+		if (handle && !this.isCompatibleFileExtension(handle)) {
+			menu.addTipLast('(incompatible file)');
 		}
 	}
 	{

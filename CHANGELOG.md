@@ -48,7 +48,8 @@
 - UI: changed default background settings for a more cohesive experience along [Library-Tree-SMP](https://github.com/regorxxx/Library-Tree-SMP/), Biography and dark mode.
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
 - Styles: added safeguards against manual editing of the waveform styles at the properties panel, with fallback to default style if it's not recognized.
-- Dependencies: mode submenu will now indicate whether the binary used is the one bundled with the script or external (binaries folder).
+- Dependencies: 'Mode' submenu will now indicate whether the binary used is the one bundled with the script or external (binaries folder).
+- Dependencies: new menu entry at 'Mode' submenu to open the binaries folder.
 - Dependencies: if 'Binaries\audiowaveform' folder exists, script will now copy built-in audiowaveform dependencies to it -if they are missing- and prefer such path. Otherwise, it will directly use the binary bundled along the package. This way, if you put your own binaries they are always preferred on first init but simplifies usage for any other case.
 ### Removed
 ### Fixed
