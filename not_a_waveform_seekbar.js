@@ -10,7 +10,7 @@ include('helpers\\helpers_xxx_flags.js');
 include('helpers\\helpers_xxx_UI.js');
 /* global _scale:readable, RGB:readable, _gdiFont:readable, _tt:readable, blendColors */
 include('helpers\\helpers_xxx_file.js');
-/* global _open:readable, utf8:readable, WshShell:readable, _save:readable, _foldPath:readable, _copyDependencies:readable */
+/* global _open:readable, utf8:readable, WshShell:readable, _save:readable, _foldPath:readable, _isFile:readable, _isFolder:readable, _copyDependencies:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isJSON:readable, isBoolean:readable, isString:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
@@ -30,7 +30,8 @@ include('main\\window\\window_xxx_dynamic_colors.js');
 /* global dynamicColors:readable, mostContrastColor */
 
 globProfiler.Print('dependencies');
-if (folders.JsPackageDirs) { _copyDependencies(['', 'audiowaveform'], void (0), false); }
+
+if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'audiowaveform'], void (0), false); }
 
 globProfiler.Print('helpers');
 
@@ -38,7 +39,7 @@ let seekbarProperties = {
 	binaries: ['Binaries paths',
 		JSON.stringify({
 			ffprobe: _foldPath(folders.binaries) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
-			audiowaveform: (folders.JsPackageDirs
+			audiowaveform: (_isFile(folders.binaries + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe')
 				? _foldPath(folders.binaries)
 				: folders.xxxRootName + 'helpers-external\\'
 			) + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
