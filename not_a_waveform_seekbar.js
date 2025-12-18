@@ -31,6 +31,7 @@ include('main\\window\\window_xxx_dynamic_colors.js');
 
 globProfiler.Print('dependencies');
 
+_copyDependencies(['', 'ffprobe'], void (0), true);
 if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'audiowaveform'], void (0), false); }
 
 globProfiler.Print('helpers');

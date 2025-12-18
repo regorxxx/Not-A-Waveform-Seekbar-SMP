@@ -58,8 +58,9 @@ function settingsMenu(bClear = true) {
 		if (options.length) {
 			options.forEach((o) => {
 				const bFound = !this.binaries[o.key] || _isFile(this.binaries[o.key]);
+				const bBundled = !this.binaries[o.key] || bFound && this.binaries[o.key] .startsWith(folders.xxxRootName + 'helpers-external\\');
 				menu.newEntry({
-					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : ''), func: () => {
+					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)': '')), func: () => {
 						this.updateConfig({ analysis: { binaryMode: o.key } });
 						this.saveProperties();
 					}, flags: bFound ? MF_STRING : MF_GRAYED
