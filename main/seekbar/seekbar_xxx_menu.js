@@ -745,6 +745,7 @@ function settingsMenu(bClear = true) {
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Show tooltip', func: () => {
 				seekbarProperties.bShowTooltip[1] = !seekbarProperties.bShowTooltip[1];
+				if (!seekbarProperties.bShowTooltip[1]) { this.tooltip.Deactivate(); }
 				this.saveProperties();
 			}
 		});

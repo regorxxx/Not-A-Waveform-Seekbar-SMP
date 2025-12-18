@@ -54,9 +54,10 @@
 ### Removed
 ### Fixed
 - Dependencies: audiowaveform binary not being copied to required dir on first init.
-- UI: fix glitches in rare cases related to unplayed/played times recognition.
-- UI: fix internal transparency table producing glitches on some settings.
+- UI: fixed glitches in rare cases related to unplayed/played times recognition.
+- UI: fixed internal transparency table producing glitches on some settings.
 - UI: fixed repainting glitches in case seeking was done with a third party panel.
+- UI: fixed tooltip not being deactivated immediately (but on next restart) when changing the 'Show tooltip' setting.
 
 ## [3.2.1] - 2025-12-12
 ### Added
