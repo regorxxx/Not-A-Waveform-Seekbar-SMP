@@ -2760,7 +2760,7 @@ function _seekbar({
 		return [a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF, this.getAlpha(color)];
 	};
 	/**
-	 * Blends two RGBA colors
+	 * Blends two RGBA colors. Alpha channels are considered also weight factors, so 100% transparent colors are  accounted as 0 weight (and simply discarded).
 	 *
 	 * @property
 	 * @name blendColors
@@ -2776,7 +2776,7 @@ function _seekbar({
 		factor = c1[3] > 0
 			? ((c1[3] / 255) / (c2[3] / 255) || 1) * factor
 			: c2[3] / 255 * factor;
-		return this.RGBA(...c1.map((_, i) => Math.round(c1[i] + factor * (c2[i] - c1[i]))));
+		return this.RGBA(...c1.map((_, i) => Math.min(Math.round(c1[i] + factor * (c2[i] - c1[i])), 255)));
 	};
 	/**
 	 * Gets alpha component [0-255] of a color.
