@@ -103,20 +103,23 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		[
 			{ isEq: null, key: this.coverModeOptions.bNoSelection, value: null, newValue: !this.coverModeOptions.bNoSelection, entryText: 'No selection (as fallback)' }
 		].forEach(createMenuOption('coverModeOptions', 'bNoSelection', subMenu, true));
-		menu.getLastEntry().flags = !this.coverModeOptions.bNowPlaying ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = this.coverMode === 'none' || !this.coverModeOptions.bNowPlaying ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bProportions, value: null, newValue: !this.coverModeOptions.bProportions, entryText: 'Maintain proportions' }
 		].forEach(createMenuOption('coverModeOptions', 'bProportions', subMenu, true));
+		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bFill, value: null, newValue: !this.coverModeOptions.bFill, entryText: 'Fill panel' }
 		].forEach(createMenuOption('coverModeOptions', 'bFill', subMenu, true));
+		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
 		].forEach(createMenuOption('coverModeOptions', 'bProcessColors', subMenu, true));
+		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bCircularBlur, value: null, newValue: !this.coverModeOptions.bCircularBlur, entryText: 'Circular blur' }
 		].forEach(createMenuOption('coverModeOptions', 'bCircularBlur', subMenu, true));
-		menu.getLastEntry().flags = this.coverModeOptions.blur === 0 ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = this.coverMode === 'none' || this.coverModeOptions.blur === 0 ? MF_GRAYED : MF_STRING;
 		menu.newSeparator(subMenu);
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
@@ -130,7 +133,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 					if (input === null) { return; }
 					const newVal = option.key === 'alpha' ? Math.round(input * 255 / 100) : input;
 					this.changeConfig({ config: { coverModeOptions: { [option.key]: newVal } }, callbackArgs: { bSaveProperties: true } });
-				}
+				}, flags: this.coverMode === 'none' ? MF_GRAYED : MF_STRING
 			});
 		});
 	}
