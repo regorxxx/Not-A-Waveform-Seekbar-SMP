@@ -49,6 +49,7 @@
 ### Changed
 - UI: changed default background settings for a more cohesive experience along [Library-Tree-SMP](https://github.com/regorxxx/Library-Tree-SMP/), Biography and dark mode.
 - UI: improvements on dynamic colors handling in some extreme cases with main and secondary colors being almost equal.
+- UI: improvements to dynamic colors handling for background and server-color sources. Added warning when trying to activate both at the same time.
 - Styles: added safeguards against manual editing of the waveform styles at the properties panel, with fallback to default style if it's not recognized.
 - Dependencies: 'Mode' submenu will now indicate whether the binary used is the one bundled with the script or external (binaries folder).
 - Dependencies: new menu entry at 'Mode' submenu to open the binaries folder.

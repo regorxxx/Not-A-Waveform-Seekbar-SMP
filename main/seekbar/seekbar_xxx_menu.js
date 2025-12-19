@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/12/25
+//19/12/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -42,7 +42,7 @@ function settingsMenu(bClear = true) {
 	if (this.isOnDemandTrack()) {
 		menu.newEntry({
 			entryText: 'Render current track', func: () => {
-				this.newTrackQueue(fb.GetFocusItem(1), void(0), true);
+				this.newTrackQueue(fb.GetFocusItem(1), void (0), true);
 			}
 		});
 		menu.newSeparator();
@@ -58,9 +58,9 @@ function settingsMenu(bClear = true) {
 		if (options.length) {
 			options.forEach((o) => {
 				const bFound = !this.binaries[o.key] || _isFile(this.binaries[o.key]);
-				const bBundled = !this.binaries[o.key] || bFound && this.binaries[o.key] .startsWith(folders.xxxRootName + 'helpers-external\\');
+				const bBundled = !this.binaries[o.key] || bFound && this.binaries[o.key].startsWith(folders.xxxRootName + 'helpers-external\\');
 				menu.newEntry({
-					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)': '\t(external)')), func: () => {
+					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)' : '\t(external)')), func: () => {
 						this.updateConfig({ analysis: { binaryMode: o.key } });
 						this.saveProperties();
 					}, flags: bFound ? MF_STRING : MF_GRAYED
@@ -623,8 +623,9 @@ function settingsMenu(bClear = true) {
 		{
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
 			menu.newEntry({
-				menuName: subMenuTwo, entryText: 'Dynamic (background cover mode)', func: () => {
+				menuName: subMenuTwo, entryText: 'Dynamic (background art mode)', func: () => {
 					seekbarProperties.bDynamicColors[1] = !seekbarProperties.bDynamicColors[1];
+					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are DOMStringList.', window.ScriptInfo.Name + ': Dynamic colors'); }
 					this.saveProperties();
 					if (seekbarProperties.bDynamicColors[1]) {
 						// Ensure it's applied with compatible settings
@@ -646,6 +647,7 @@ function settingsMenu(bClear = true) {
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Listen to color-servers', func: () => {
 					seekbarProperties.bOnNotifyColors[1] = !seekbarProperties.bOnNotifyColors[1];
+					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are DOMStringList.', window.ScriptInfo.Name + ': Dynamic colors'); }
 					this.saveProperties();
 					if (seekbarProperties.bOnNotifyColors[1]) {
 						window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
