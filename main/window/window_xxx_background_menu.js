@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/12/25
+//19/12/25
 
 /* exported createBackgroundMenu */
 
@@ -24,7 +24,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	const getColorName = (val) => val !== -1 && val !== null && typeof val !== 'undefined'
 		? (ntc.name(Chroma(val).hex())[1] || '').toString() || 'unknown'
 		: '-none-';
-	const createMenuOption = (key, subKey, menuName = mainMenuName, bCheck = true, addFunc = null) => {
+	const createMenuOption = (key, subKey, menuName = mainMenuName, bCheck = true, addFunc = null, postFunc = null) => {
 		return function (option) {
 			if (menu.isSeparator(option) && !menu.isSeparator(menu.getEntries().pop())) { menu.newSeparator(menuName); return; } // Add sep only if any entry has been added
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
@@ -46,6 +46,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 							}
 						}
 						else { this.changeConfig({ config: { [key]: option.newValue }, callbackArgs: { bSaveProperties: true } }); }
+						if (postFunc) { postFunc(option); }
 					}
 				});
 				if (bCheck) {
@@ -78,7 +79,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 	menu.newSeparator(mainMenuName);
 	// Menus
 	{
-		const subMenu = menu.newMenu('Cover mode', mainMenuName);
+		const subMenu = menu.newMenu('Art mode', mainMenuName);
 		[
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'none', entryText: 'None' },
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'front', entryText: 'Front' },
