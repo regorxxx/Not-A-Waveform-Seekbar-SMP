@@ -1,5 +1,5 @@
 'use strict';
-//18/12/25
+//19/12/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -2159,7 +2159,7 @@ function _seekbar({
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
-					gr.FillGradRect(x, axisY - z, barW, z, 270.1, altColor, topColor);
+					gr.FillGradRect(x, axisY - z, barW, z, 92, topColor, altColor);
 				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z / 2, color); }
 				else if (altColor !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z, color); }
@@ -2170,7 +2170,7 @@ function _seekbar({
 				if (color !== -1 && altColor !== -1) {
 					const reflectionColorMain = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
 					const reflectionColorAlt = this.applyAlpha(altColor, this.getAlpha(altColor) / 2.5 / 255 * 100);
-					gr.FillGradRect(x, axisY, barW, - z / 2, 90.1, reflectionColorAlt, reflectionColorMain);
+					gr.FillGradRect(x, axisY, barW, - z / 2, 92, reflectionColorAlt, reflectionColorMain);
 				} else if (color !== -1) {
 					const reflectionColor = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
 					gr.FillSolidRect(x, axisY - z / 4, barW, - z / 4, reflectionColor);
@@ -2777,7 +2777,7 @@ function _seekbar({
 		return [a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF, this.getAlpha(color)];
 	};
 	/**
-	 * Blends two RGBA colors. Alpha channels are considered also weight factors, so 100% transparent colors are  accounted as 0 weight (and simply discarded).
+	 * Blends two RGBA colors.
 	 *
 	 * @property
 	 * @name blendColors
@@ -2790,9 +2790,7 @@ function _seekbar({
 	*/
 	this.blendColors = (color1, color2, factor) => {
 		const [c1, c2] = [this.getRGBA(color1), this.getRGBA(color2)];
-		factor = c1[3] > 0
-			? ((c1[3] / 255) / (c2[3] / 255) || 1) * factor
-			: c2[3] / 255 * factor;
+		factor = Math.max(0, Math.min(1, factor));
 		return this.RGBA(...c1.map((_, i) => Math.min(Math.round(c1[i] + factor * (c2[i] - c1[i])), 255)));
 	};
 	/**
@@ -2821,6 +2819,7 @@ function _seekbar({
 	*/
 	this.applyAlpha = (color, percent) => {
 		// 64/32 bit color
+		if (color < 0) { color += 4294967296; }
 		if (color > 4294967296) { color -= 4294967296; }
 		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
 	};
