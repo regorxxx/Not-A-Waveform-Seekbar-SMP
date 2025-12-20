@@ -67,14 +67,13 @@ FAQ:
 	'Analysis\File name format...'. Exotic paths, chars, artist
 	names or setups should be handled by the user.
 
-	◦ Tracks with non-latin chars on filename will fail using
-	Audiowaveform. This is a known limitation:
-	https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/issues/6
-
 • How to control dynamic colors artwork source:
 	◦ It can be set at the background 'Art mode' sub-menu.
 
 	◦ Selection/now playing source can be set at same sub-menu.
+
+	◦ Alternatively colors may be provided by a third-party script
+	if listen to color-servers setting is enabled.
 
 • How to show the artwork as background instead of a solid color:
 	◦ Art mode transparency must be non-zero, and slider background

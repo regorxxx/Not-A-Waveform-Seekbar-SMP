@@ -54,6 +54,7 @@
 - Dependencies: 'Mode' submenu will now indicate whether the binary used is the one bundled with the script or external (binaries folder).
 - Dependencies: new menu entry at 'Mode' submenu to open the binaries folder.
 - Dependencies: if 'Binaries\audiowaveform' folder exists, script will now copy built-in audiowaveform dependencies to it -if they are missing- and prefer such path. Otherwise, it will directly use the binary bundled along the package. This way, if you put your own binaries they are always preferred on first init but simplifies usage for any other case.
+- Update audiowaveform binaries to 1.11.0.
 ### Removed
 ### Fixed
 - Dependencies: audiowaveform binary not being copied to required dir on first init.
@@ -61,6 +62,7 @@
 - UI: fixed internal transparency table producing glitches on some settings.
 - UI: fixed repainting glitches in case seeking was done with a third party panel.
 - UI: fixed tooltip not being deactivated immediately (but on next restart) when changing the 'Show tooltip' setting.
+- Analysis: fixed audiowaveform analysis failure on filenames with non-latin chars. Not an script issue, but a limitation of previous binaries. See [Issue 6](https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP/issues/6).
 
 ## [3.2.1] - 2025-12-12
 ### Added
