@@ -37,8 +37,20 @@ Points:
 Half-Bars:
 ![seek4](https://user-images.githubusercontent.com/83307074/215299707-2e3d41b6-89e6-4d74-90fb-fcf25efa7632.gif)
 
+Half-Bars (filled):
+![halfbarsfilled](https://github.com/user-attachments/assets/5c767950-52d6-4007-acff-bbd9c8fc664b)
+
+Half-Bars (gradient):
+![halfbarsgradient](https://github.com/user-attachments/assets/1995f789-f528-4464-9122-c2991f5a6082)
+
 Bars:
 ![seek3](https://user-images.githubusercontent.com/83307074/215299708-c70d1ebc-1c81-4af4-8cc5-183e03cfb4f5.gif)
+
+Bars (filled):
+![barsfilled](https://github.com/user-attachments/assets/ebcab83e-d9a9-4780-9c6d-4b10cf068282)
+
+Bars (gradient):
+![barsgrad](https://github.com/user-attachments/assets/3d7c0f2f-633b-4155-aeed-8f2d1b3dbd5b)
 
 Partial:
 ![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
