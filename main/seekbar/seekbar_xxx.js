@@ -304,7 +304,7 @@ function _seekbar({
 	this.ui = ui;
 	/**
 	 * @typedef {object} Preset - Waveform display related settings.
-	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'points'|'halfbars'|'tree'|'vumeter'} waveMode - Waveform design.
+	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'points'|'halfbars'|'halfbarsfilled'|'soundcloud'|'soundcloudgradient'|'tree'|'vumeter'} waveMode - Waveform design.
 	 * @property {'rms_level'|'rms_peak'|'peak_level'} analysisMode - Data analysis mode (only available using ffprobe).
 	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
 	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
@@ -1975,7 +1975,7 @@ function _seekbar({
 		}
 	};
 	/**
-	 * Draws bars (filled) wave mode.
+	 * Draws half-bars (filled) wave mode.
 	 *
 	 * @property
 	 * @name paintHalfBarsFilled
