@@ -39,11 +39,11 @@
 - Styles: added 'SoundCloud' similar to 'Bars (filled), with half-width reflection at bottom, and special transparency and bar size effects. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074302.html#msg1074302).
 - Styles: added 'SoundCloud (gradient)' similar to 'Bars (filled), with half-width reflection at bottom, and special transparency and bar size effects. Colors are applied as a gradient instead of using hard transitions. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074304.html#msg1074304).
 - Styles: added 'Waveform (filled)' similar to waveform but with filled interior using polygons. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
-- Styles: added 'Bars (filled)' similar to bars but with filled interior. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
-- Styles: added 'Bars (gradient)' similar to half-bars (filled). Colors are applied as a gradient instead of using hard transitions.
+- Styles: added 'Bars (filled)' similar to bars but with filled interior. See [here](https://hydrogenaudio.org/index.php/topic,124385.new.html#info_1074549).
+- Styles: added 'Bars (gradient)' similar to bars (filled). Colors are applied as a gradient instead of using hard transitions. See [here](https://hydrogenaudio.org/index.php/topic,124385.new.html#info_1074549).
 - Styles: added 'Tree' similar to a Christmas tree on X-axis. Note it's appearance is heavily influenced by resolution, i.e. point width (and the 'Normalize Width' setting). See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
-- Styles: added 'Half-Bars (filled)' similar to half-bars but with filled interior.
-- Styles: added 'Half-Bars (gradient)' similar to half-bars (filled). Colors are applied as a gradient instead of using hard transitions.
+- Styles: added 'Half-Bars (filled)' similar to half-bars but with filled interior. See [here](https://hydrogenaudio.org/index.php/topic,124385.new.html#info_1074549).
+- Styles: added 'Half-Bars (gradient)' similar to half-bars (filled). Colors are applied as a gradient instead of using hard transitions. See [here](https://hydrogenaudio.org/index.php/topic,124385.new.html#info_1074549).
 - Colors: added 'SoundCloud' colors preset.
 - UI: added new setting to only show the tooltip while seeking (i.e. L. Clicking over the panel).
 - UI: added new setting to tweak whether extended info is shown at tooltip or not.
