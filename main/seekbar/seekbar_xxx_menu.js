@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/25
+//22/12/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -439,6 +439,8 @@ function settingsMenu(bClear = true) {
 			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'White', bPrepaint: false, colors: { bg: 0xFFFFFFFF, bgFuture: 0xFFF8F7FF } },
+				{ name: 'Grey (light)', bPrepaint: false, colors: { bg: 0XFFE6E6E6, bgFuture: 0XFF363636 } },
+				{ name: 'Grey (dark)', bPrepaint: false, colors: { bg: 0XFF1F1F1F, bgFuture: 0XFF292929 } },
 				{ name: 'Black', bPrepaint: false, colors: { bg: 0xFF000000, bgFuture: 0xFF1B1B1B } },
 				{ name: 'Sienna', bPrepaint: false, colors: { bg: 0xFF450920, bgFuture: 0xFF74121D } },
 				{ name: 'Blue', bPrepaint: false, colors: { bg: 0xFFB9D6F2, bgFuture: 0xFFBBDEFB } },
@@ -493,11 +495,12 @@ function settingsMenu(bClear = true) {
 			menu.newSeparator(subMenuTwo);
 			[
 				{ name: 'Green', colors: { main: 0xFF90EE90, alt: 0xFF7CFC00, mainFuture: 0xFFB7FFA2, altFuture: 0xFFF9FF99, currPos: 0xFFFFFFFF } },
-				{ name: 'SoundCloud', colors: { main: 0XFFFF5400, alt: 0XFFFF2900, mainFuture: 0xFFFFFAFE, altFuture: 0xFFFCFCFC, currPos: 0xFFFFFFFF } },
+				{ name: 'SoundCloud', colors: { main: 0XFFFF5400, alt: 0XFFBD1C00, mainFuture: 0xFFFFFAFE, altFuture: 0xFFFCFCFC, currPos: 0xFFFFFFFF } },
 				{ name: 'Lavender', colors: { main: 0xFFCDB4DB, alt: 0xFFFFC8DD, mainFuture: 0xFFBDE0FE, altFuture: 0xFFA2D2FF, currPos: 0xFFFFAFCC } },
 				{ name: 'Forest', colors: { main: 0xFF606C38, alt: 0xFFDDA15E, mainFuture: 0xFF283618, altFuture: 0xFFBC6C25, currPos: 0xFF606C38 } },
 				{ name: 'Sienna', colors: { main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920 } },
 				{ name: 'Blue', colors: { main: 0xFF003559, alt: 0xFF006DAA, mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2 } },
+				{ name: 'Ocean', colors: { main: 0xFF003559, alt: 0xFF006DAA, mainFuture: 0xFF0d0740, altFuture: 0xFF201e34, currPos: 0xFFB9D6F2 } },
 				{ name: 'sep' },
 				{ name: 'None', colors: { main: -1, alt: -1, mainFuture: -1, altFuture: -1 } },
 			].forEach((o) => {
