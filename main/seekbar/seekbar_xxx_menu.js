@@ -231,6 +231,7 @@ function settingsMenu(bClear = true) {
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
 			{ name: 'Half-Bars (filled)', key: 'halfbarsfilled' },
+			{ name: 'Half-Bars (gradient)', key: 'halfbarsgradient' },
 			{ name: 'Tree', key: 'tree' },
 			{ name: 'SoundCloud', key: 'soundcloud' },
 			{ name: 'SoundCloud (gradient)', key: 'soundcloudgradient' },
@@ -245,7 +246,7 @@ function settingsMenu(bClear = true) {
 			});
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.waveMode), options);
-		if (['halfbarsfilled', 'halfbars'].includes(this.preset.waveMode)) {
+		if (['halfbarsfilled', 'halfbars', 'halfbarsgradient'].includes(this.preset.waveMode)) {
 			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Show negative values (inverted)', func: () => {
