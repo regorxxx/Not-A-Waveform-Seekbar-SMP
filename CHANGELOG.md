@@ -41,6 +41,7 @@
 - Styles: added 'Waveform (filled)' similar to waveform but with filled interior using polygons. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
 - Styles: added 'Bars (filled)' similar to bars but with filled interior. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
 - Styles: added 'Tree' similar to a Christmas tree on X-axis. Note it's appearance is heavily influenced by resolution, i.e. point width (and the 'Normalize Width' setting). See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074279.html#msg1074279).
+- Styles: added 'Half-Bars (filled)' similar to half-bars but with filled interior.
 - Colors: added 'SoundCloud' colors preset.
 - UI: added new setting to only show the tooltip while seeking (i.e. L. Clicking over the panel).
 - UI: added new setting to tweak whether extended info is shown at tooltip or not.

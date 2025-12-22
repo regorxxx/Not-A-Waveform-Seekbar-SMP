@@ -226,10 +226,11 @@ function settingsMenu(bClear = true) {
 		const options = [
 			{ name: 'Waveform', key: 'waveform' },
 			{ name: 'Waveform (fill)', key: 'waveformfilled' },
-			{ name: 'Bars (filled)', key: 'barsfilled' },
 			{ name: 'Bars', key: 'bars' },
+			{ name: 'Bars (filled)', key: 'barsfilled' },
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
+			{ name: 'Half-Bars (filled)', key: 'halfbarsfilled' },
 			{ name: 'Tree', key: 'tree' },
 			{ name: 'SoundCloud', key: 'soundcloud' },
 			{ name: 'SoundCloud (gradient)', key: 'soundcloudgradient' },
@@ -244,7 +245,7 @@ function settingsMenu(bClear = true) {
 			});
 		});
 		menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.preset.waveMode), options);
-		if (this.preset.waveMode === 'halfbars') {
+		if (['halfbarsfilled', 'halfbars'].includes(this.preset.waveMode)) {
 			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Show negative values (inverted)', func: () => {
