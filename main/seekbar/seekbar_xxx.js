@@ -304,7 +304,7 @@ function _seekbar({
 	this.ui = ui;
 	/**
 	 * @typedef {object} Preset - Waveform display related settings.
-	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'points'|'halfbars'|'halfbarsfilled'|'halfbarsgradient'|'soundcloud'|'soundcloudgradient'|'tree'|'vumeter'} waveMode - Waveform design.
+	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'barsgradient'|'points'|'halfbars'|'halfbarsfilled'|'halfbarsgradient'|'soundcloud'|'soundcloudgradient'|'tree'|'vumeter'} waveMode - Waveform design.
 	 * @property {'rms_level'|'rms_peak'|'peak_level'} analysisMode - Data analysis mode (only available using ffprobe).
 	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
 	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
@@ -461,9 +461,9 @@ function _seekbar({
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
 	/** @type {string[]} - Supported wavemodes */
-	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'vumeter'];
+	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'vumeter'];
 	/** @type {string[]} - Wavemodes which require wider repainting */
-	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
+	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -1596,6 +1596,7 @@ function _seekbar({
 			const bWaveForm = this.preset.waveMode === 'waveform';
 			const bPoints = this.preset.waveMode === 'points';
 			const bBarsFilled = this.preset.waveMode === 'barsfilled';
+			const bBarsGrad = this.preset.waveMode === 'barsgradient';
 			const bHalfBarsFilled = this.preset.waveMode === 'halfbarsfilled';
 			const bHalfBarsGrad = this.preset.waveMode === 'halfbarsgradient';
 			const bWaveFormFilled = this.preset.waveMode === 'waveformfilled';
@@ -1678,6 +1679,8 @@ function _seekbar({
 							this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bBarsFilled) {
 							this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+						}  else if (bBarsGrad) {
+							this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						} else if (bHalfBarsFilled) {
 							this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						} else if (bHalfBarsGrad) {
@@ -1974,6 +1977,63 @@ function _seekbar({
 			if (altColor !== color) {
 				if (color !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, - z / 2, color); }
 				if (altColor !== -1) { gr.FillSolidRect(x, axisY, barW, - z / 2, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, axisY, barW, - z, color); }
+		}
+	};
+	/**
+	 * Draws bars (gradient) wave mode.
+	 *
+	 * @property
+	 * @name paintBarsGradient
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} n - Point idx
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintBarsGradient = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+		const scaledSize = size / 2 * scale;
+		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
+		const rand = Math.sign(scale) * this.offset[n];
+		const y = scaledSize > 0
+			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
+			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
+		const axisY = this.h / 2 - offsetY;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
+		}
+		let z = bVisualizer ? Math.abs(y) : y;
+		if (z > 0) {
+			if (altColor !== color) {
+				if (color !== -1 && altColor !== -1) {
+					const topColor = this.blendColors(altColor, color, scale);
+					gr.FillGradRect(x, axisY - z, barW, z, 92, topColor, altColor);
+				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z / 2, color); }
+				else if (altColor !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, z / 2, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z, color); }
+		}
+		z = bVisualizer ? - Math.abs(y) : y;
+		if (z < 0) {
+			if (altColor !== color) {
+				if (color !== -1 && altColor !== -1) {
+					const topColor = this.blendColors(altColor, color, scale);
+					gr.FillGradRect(x, axisY, barW, - z, 92, topColor, altColor);
+				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, - z / 2, color); }
+				else if (altColor !== -1) { gr.FillSolidRect(x, axisY, barW, - z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY, barW, - z, color); }
 		}
 	};
