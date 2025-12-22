@@ -1,5 +1,5 @@
 'use strict';
-//19/12/25
+//22/12/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -1675,15 +1675,15 @@ function _seekbar({
 						} else if (bPoints) {
 							this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bBarsFilled) {
-							this.paintBarsFilled(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+							this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						} else if (bWaveFormFilled) {
 							this.paintWaveFill(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bTree) {
 							this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bSoundCloud) {
-							this.paintSoundCloud(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+							this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						} else if (bSoundCloudGrad) {
-							this.paintSoundCloudGrad(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+							this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -1692,7 +1692,7 @@ function _seekbar({
 				}
 				gr.SetSmoothingMode(0);
 				// Current position
-				if ((bFfProbe || bWaveForm || bPoints || bBarsFilled || bWaveFormFilled || bSoundCloud || bVuMeter) && bIsTrackPlaying) {
+				if ((bFfProbe || bWaveForm || bPoints || bHalfBarsFilled || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
@@ -1826,6 +1826,7 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos: number}} colors - Colors used
 	 * @returns {void}
 	*/
@@ -1930,16 +1931,18 @@ function _seekbar({
 	 * @param {number} n - Point idx
 	 * @param {number} x - X-point coord
 	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
 	 * @param {number} size - Panel point size
 	 * @param {number} scale - Point scaling
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintBarsFilled = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+	this.paintBarsFilled = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -1947,8 +1950,12 @@ function _seekbar({
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 		const axisY = this.h / 2 - offsetY;
-		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
-		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
+		}
 		let z = bVisualizer ? Math.abs(y) : y;
 		if (z > 0) {
 			if (altColor !== color) {
@@ -2077,6 +2084,7 @@ function _seekbar({
 	 * @param {number} n - Point idx
 	 * @param {number} x - X-point coord
 	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
 	 * @param {number} size - Panel point size
 	 * @param {number} scale - Point scaling
@@ -2084,10 +2092,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintSoundCloud = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+	this.paintSoundCloud = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		barW = barW * 1.80;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -2096,8 +2105,12 @@ function _seekbar({
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 		const axisY = this.h / 2 - offsetY + size / 4 / 2; // Move it down a bit to account for half wave not being painted
-		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
-		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
+		}
 		let z = bVisualizer ? Math.abs(y) : y;
 		if (z > 0) {
 			if (altColor !== color) {
@@ -2133,6 +2146,7 @@ function _seekbar({
 	 * @param {number} n - Point idx
 	 * @param {number} x - X-point coord
 	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
 	 * @param {number} size - Panel point size
 	 * @param {number} scale - Point scaling
@@ -2140,10 +2154,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintSoundCloudGrad = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+	this.paintSoundCloudGrad = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
 		barW = barW * 1.80;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -2152,8 +2167,12 @@ function _seekbar({
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 		const axisY = this.h / 2 - offsetY + size / 4 / 2; // Move it down a bit to account for half wave not being painted
-		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
-		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
+		}
 		let z = bVisualizer ? Math.abs(y) : y;
 		if (z > 0) {
 			if (altColor !== color) {
