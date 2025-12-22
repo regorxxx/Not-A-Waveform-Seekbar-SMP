@@ -28,6 +28,9 @@ Waveform (ffprobe):
 Waveform (audiowaveform):
 ![seek2](https://user-images.githubusercontent.com/83307074/215299699-ab57c6ec-1f3a-4c56-ad45-fdcf94980d60.gif)
 
+Waveform (filled):
+![waveform](https://github.com/user-attachments/assets/ad96c1a5-28cb-4cb3-95f1-5e6ede26962f)
+
 Points:
 ![seek1](https://user-images.githubusercontent.com/83307074/215299701-1a97ca0a-fed1-4ed0-b8b8-796b3a9fe581.gif)
 
