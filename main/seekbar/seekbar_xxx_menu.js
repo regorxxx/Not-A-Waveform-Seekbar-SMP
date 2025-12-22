@@ -504,6 +504,9 @@ function settingsMenu(bClear = true) {
 				{ name: 'Sienna', colors: { main: 0xFFBF0603, alt: 0xFFEE6055, mainFuture: 0xFF8D0801, altFuture: 0xFFC52233, currPos: 0xFF450920 } },
 				{ name: 'Blue', colors: { main: 0xFF003559, alt: 0xFF006DAA, mainFuture: 0xFF0353A4, altFuture: 0xFF061A40, currPos: 0xFFB9D6F2 } },
 				{ name: 'Ocean', colors: { main: 0xFF003559, alt: 0xFF006DAA, mainFuture: 0xFF0d0740, altFuture: 0xFF201e34, currPos: 0xFFB9D6F2 } },
+				{ name: 'Grey', colors: { main: 0xFF4d4d4d, alt: 0xFF8f8f8f, mainFuture: 0xFF2b2b2b, altFuture: 0xFF333333, currPos: 0xFFB9D6F2 } },
+				{ name: 'Browney', colors: { main: 0xFFc75b3d, alt: 0xFF2f1d1f, mainFuture: 0xFF291e20, altFuture: 0xFF413032, currPos: 0xFFB9D6F2 } },
+				{ name: 'Hello Kitty', colors: { main: 0xFFB01455, alt: 0xFFae1366, mainFuture: 0xFF810e4b, altFuture: 0xFF7c0e3c, currPos: 0xFFB9D6F2 } },
 				{ name: 'sep' },
 				{ name: 'None', colors: { main: -1, alt: -1, mainFuture: -1, altFuture: -1 } },
 			].forEach((o) => {
