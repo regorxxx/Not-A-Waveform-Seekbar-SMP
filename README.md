@@ -38,10 +38,10 @@ Half-Bars:
 ![seek4](https://user-images.githubusercontent.com/83307074/215299707-2e3d41b6-89e6-4d74-90fb-fcf25efa7632.gif)
 
 Half-Bars (filled):
-![halfbarsfilled](https://github.com/user-attachments/assets/5c767950-52d6-4007-acff-bbd9c8fc664b)
+![halfbarsfilled](https://github.com/user-attachments/assets/a46cc296-e7bb-4c94-be9c-7265b9d79273)
 
 Half-Bars (gradient):
-![halfbarsgradient](https://github.com/user-attachments/assets/1995f789-f528-4464-9122-c2991f5a6082)
+![halfbarsgradient](https://github.com/user-attachments/assets/9d4812f9-1aa0-4a5d-83a0-9c7b6ea701fe)
 
 Bars:
 ![seek3](https://user-images.githubusercontent.com/83307074/215299708-c70d1ebc-1c81-4af4-8cc5-183e03cfb4f5.gif)
