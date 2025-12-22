@@ -28,6 +28,9 @@ Waveform (ffprobe):
 Waveform (audiowaveform):
 ![seek2](https://user-images.githubusercontent.com/83307074/215299699-ab57c6ec-1f3a-4c56-ad45-fdcf94980d60.gif)
 
+Waveform (filled):
+![waveform](https://github.com/user-attachments/assets/ad96c1a5-28cb-4cb3-95f1-5e6ede26962f)
+
 Points:
 ![seek1](https://user-images.githubusercontent.com/83307074/215299701-1a97ca0a-fed1-4ed0-b8b8-796b3a9fe581.gif)
 
@@ -39,6 +42,15 @@ Bars:
 
 Partial:
 ![seek6](https://user-images.githubusercontent.com/83307074/215299704-0696612e-6a3e-469e-8a68-4c698491dc9a.gif)
+
+SoundCloud (gradient):
+![soundcloud](https://github.com/user-attachments/assets/7c7a1438-e69d-4f7f-a3da-fbb639f59f59)
+
+SoundCloud:
+![soundcloud2](https://github.com/user-attachments/assets/f38d68fb-a2f0-4a43-995c-83659de7b919)
+
+Tree:
+![tree](https://github.com/user-attachments/assets/4e311c31-a9b5-48b6-bf7e-4edb2df832e5)
 
 VU Meter:
 ![VU](https://github.com/user-attachments/assets/cd5f1847-6d6c-4b84-b369-4b91c736378d)
