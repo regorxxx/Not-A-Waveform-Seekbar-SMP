@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.3.0](#330---2025-12-23)
 - [3.2.1](#321---2025-12-12)
 - [3.2.0](#320---2025-11-25)
 - [3.1.1](#311---2025-11-19)
@@ -35,6 +36,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [3.3.0] - 2025-12-23
 ### Added
 - Styles: added 'SoundCloud' similar to 'Bars (filled), with half-width reflection at bottom, and special transparency and bar size effects. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074302.html#msg1074302).
 - Styles: added 'SoundCloud (gradient)' similar to 'Bars (filled), with half-width reflection at bottom, and special transparency and bar size effects. Colors are applied as a gradient instead of using hard transitions. See [here](https://hydrogenaudio.org/index.php/topic,124385.msg1074304.html#msg1074304).
@@ -396,7 +403,8 @@
 ### Fixed
 
 
-[Unreleased]: ../../compare/v3.2.1...HEAD
+[Unreleased]: ../../compare/v3.3.0...HEAD
+[3.3.0]: ../../compare/v3.2.1...v3.3.0
 [3.2.1]: ../../compare/v3.2.0...v3.2.1
 [3.2.0]: ../../compare/v3.1.1...v3.2.0
 [3.1.1]: ../../compare/v3.1.0...v3.1.1
