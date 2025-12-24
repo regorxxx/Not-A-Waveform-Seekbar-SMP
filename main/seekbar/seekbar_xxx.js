@@ -560,7 +560,12 @@ function _seekbar({
 	this.exportConfig = (bSkipPanelDependent = true) => {
 		const config = {};
 		const notAllowed = new Set();
-		config.binaries = clone(this.binaries);
+		config.binaries = {};
+		if (bSkipPanelDependent) { notAllowed.add('visualizer'); }
+		for (const key in this.binaries) {
+			if (!notAllowed.has(key)) { config.binaries[key] = clone(this.binaries[key]); }
+		}
+		notAllowed.clear();
 		config.ui = {};
 		notAllowed.add('gFont');
 		for (const key in this.ui) {

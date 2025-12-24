@@ -43,8 +43,7 @@ let seekbarProperties = {
 			audiowaveform: (_isFile(folders.binaries + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe')
 				? _foldPath(folders.binaries)
 				: folders.xxxRootName + 'helpers-external\\'
-			) + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe',
-			visualizer: true
+			) + 'audiowaveform\\audiowaveform' + (soFeat.x64 ? '' : '_32') + '.exe'
 		}), { func: isJSON, forceDefaults: true }],
 	analysis: ['Analysis config',
 		JSON.stringify({
