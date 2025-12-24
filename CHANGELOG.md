@@ -43,6 +43,7 @@
 - Styles: added 'Process bar (gradient-scaled)' similar to 'Process bar (gradient)' but colors are shifted according to waveform amplitude.
 - UI: added new setting to control colors shift on styles using gradients, from 0 (reversed) to 1 (standard). 0.5 may be used to display symmetric gradients (centered).
 ### Changed
+- Dependencies: internal changes to how binaries are handled.
 ### Removed
 ### Fixed
 

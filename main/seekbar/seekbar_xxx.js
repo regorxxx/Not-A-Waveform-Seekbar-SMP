@@ -28,7 +28,7 @@ function _seekbar({
 	binaries = {
 		ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
 		audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
-		visualizer: null,
+		visualizer: true,
 	},
 	preset = {
 		waveMode: 'waveform',
@@ -112,7 +112,7 @@ function _seekbar({
 		const defBinaries = {
 			ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
 			audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
-			visualizer: null,
+			visualizer: true,
 		};
 		const defPreset = {
 			waveMode: 'waveform',
@@ -204,11 +204,11 @@ function _seekbar({
 		if (!Object.hasOwn(this.binaries, this.analysis.binaryMode)) {
 			throw new Error('Binary mode not recognized or path not set: ' + this.analysis.binaryMode);
 		}
-		if (this.binaries[this.analysis.binaryMode] && !_isFile(this.binaries[this.analysis.binaryMode])) {
+		if (typeof this.binaries[this.analysis.binaryMode] === 'string' && !_isFile(this.binaries[this.analysis.binaryMode])) {
 			fb.ShowPopupMessage('Required dependency not found: ' + this.analysis.binaryMode + '\n\n' + JSON.stringify(this.binaries[this.analysis.binaryMode]), window.Name + ' (' + window.ScriptInfo.Name + ')');
 			this.bBinaryFound = false;
-		} else if (!this.binaries[this.analysis.binaryMode]) {
-			this.bBinaryFound = this.analysis.binaryMode === 'visualizer';
+		} else if (typeof this.binaries[this.analysis.binaryMode] === 'boolean') {
+			this.bBinaryFound = this.binaries[this.analysis.binaryMode];
 		} else { this.bBinaryFound = true; }
 		if (!this.isValidWaveMode(this.preset.waveMode)) { this.preset.waveMode = waveModes[0]; }
 		if (this.preset.waveMode === 'vumeter') {
@@ -559,20 +559,17 @@ function _seekbar({
 	*/
 	this.exportConfig = (bSkipPanelDependent = true) => {
 		const config = {};
-		let notAllowed;
-		config.binaries = {};
-		notAllowed = new Set(['visualizer']);
-		for (const key in this.binaries) {
-			if (!notAllowed.has(key)) { config.binaries[key] = clone(this.binaries[key]); }
-		}
+		const notAllowed = new Set();
+		config.binaries = clone(this.binaries);
 		config.ui = {};
-		notAllowed = new Set(['gFont']);
+		notAllowed.add('gFont');
 		for (const key in this.ui) {
 			if (key === 'pos') {
 				if (bSkipPanelDependent) { continue; }
 				config.ui.pos = { scaleH: this.ui.pos.scaleH, scaleW: this.ui.posScaleW, marginW: this.ui.marginW };
 			} else if (!notAllowed.has(key)) { config.ui[key] = clone(this.ui[key]); }
 		}
+		notAllowed.clear();
 		config.preset = clone(this.preset);
 		config.analysis = clone(this.analysis);
 		config.logging = clone(this.logging);

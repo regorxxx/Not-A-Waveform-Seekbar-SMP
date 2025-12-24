@@ -63,11 +63,12 @@ function settingsMenu(bClear = true) {
 			{ name: 'FFprobe', key: 'ffprobe' },
 			{ name: 'Audiowaveform', key: 'audiowaveform' },
 			{ name: 'Visualizer', key: 'visualizer' }
-		].filter((o) => this.binaries[o.key] || o.key === 'visualizer');
+		].filter((o) => typeof this.binaries[o.key] !== 'string' || this.binaries[o.key].length);
 		if (options.length) {
 			options.forEach((o) => {
-				const bFound = !this.binaries[o.key] || _isFile(this.binaries[o.key]);
-				const bBundled = !this.binaries[o.key] || bFound && this.binaries[o.key].startsWith(folders.xxxRootName + 'helpers-external\\');
+				const source = this.binaries[o.key];
+				const bFound = source === true || typeof source === 'string' && _isFile(source);
+				const bBundled = bFound && (typeof source !== 'string' || source.startsWith(folders.xxxRootName + 'helpers-external\\'));
 				menu.newEntry({
 					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)' : '\t(external)')), func: () => {
 						this.updateConfig({ analysis: { binaryMode: o.key } });
