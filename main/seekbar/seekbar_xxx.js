@@ -1,5 +1,5 @@
 'use strict';
-//22/12/25
+//24/12/25
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -217,6 +217,9 @@ function _seekbar({
 		if (this.ui.wheel.step < 0) { this.ui.wheel.step = 1; }
 		else if (this.ui.wheel.step > 100 && this.ui.wheel.unit === '%') { this.ui.wheel.step = 100; }
 		this.preset.displayChannels.sort((a, b) => a - b);
+		for (let key in this.ui.transparency) {
+			if (this.ui.transparency[key] < 0 || this.ui.transparency[key] > 100) {this.ui.transparency[key] = Math.max(0, Math.min(100, this.ui.transparency[key])); }
+		}
 	};
 	/**
 	 * Updates all panel repaint functions to use refresh rate settings.
@@ -273,14 +276,14 @@ function _seekbar({
 	 * @property {number} colors.mainFuture - After current time main color
 	 * @property {number} colors.altFuture - After current time alt color
 	 * @property {number} colors.currPos - Current time indicator color
-	 * @property {object} transparency - Current time indicator color
-	 * @property {number} transparency.bg - Background transparency
-	 * @property {number} transparency.main - Waveform main transparency
-	 * @property {number} transparency.alt - Waveform alt transparency
-	 * @property {number} transparency.bgFuture - After current time background transparency
-	 * @property {number} transparency.mainFuture - After current time main transparency
-	 * @property {number} transparency.altFuture - After current time alt transparency
-	 * @property {number} transparency.currPos - Current time indicator transparency
+	 * @property {object} transparency - Transparecy settings [0-100]
+	 * @property {number} transparency.bg - Background transparency [0-100]
+	 * @property {number} transparency.main - Waveform main transparency [0-100]
+	 * @property {number} transparency.alt - Waveform alt transparency [0-100]
+	 * @property {number} transparency.bgFuture - After current time background transparency [0-100]
+	 * @property {number} transparency.mainFuture - After current time main transparency [0-100]
+	 * @property {number} transparency.altFuture - After current time alt transparency [0-100]
+	 * @property {number} transparency.currPos - Current time indicator transparency [0-100]
 	 * @property {object} pos - Panel coordinates
 	 * @property {number} pos.x - X-Axis position
 	 * @property {number} pos.y - Y-Axis position
@@ -460,9 +463,9 @@ function _seekbar({
 	['ffprobe', 'audiowaveform'].forEach((key) => {
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
-	/** @type {string[]} - Supported wavemodes */
+	/** @type {Preset['waveMode'][]} - Supported wavemodes */
 	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'vumeter'];
-	/** @type {string[]} - Wavemodes which require wider repainting */
+	/** @type {Preset['waveMode'][]} - Wavemodes which require wider repainting */
 	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
@@ -1351,6 +1354,19 @@ function _seekbar({
 		return [...waveModes];
 	};
 	/**
+	 * Checks if given wave mode requires wide repainting
+	 *
+	 * @property
+	 * @name isWideWaveMode
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {Preset['waveMode']} mode - [=this.preset.waveMode] Wavemode
+	 * @returns {string[]}
+	*/
+	this.isWideWaveMode = (mode = this.preset.waveMode) => {
+		return waveModesWide.includes(mode);
+	};
+	/**
 	 * Sets the steps required to draw the animation for the track's BPM. By default BPM is considered 100 if not available.
 	 *
 	 * @property
@@ -1413,7 +1429,7 @@ function _seekbar({
 		if (this.analysis.binaryMode === 'visualizer' || bFullAnimated || this.preset.waveMode === 'vumeter' || !frames || bFull) {
 			throttlePaint(bFull);
 		} else if (bPrePaint || this.preset.bPaintCurrent || bPartial) {
-			const widerModesScale = waveModesWide.includes(this.preset.waveMode) ? 2 : 1;
+			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const prePaintW = Math.min(
@@ -2444,7 +2460,7 @@ function _seekbar({
 		}
 		if (bVisualizer || bFullAnimated || (bVuMeter && frames)) { throttlePaint(); }
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
-			const widerModesScale = waveModesWide.includes(this.preset.waveMode) ? 2 : 1;
+			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
