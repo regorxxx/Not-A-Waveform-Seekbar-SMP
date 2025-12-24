@@ -69,6 +69,7 @@ function _seekbar({
 			step: 5,
 			bReversed: false
 		},
+		gradientFocus: 1,
 		refreshRate: 200,
 		bVariableRefreshRate: false,
 		bNormalizeWidth: false,
@@ -146,6 +147,7 @@ function _seekbar({
 				altFuture: 100,
 				currPos: 100
 			},
+			gradientFocus: 1,
 			pos: { x: 0, y: 0, w: window.Width, h: window.Height, scaleH: 0.9, scaleW: 1 / 30, marginW: null },
 			wheel: { unit: 's', step: 5, bReversed: false },
 			refreshRate: 200,
