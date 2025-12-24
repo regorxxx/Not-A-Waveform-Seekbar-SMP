@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/12/25
+//24/12/25
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -17,9 +17,18 @@ include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 const Chroma = require('..\\helpers-external\\chroma.js\\chroma.min'); // Relative to helpers folder
 
-// Generic menu for config
+/**
+ * Waveform settings menu
+ *
+ * @function
+ * @name settingsMenu
+ * @this {_seekbar}
+ * @param {boolean} bClear?
+ * @returns {_menu}
+ */
 function settingsMenu(bClear = true) {
 	if (!this.menu) { this.menu = new _menu(); }
+ 	/** @type {_menu} */
 	const menu = this.menu;
 	if (bClear) { menu.clear(true); } // Reset on every call
 	// helper
