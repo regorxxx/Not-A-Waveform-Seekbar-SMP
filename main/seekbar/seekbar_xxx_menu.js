@@ -633,7 +633,7 @@ function settingsMenu(bClear = true) {
 						menuName: subMenuTwo, entryText: o.name + '\t' + _b(this.ui.transparency[o.key]), func: () => {
 							const input = utils.IsKeyPressed(VK_CONTROL)
 								? 100
-								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(0 to 100)', 'Seekbar: ' + o.name + ' transparency', 50, [(n) => n >= 0 && n <= 100]);
+								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', 'Seekbar: ' + o.name + ' transparency', 50, [(n) => n >= 0 && n <= 100]);
 							if (input === null) { return; }
 							this.updateConfig({ ui: { transparency: { [o.key]: input } } });
 							this.saveProperties();
@@ -806,7 +806,7 @@ function settingsMenu(bClear = true) {
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Refresh rate...' + '\t' + _b(this.ui.refreshRateOpt), func: () => {
-				const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(ms)', 'Seekbar: Refresh rate', 200, [(n) => n >= 50]);
+				const input = Input.number('int', this.ui.refreshRate, 'Enter value:\n(integer number ≥50 ms)', 'Seekbar: Refresh rate', 200, [(n) => n >= 50]);
 				if (input === null) { return; }
 				this.updateConfig({ ui: { refreshRate: input } });
 				this.saveProperties();
