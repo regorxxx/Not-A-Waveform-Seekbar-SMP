@@ -221,7 +221,7 @@ function _seekbar({
 		this.preset.displayChannels.sort((a, b) => a - b);
 		if (this.ui.gradientFocus < 0 || this.ui.gradientFocus > 100) { this.ui.gradientFocus = Math.max(0, Math.min(1, this.ui.gradientFocus)); }
 		for (let key in this.ui.transparency) {
-			if (this.ui.transparency[key] < 0 || this.ui.transparency[key] > 100) {this.ui.transparency[key] = Math.max(0, Math.min(100, this.ui.transparency[key])); }
+			if (this.ui.transparency[key] < 0 || this.ui.transparency[key] > 100) { this.ui.transparency[key] = Math.max(0, Math.min(100, this.ui.transparency[key])); }
 		}
 	};
 	/**
@@ -1718,7 +1718,7 @@ function _seekbar({
 							this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bBarsFilled) {
 							this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
-						}  else if (bBarsGrad) {
+						} else if (bBarsGrad) {
 							this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						} else if (bHalfBarsFilled) {
 							this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
