@@ -1737,7 +1737,7 @@ function _seekbar({
 						} else if (bProcessbarFilled) {
 							this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
 						} else if (bProcessbarGrad) {
-							this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bFfProbe, colors);
+							this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -2492,14 +2492,13 @@ function _seekbar({
 	 * @param {number} currX - Current time position to handle indicator within bars
 	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
 	 * @param {number} size - Panel point size
-	 * @param {number} scale - Point scaling
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bFfProbe - Flag used when using ffprobe
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintProcessBarGrad = (gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+	this.paintProcessBarGrad = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
 		const y = size / 2;
 		const axisY = this.h / 2 - offsetY;
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
