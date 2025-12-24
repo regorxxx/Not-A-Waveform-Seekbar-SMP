@@ -245,6 +245,9 @@ function settingsMenu(bClear = true) {
 			{ name: 'Tree', key: 'tree' },
 			{ name: 'SoundCloud', key: 'soundcloud' },
 			{ name: 'SoundCloud (gradient)', key: 'soundcloudgradient' },
+			{ name: 'Processbar', key: 'processbar' },
+			{ name: 'Processbar (filled)', key: 'processbarfilled' },
+			{ name: 'Processbar (gradient)', key: 'processbargradient' },
 			{ name: 'VU Meter', key: 'vumeter' },
 		];
 		options.forEach((o) => {

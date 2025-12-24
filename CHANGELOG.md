@@ -37,6 +37,9 @@
 
 ## [Unreleased][]
 ### Added
+- Styles: added 'Process bar' similar to a loading bar without any waveform-related data.
+- Styles: added 'Process bar (filled)' similar to Process bar but with filled interior.
+- Styles: added 'Process bar (gradient)' similar to Process bar (filled) but with filled interior. Colors are applied as a gradient instead of using hard transitions.
 - UI: added new setting to control colors shift on styles using gradients, from 0 (reversed) to 1 (standard). 0.5 may be used to display symmetric gradients (centered).
 ### Changed
 ### Removed

@@ -311,7 +311,7 @@ function _seekbar({
 	this.ui = ui;
 	/**
 	 * @typedef {object} Preset - Waveform display related settings.
-	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'barsgradient'|'points'|'halfbars'|'halfbarsfilled'|'halfbarsgradient'|'soundcloud'|'soundcloudgradient'|'tree'|'vumeter'} waveMode - Waveform design.
+	 * @property {'waveform'|'waveformfilled'|'bars'|'barsfilled'|'barsgradient'|'points'|'halfbars'|'halfbarsfilled'|'halfbarsgradient'|'soundcloud'|'soundcloudgradient'|'tree'|'processbar'|'processbarfilled'|'processbargradient'|'vumeter'} waveMode - Waveform design.
 	 * @property {'rms_level'|'rms_peak'|'peak_level'} analysisMode - Data analysis mode (only available using ffprobe).
 	 * @property {'full'|'partial'} paintMode - Display mode. Entire track (full) or splits it into 2 regions (before/after current time). How the region after current time is displayed is set by {@link Preset.bPrePaint}
 	 * @property {boolean} bPrePaint - Flag to display the region after current time. How many seconds are  shown is set by {@link Preset.futureSecs}
@@ -468,11 +468,11 @@ function _seekbar({
 		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
 	/** @type {Preset['waveMode'][]} - Supported wavemodes */
-	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'vumeter'];
+	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'processbar', 'processbarfilled', 'processbargradient', 'vumeter'];
 	/** @type {Preset['waveMode'][]} - Wavemodes which require wider repainting */
 	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
 	/** @type {Preset['waveMode'][]} - Wavemodes which use gradient painting */
-	const waveModesGrad = ['soundcloudgradient', 'barsgradient', 'halfbarsgradient'];
+	const waveModesGrad = ['soundcloudgradient', 'barsgradient', 'halfbarsgradient', 'processbargradient'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -1639,6 +1639,9 @@ function _seekbar({
 			const bTree = this.preset.waveMode === 'tree';
 			const bSoundCloud = this.preset.waveMode === 'soundcloud';
 			const bSoundCloudGrad = this.preset.waveMode === 'soundcloudgradient';
+			const bProcessbar = this.preset.waveMode === 'processbar';
+			const bProcessbarFilled = this.preset.waveMode === 'processbarfilled';
+			const bProcessbarGrad = this.preset.waveMode === 'processbargradient';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
 			let bPaintedVu = false;
 			let bFilledVu = framesVu.length >= this.maxStepVu;
@@ -1729,6 +1732,12 @@ function _seekbar({
 							this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
 						} else if (bSoundCloudGrad) {
 							this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+						} else if (bProcessbar) {
+							this.paintProcessBar(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
+						} else if (bProcessbarFilled) {
+							this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
+						} else if (bProcessbarGrad) {
+							this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bFfProbe, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -2394,6 +2403,121 @@ function _seekbar({
 				const reflectionColor = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
 				gr.FillSolidRect(x, axisY, barW, - z / 2, reflectionColor);
 			}
+		}
+	};
+	/**
+	 * Draws process bar  wave mode.
+	 *
+	 * @property
+	 * @name paintProcessBar
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintProcessBar = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+		const y = size / 2;
+		const axisY = this.h / 2 - offsetY;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
+		}
+		if (y > 0) {
+			x += Math.max(barW * 0.025, 1);
+			barW -= Math.max(barW * 0.05, 2);
+			if (altColor !== color) {
+				if (color !== -1) { gr.DrawRect(x, axisY + size / 2 - 2 * y, barW, y, 1, color); }
+				if (altColor !== -1) { gr.DrawRect(x, axisY + size / 2 - y, barW, y, 1, altColor); }
+			} else if (color !== -1) { gr.DrawRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 1, color); }
+		}
+	};
+	/**
+	 * Draws process bar (filled) wave mode.
+	 *
+	 * @property
+	 * @name paintProcessBarFilled
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintProcessBarFilled = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+		const y = size / 2;
+		const axisY = this.h / 2 - offsetY;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
+		}
+		if (y > 0) {
+			x += Math.max(barW * 0.025, 1);
+			barW -= Math.max(barW * 0.05, 2);
+			if (altColor !== color) {
+				if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
+				if (altColor !== -1) { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, color); }
+		}
+	};
+	/**
+	 * Draws process bar (gradient) wave mode.
+	 *
+	 * @property
+	 * @name paintProcessBarGrad
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {number} x - X-point coord
+	 * @param {number} barW - Bar size
+	 * @param {number} currX - Current time position to handle indicator within bars
+	 * @param {number} offsetY - Offset in Y-Axis due to multichannel handling
+	 * @param {number} size - Panel point size
+	 * @param {number} scale - Point scaling
+	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
+	 * @param {boolean} bIsFuture - Flag used when point is after current time
+	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
+	 * @returns {void}
+	*/
+	this.paintProcessBarGrad = (gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+		const y = size / 2;
+		const axisY = this.h / 2 - offsetY;
+		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
+		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
+		// Current position
+		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
+		}
+		if (y > 0) {
+			x += Math.max(barW * 0.025, 1);
+			barW -= Math.max(barW * 0.05, 2);
+			if (altColor !== color) {
+				if (color !== -1 && altColor !== -1) {
+					const topColor = this.blendColors(altColor, color, 0.5);
+					gr.FillGradRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 92, topColor, altColor, this.ui.gradientFocus);
+				} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
+				else { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+			} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, color); }
 		}
 	};
 	/**
