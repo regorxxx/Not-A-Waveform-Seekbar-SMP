@@ -248,6 +248,7 @@ function settingsMenu(bClear = true) {
 			{ name: 'Processbar', key: 'processbar' },
 			{ name: 'Processbar (filled)', key: 'processbarfilled' },
 			{ name: 'Processbar (gradient)', key: 'processbargradient' },
+			{ name: 'Processbar (gradient-scaled)', key: 'processbargradientscaled' },
 			{ name: 'VU Meter', key: 'vumeter' },
 		];
 		options.forEach((o) => {
