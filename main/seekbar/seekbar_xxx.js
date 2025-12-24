@@ -217,6 +217,7 @@ function _seekbar({
 		if (this.ui.wheel.step < 0) { this.ui.wheel.step = 1; }
 		else if (this.ui.wheel.step > 100 && this.ui.wheel.unit === '%') { this.ui.wheel.step = 100; }
 		this.preset.displayChannels.sort((a, b) => a - b);
+		if (this.ui.gradientFocus < 0 || this.ui.gradientFocus > 100) { this.ui.gradientFocus = Math.max(0, Math.min(1, this.ui.gradientFocus)); }
 		for (let key in this.ui.transparency) {
 			if (this.ui.transparency[key] < 0 || this.ui.transparency[key] > 100) {this.ui.transparency[key] = Math.max(0, Math.min(100, this.ui.transparency[key])); }
 		}
@@ -284,6 +285,7 @@ function _seekbar({
 	 * @property {number} transparency.mainFuture - After current time main transparency [0-100]
 	 * @property {number} transparency.altFuture - After current time alt transparency [0-100]
 	 * @property {number} transparency.currPos - Current time indicator transparency [0-100]
+	 * @property {number} gradientFocus - Focus for gradient related methods [0-1]
 	 * @property {object} pos - Panel coordinates
 	 * @property {number} pos.x - X-Axis position
 	 * @property {number} pos.y - Y-Axis position
@@ -467,6 +469,8 @@ function _seekbar({
 	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'vumeter'];
 	/** @type {Preset['waveMode'][]} - Wavemodes which require wider repainting */
 	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
+	/** @type {Preset['waveMode'][]} - Wavemodes which use gradient painting */
+	const waveModesGrad = ['soundcloudgradient', 'barsgradient', 'halfbarsgradient'];
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -1367,6 +1371,20 @@ function _seekbar({
 		return waveModesWide.includes(mode);
 	};
 	/**
+	 * Checks if given wave mode uses gradient painting
+	 *
+	 * @property
+	 * @name isGradientWaveMode
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {Preset['waveMode']} mode - [=this.preset.waveMode] Wavemode
+	 * @returns {string[]}
+	*/
+	this.isGradientWaveMode = (mode = this.preset.waveMode) => {
+
+		return waveModesGrad.includes(mode);
+	};
+	/**
 	 * Sets the steps required to draw the animation for the track's BPM. By default BPM is considered 100 if not available.
 	 *
 	 * @property
@@ -2037,7 +2055,7 @@ function _seekbar({
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
-					gr.FillGradRect(x, axisY - z, barW, z, 92, topColor, altColor);
+					gr.FillGradRect(x, axisY - z, barW, z, 92, topColor, altColor, this.ui.gradientFocus);
 				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z / 2, color); }
 				else if (altColor !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z, color); }
@@ -2047,7 +2065,7 @@ function _seekbar({
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
-					gr.FillGradRect(x, axisY, barW, - z, 92, topColor, altColor);
+					gr.FillGradRect(x, axisY, barW, - z, 92, topColor, altColor, this.ui.gradientFocus);
 				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, - z / 2, color); }
 				else if (altColor !== -1) { gr.FillSolidRect(x, axisY, barW, - z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY, barW, - z, color); }
@@ -2138,7 +2156,7 @@ function _seekbar({
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
-					gr.FillGradRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 92, topColor, altColor);
+					gr.FillGradRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 92, topColor, altColor, this.ui.gradientFocus);
 				} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
 				else { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, color); }
@@ -2351,7 +2369,7 @@ function _seekbar({
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
-					gr.FillGradRect(x, axisY - z, barW, z, 92, topColor, altColor);
+					gr.FillGradRect(x, axisY - z, barW, z, 92, topColor, altColor, this.ui.gradientFocus);
 				} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z / 2, color); }
 				else if (altColor !== -1) { gr.FillSolidRect(x, axisY - z / 2, barW, z / 2, altColor); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY - z, barW, z, color); }
@@ -2362,7 +2380,7 @@ function _seekbar({
 				if (color !== -1 && altColor !== -1) {
 					const reflectionColorMain = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
 					const reflectionColorAlt = this.applyAlpha(altColor, this.getAlpha(altColor) / 2.5 / 255 * 100);
-					gr.FillGradRect(x, axisY, barW, - z / 2, 92, reflectionColorAlt, reflectionColorMain);
+					gr.FillGradRect(x, axisY, barW, - z / 2, 92, reflectionColorAlt, reflectionColorMain, this.ui.gradientFocus);
 				} else if (color !== -1) {
 					const reflectionColor = this.applyAlpha(color, this.getAlpha(color) / 2.5 / 255 * 100);
 					gr.FillSolidRect(x, axisY - z / 4, barW, - z / 4, reflectionColor);
@@ -2395,7 +2413,7 @@ function _seekbar({
 		if (!scale) { return false; }
 		const color = bFade ? this.applyAlpha(colors.main, 70) : colors.main;
 		const altColor = bFade ? this.applyAlpha(colors.alt, 70) : colors.alt;
-		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * scale, size, 1, color, altColor);
+		gr.FillGradRect(this.x + this.marginW, this.h / 2 - offsetY - size / 2, (this.w - this.marginW * 2) * scale, size, 1, color, altColor, this.ui.gradientFocus);
 		return true;
 	};
 	/**

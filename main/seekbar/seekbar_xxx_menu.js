@@ -639,6 +639,19 @@ function settingsMenu(bClear = true) {
 			});
 		}
 		{
+			menu.newEntry({
+				menuName: subMenu, entryText: 'Gradient color focus' + '\t' + _b(this.ui.gradientFocus), func: () => {
+					const input = utils.IsKeyPressed(VK_CONTROL)
+						? 1
+						: Input.number('real positive', this.ui.gradientFocus, 'Enter value:\n(real number ≥0 and ≤1)\n\n0 is reversed, 1 is standard', 'Seekbar: gradient color focus', 1, [(n) => n >= 0 && n <= 1]);
+					if (input === null) { return; }
+					this.updateConfig({ ui: { gradientFocus: input } });
+					this.saveProperties();
+				}, flags: this.isGradientWaveMode() ? MF_STRING : MF_GRAYED
+			});
+		}
+		menu.newSeparator(subMenu);
+		{
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Dynamic (background art mode)', func: () => {
