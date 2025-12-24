@@ -264,7 +264,7 @@ function _seekbar({
 	 * @typedef {object} Binaries - Binaries paths
 	 * @property {string?} ffprobe - ffprobe path
 	 * @property {string?} audiowaveform - audiowaveform path
-	 * @property {null} visualizer - Dummy placeholder
+	 * @property {boolean} visualizer - Internal visualizer (set to false to disable it)
 	 */
 	/** @type {Binaries} - Binaries paths */
 	this.binaries = binaries;
