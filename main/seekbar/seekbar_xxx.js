@@ -270,7 +270,7 @@ function _seekbar({
 	this.binaries = binaries;
 	/**
 	 * @typedef {object} UI - Panel UI related settings
-	 * @property {GdiFont} gFont - ffprobe path
+	 * @property {GdiFont} gFont - GdiFont object
 	 * @property {object} colors - Color settings
 	 * @property {number} colors.bg - Background color
 	 * @property {number} colors.main - Waveform main color
@@ -2970,7 +2970,7 @@ function _seekbar({
 				) +
 				' -print_format json > ' + _q(seekbarFolder + 'data.json');
 		} else if (this.isFallback || bVisualizer || bFallbackMode.analysis) {
-			profiler = new FbProfiler('visualizer');
+			if (this.logging.bProfile) { profiler = new FbProfiler('visualizer'); }
 		}
 		if (cmd) {
 			if (this.logging.bSave) { console.log('Seekbar: Scanning -> ' + sourceFile); }
