@@ -1629,7 +1629,6 @@ function _seekbar({
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
-			const bPaintCurrent = !bFfProbe;
 			const bBars = this.preset.waveMode === 'bars';
 			const bHalfBars = this.preset.waveMode === 'halfbars';
 			const bWaveForm = this.preset.waveMode === 'waveform';
@@ -1656,6 +1655,7 @@ function _seekbar({
 			const margin = channelsNum > 1 ? _scale(5) : 0;
 			const size = (this.h - this.y - margin) * this.scaleH / channelsNum;
 			const barW = (this.w - this.marginW * 2) / this.frames;
+			const bPaintCurrent = barW > _scale(2);
 			const minPointDiff = 1; // in px
 			const timeConstant = this.timeConstant;
 			for (let c = 0; c < channelsNum; c++) {
