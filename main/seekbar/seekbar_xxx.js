@@ -2527,7 +2527,7 @@ function _seekbar({
 		}
 	};
 	/**
-	 * Draws keyboard wave mode based on process bar (gradient), with colors shifting according to scale .
+	 * Draws process bar (gradient-scaled), with colors shifting according to amplitude scale.
 	 *
 	 * @property
 	 * @name processBarGradScale
