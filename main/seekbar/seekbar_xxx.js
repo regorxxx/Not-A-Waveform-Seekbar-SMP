@@ -1629,6 +1629,7 @@ function _seekbar({
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
+			const bPaintCurrent = !bFfProbe;
 			const bBars = this.preset.waveMode === 'bars';
 			const bHalfBars = this.preset.waveMode === 'halfbars';
 			const bWaveForm = this.preset.waveMode === 'waveform';
@@ -1714,35 +1715,35 @@ function _seekbar({
 						if (bWaveForm) {
 							this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bHalfBars) {
-							this.paintHalfBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintHalfBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bBars) {
-							this.paintBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bPoints) {
 							this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bBarsFilled) {
-							this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bBarsGrad) {
-							this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bHalfBarsFilled) {
-							this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bHalfBarsGrad) {
-							this.paintHalfBarsGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintHalfBarsGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bWaveFormFilled) {
 							this.paintWaveFill(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bTree) {
 							this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 						} else if (bSoundCloud) {
-							this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bSoundCloudGrad) {
-							this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors);
+							this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 						} else if (bProcessbar) {
-							this.paintProcessBar(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
+							this.paintProcessBar(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
 						} else if (bProcessbarFilled) {
-							this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
+							this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
 						} else if (bProcessbarGrad) {
-							this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors);
+							this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
 						} else if (bProcessbarGradScaled) {
-							this.processBarGradScale(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bFfProbe, colors);
+							this.processBarGradScale(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bPaintCurrent, colors);
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -1751,7 +1752,7 @@ function _seekbar({
 				}
 				gr.SetSmoothingMode(0);
 				// Current position
-				if ((bFfProbe || bWaveForm || bPoints || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
+				if ((!bPaintCurrent || bWaveForm || bPoints || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
@@ -1842,10 +1843,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos: number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintHalfBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintHalfBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -1857,7 +1859,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
@@ -1885,11 +1887,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number, currPos: number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintBars = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -1900,7 +1902,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
@@ -1997,11 +1999,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintBarsFilled = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintBarsFilled = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -2012,7 +2014,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
@@ -2048,11 +2050,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintBarsGradient = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintBarsGradient = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -2063,7 +2065,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
@@ -2105,11 +2107,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintHalfBarsFilled = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintHalfBarsFilled = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -2121,7 +2123,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
@@ -2149,11 +2151,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintHalfBarsGrad = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintHalfBarsGrad = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -2165,7 +2167,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
@@ -2299,11 +2301,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintSoundCloud = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintSoundCloud = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		barW = barW * 1.80;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -2315,7 +2317,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
@@ -2361,11 +2363,11 @@ function _seekbar({
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
 	 * @param {boolean} bVisualizer - Flag used when mode is visualizer
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintSoundCloudGrad = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bFfProbe, colors) => { // NOSONAR
+	this.paintSoundCloudGrad = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
 		barW = barW * 1.80;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
@@ -2377,7 +2379,7 @@ function _seekbar({
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
@@ -2425,17 +2427,17 @@ function _seekbar({
 	 * @param {number} size - Panel point size
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintProcessBar = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+	this.paintProcessBar = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors) => { // NOSONAR
 		const y = size / 2;
 		const axisY = this.h / 2 - offsetY;
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
@@ -2462,17 +2464,17 @@ function _seekbar({
 	 * @param {number} size - Panel point size
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintProcessBarFilled = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+	this.paintProcessBarFilled = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors) => { // NOSONAR
 		const y = size / 2;
 		const axisY = this.h / 2 - offsetY;
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
@@ -2499,17 +2501,17 @@ function _seekbar({
 	 * @param {number} size - Panel point size
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintProcessBarGrad = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+	this.paintProcessBarGrad = (gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors) => { // NOSONAR
 		const y = size / 2;
 		const axisY = this.h / 2 - offsetY;
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
@@ -2540,17 +2542,17 @@ function _seekbar({
 	 * @param {number} scale - Point scaling
 	 * @param {boolean} bPrePaint - Flag used when points after current time must be paint
 	 * @param {boolean} bIsFuture - Flag used when point is after current time
-	 * @param {boolean} bFfProbe - Flag used when using ffprobe
+	 * @param {boolean} bPaintCurrent - Flag used to paint current position using built-in effect
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.processBarGradScale = (gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bFfProbe, colors) => { // NOSONAR
+	this.processBarGradScale = (gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bPaintCurrent, colors) => { // NOSONAR
 		const y = size / 2;
 		const axisY = this.h / 2 - offsetY;
 		let color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		let altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
 		// Current position
-		if ((this.preset.bPaintCurrent || this.mouseDown) && !bFfProbe && colors.currPos !== -1) {
+		if ((this.preset.bPaintCurrent || this.mouseDown) && bPaintCurrent && colors.currPos !== -1) {
 			if (x <= currX && x >= currX - barW) { color = altColor = colors.currPos; }
 		}
 		if (y > 0) {
