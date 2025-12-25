@@ -47,6 +47,7 @@
 - Dependencies: internal changes to how binaries are handled.
 ### Removed
 ### Fixed
+- UI: repaint glitches in some cases when original number of frames (before normalization) was too low, usually for <1 min tracks.
 
 ## [3.3.0] - 2025-12-23
 ### Added

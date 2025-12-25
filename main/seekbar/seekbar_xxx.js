@@ -408,8 +408,10 @@ function _seekbar({
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	/** @type {number[][]} - Current track data per channel */
 	this.current = [];
-	/** @type {number} - Number of data points (frames) per channel */
+	/** @type {number} - Number of data points (frames) per channel after normalization */
 	this.frames = 0;
+	/** @type {number} - Number of data points (frames) per channel before normalization */
+	this.framesSource = 0;
 	/** @type {number} - Track length / Num of frames */
 	this.timeConstant = 0;
 	/** @type {number} - Current track channels */
@@ -933,7 +935,7 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.normalizePoints = (bNormalizeWidth = false) => {
-		this.frames = this.current[0].length;
+		this.framesSource = this.frames = this.current[0].length;
 		if (this.frames) {
 			const bDiscardedSamples = this.clampResolution(Math.max(this.w / _scale(1), 40000));
 			const limits = this.normalizeAmplitude();
@@ -1164,7 +1166,7 @@ function _seekbar({
 	*/
 	this.downMixToMono = () => {
 		if (this.channels <= 1) { return; }
-		this.frames = this.current[0].length;
+		this.framesSource = this.frames = this.current[0].length;
 		const monoData = [];
 		const channelsNum = this.getDisplayChannels(false).length;
 		if (this.analysis.binaryMode === 'ffprobe') {
@@ -1249,14 +1251,14 @@ function _seekbar({
 				this.isFallback = this.analysis.bVisualizerFallback;
 				this.isError = true;
 				this.current = [];
-				this.frames = 0;
+				this.framesSource = this.frames = 0;
 				this.timeConstant = 0;
 			} else if (this.analysis.binaryMode === 'visualizer') {
 				this.isAllowedFile = true;
 				this.isFallback = false;
 				this.isError = true;
 				this.current = [];
-				this.frames = 0;
+				this.framesSource = this.frames = 0;
 				this.timeConstant = 0;
 			} else {
 				if (this.logging.bError) { console.log('Seekbar: Analysis file not valid.' + (file ? ' Creating new one -> ' + file : '')); }
@@ -1454,6 +1456,7 @@ function _seekbar({
 			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
+			const extraNormOffset = this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 0;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
@@ -1461,8 +1464,8 @@ function _seekbar({
 						: this.preset.futureSecs / this.timeConstant * barW + barW
 					: 2.5 * barW * 2,
 				this.w - currX + barW
-			);
-			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
+			) + barW * extraNormOffset;
+			throttlePaintRect(currX - barW * extraNormOffset, this.y, prePaintW, this.h);
 		}
 	};
 	/**
@@ -1478,7 +1481,7 @@ function _seekbar({
 		this.current = [];
 		this.currentHandle = null;
 		this.channels = 0;
-		this.frames = 0;
+		this.framesSource = this.frames = 0;
 		this.timeConstant = 0;
 		this.cache = null;
 		this.time = 0;
@@ -2654,6 +2657,7 @@ function _seekbar({
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
 			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
+			const extraNormOffset = this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 0;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
@@ -2661,8 +2665,8 @@ function _seekbar({
 						: this.preset.futureSecs / this.timeConstant * barW + barW
 					: 2.5 * barW * 2,
 				this.w - currX + barW
-			);
-			throttlePaintRect(currX - barW, this.y, prePaintW, this.h);
+			) + barW * extraNormOffset;
+			throttlePaintRect(currX - barW * extraNormOffset, this.y, prePaintW, this.h);
 		}
 		if (this.ui.bVariableRefreshRate) {
 			if (profilerPaint.Time > this.ui.refreshRate) { this.updateConfig({ ui: { refreshRate: this.ui.refreshRate + 50 } }); }
