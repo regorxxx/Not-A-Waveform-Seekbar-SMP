@@ -1,5 +1,5 @@
 'use strict';
-//24/12/25
+//25/12/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.3.0-beta' }); }
 
@@ -359,6 +359,8 @@ addEventListener('on_playback_pause', (state) => {
 });
 
 addEventListener('on_paint', (gr) => {
+	if (!window.ID) { return; }
+	if (!window.Width || !window.Height) { return; }
 	if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
 	// Skip background if it will not be seen
 	if (Math.round(seekbar.ui.transparency.bg) !== 100 || seekbar.preset.paintMode === 'partial' && Math.round(seekbar.ui.transparency.bgFuture) !== 100) {
