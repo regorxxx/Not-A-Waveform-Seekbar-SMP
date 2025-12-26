@@ -45,7 +45,7 @@
 ### Changed
 - UI: current time indicator now uses the built-in effect for the given style for ffprobe too, unless the point width is too small (taking into consideration normalized width settings). This condition now applies to any binary mode used.
 - Dependencies: internal changes to how binaries are handled.
-- Code cleanup and performance improvements if panel is disabled or during startup. <ins>[new]</ins>
+- Code cleanup and performance improvements if panel is disabled or during startup.
 ### Removed
 ### Fixed
 - UI: repaint glitches in some cases when original number of frames (before normalization) was too low, usually for <1 min tracks.
