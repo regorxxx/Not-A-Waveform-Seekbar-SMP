@@ -4,7 +4,7 @@
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable */
 
 /**
  * Background for panel with different cover options
@@ -47,8 +47,6 @@ function _background({
 	 * @returns {void}
 	 */
 	this.updateImageBg = debounce((bForce = false, onDone = null, bRepaint = true) => {
-		const path = _resolvePath(this.coverModeOptions.path || '');
-		const bPath = this.coverMode.toLowerCase() === 'path' && path.length;
 		if (!this.useCover) {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
@@ -56,9 +54,11 @@ function _background({
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
 		if (!this.useColors) { this.colorImg = null; }
 		if (!this.useCover) { return; }
-		const handle = (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null)
-			|| (this.coverModeOptions.bNowPlaying && this.coverModeOptions.bNoSelection ? null : fb.GetFocusItem(true));
-		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === path)) { return; }
+		const handle = this.getHandle();
+		const bPath = ['path', 'folder'].includes(this.coverMode.toLowerCase());
+		const path = bPath ? this.getArtPath(void(0), handle) : '';
+		const bFoundPath = bPath && path.length;
+		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.art.path === path)) { return; }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
@@ -69,13 +69,13 @@ function _background({
 			}
 		}
 		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
-		const promise = bPath
+		const promise = bFoundPath
 			? gdi.LoadImageAsyncV2('', path)
 			: handle
 				? utils.GetAlbumArtAsyncV2(void (0), handle, AlbumArtId[this.coverMode] || 0, true, false, false)
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
-			if (bPath) {
+			if (bFoundPath) {
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = path;
 			} else {
@@ -277,7 +277,8 @@ function _background({
 			case 'disc':
 			case 'icon':
 			case 'artist':
-			case 'path': {
+			case 'path':
+			case 'folder': {
 				this.paintImage(gr, { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH });
 				break;
 			}
@@ -420,6 +421,96 @@ function _background({
 		};
 	};
 	/**
+	 * Gets current art path which may link to a static file or file within folder set
+	 * @property
+	 * @name getArtPath
+	 * @kind method
+	 * @memberof _background
+	 * @param {boolean} bNext - Use next image for folder path
+	 * @returns {string}
+	 */
+	this.getArtPath = (bNext, handle) => {
+		let path = _resolvePath(this.coverModeOptions.path || '');
+		if (path.includes('$') || path.includes('%')) {
+			if (!handle) { handle = this.getHandle(); }
+			path = handle
+				? fb.TitleFormat(path).EvalWithMetadb(handle)
+				: fb.TitleFormat(path).Eval();
+		}
+		if (this.coverMode.toLowerCase() === 'folder' && path.length) {
+			if (artFiles.root !== path) { this.resetArtFiles(path); bNext = true; }
+			if (bNext) {
+				if (this.coverModeOptions.pathCycleTimer > 0) {
+					artFiles.timer = setTimeout(() => this.updateImageBg(!!this.getArtPath(true)), this.coverModeOptions.pathCycleTimer);
+				}
+				const files = this.coverModeOptions.pathCycleSort.toLowerCase() === 'date'
+					? getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
+						.map((file) => { return { file, date: lastModified(file, true) };})
+						.sort((a, b) => b.date - a.date).map((o) => o.file)
+					: getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
+						.sort((a, b) => strNumCollator.compare(a, b));
+				artFiles.num = files.length;
+				for (let file of files) {
+					if (file && file.length && !artFiles.shown.has(file)) {
+						artFiles.shown.add(file);
+						return file;
+					}
+				}
+				if (files[0] && files[0].length) {
+					artFiles.shown.clear();
+					artFiles.shown.add(files[0]);
+					return files[0];
+				}
+			} else {
+				return [...artFiles.shown].pop() || '';
+			}
+		}
+		return path;
+	};
+	/**
+	 * Resets visited art files history
+	 * @property
+	 * @name resetArtFiles
+	 * @kind method
+	 * @memberof _background
+	 * @param {string?} root
+	 * @returns {string}
+	 */
+	this.resetArtFiles = (root) => {
+		artFiles.root = root || '';
+		artFiles.num = -1;
+		artFiles.shown.clear();
+		clearTimeout(artFiles.timer);
+		artFiles.timer = null;
+	};
+	/**
+	 * Art files history
+	 *
+	 * @constant
+	 * @name debounced
+	 * @kind variable
+	 * @private
+	 * @memberof _background
+	 * @type {{num: number, root: string, shown: Set<String>}}
+	 */
+	const artFiles = {
+		root: '',
+		num: 0,
+		shown: new Set(),
+		timer: null
+	};
+	/**
+	 * Gets panel handle
+	 * @property
+	 * @name getHandle
+	 * @kind method
+	 * @memberof _background
+	 * @returns {FbMetadbHandle}
+	 */
+	this.getHandle = () => {
+		return (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null) || (this.coverModeOptions.bNowPlaying && this.coverModeOptions.bNoSelection ? null : fb.GetFocusItem(true));
+	};
+	/**
 	 * Gets all art colors from panel if available
 	 * @property
 	 * @name getArtColors
@@ -524,7 +615,7 @@ function _background({
 	/** @type {Number} - Height margin for image drawing */
 	this.offsetH = 0;
 	/**
-	 * @typedef {'none'|'front'|'back'|'disc'|'icon'|'artist'|'path'} coverMode - Available art modes
+	 * @typedef {'none'|'front'|'back'|'disc'|'icon'|'artist'|'path'|'folder'} coverMode - Available art modes
 	 */
 	/** @type {coverMode} - Art type used by panel */
 	this.coverMode = '';
@@ -533,7 +624,9 @@ function _background({
 	 * @property {number} blur - Blur effect in px
 	 * @property {number} angle - Image angle drawing (0-360)
 	 * @property {number} alpha - Image transparency (0-100)
-	 * @property {String} path - Img path for 'path' coverMode
+	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
+	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
+	 * @property {'name'|'date'} pathCycleSort - Art sorting when using 'folder' coverMode
 	 * @property {boolean} bNowPlaying - Follow now playing
 	 * @property {boolean} bNoSelection - Skip updates on selection changes
 	 * @property {boolean} bProportions - Maintain art proportions
@@ -577,9 +670,9 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		...(bPosition ? { x: 0, y: 0, w: window.Width, h: window.Height } : {}),
 		offsetH: _scale(1),
 		timer: 60,
-		coverMode: 'front', // none | front | back | disc | icon | artist | path
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'auto', zoom: 0, bCacheAlbum: true, bProcessColors: true },
-		colorMode: 'bigradient', // none | single | gradient | bigradient
+		coverMode: 'front',
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'auto', zoom: 0, bCacheAlbum: true, bProcessColors: true },
+		colorMode: 'bigradient',
 		colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
 			? {

@@ -100,10 +100,13 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'icon', entryText: 'Icon' },
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'artist', entryText: 'Artist' },
 			{ isEq: null, key: this.coverMode, value: null, newValue: 'path', entryText: 'File...' },
+			{ isEq: null, key: this.coverMode, value: null, newValue: 'folder', entryText: 'Folder...' },
 		].forEach(createMenuOption('coverMode', void (0), subMenu, true, (option) => {
-			if (option.newValue === 'path') {
+			if (option.newValue === 'path' || option.newValue === 'folder') {
 				const bLoadXXX = typeof folders !== 'undefined' && Object.hasOwn(folders, 'xxxRootName');
-				const input = Input.string('string', this.coverModeOptions.path, 'Enter TF expression or File Path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\nFor example:\n$lower([$replace(%ALBUM ARTIST%,\\,)]).jpg', window.Name + ' (' + window.ScriptInfo.Name + ')', '%FILENAME%.jpg');
+				const input = option.newValue === 'path'
+					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n$directory_path(%PATH%)\\art\\artist.jpg', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', '$directory_path(%PATH%)\\art\\artist.jpg')
+					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n%PROFILE%\\yttm\\art_img\\$lower($cut(%ARTIST%,1))\\$meta(ARTIST,0)\\', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', '%PROFILE%\\yttm\\art_img\\$lower($cut(%ARTIST%,1))\\$meta(ARTIST,0)\\');
 				if (input === null) { return; }
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}
@@ -147,6 +150,22 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menu.newCheckMenuLast(() => this.coverModeOptions.bFill && this.coverModeOptions.bProportions && this.coverModeOptions.fillCrop === opt.newValue);
 			menu.getLastEntry().flags = !this.coverModeOptions.bProportions ? MF_GRAYED : MF_STRING;
 		});
+	}
+	{
+		const subMenu = menu.newMenu('Art cycle', mainMenuName, ['path', 'folder'].includes(this.coverMode.toLowerCase()) ? MF_STRING : MF_GRAYED);
+		[
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 0, entryText: 'Disabled' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 5000, entryText: '5' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 10000, entryText: '10' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 20000, entryText: '20' },
+		].forEach(createMenuOption('coverModeOptions', 'pathCycleTimer', subMenu, true, (option) => {
+			if (option.newValue === 0 || !this.coverModeOptions.pathCycleTimer) { this.resetArtFiles(); }
+		}));
+		menu.newSeparator(subMenu);
+		[
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'name', entryText: 'By name' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'date', entryText: 'By date (last modified)' },
+		].forEach(createMenuOption('coverModeOptions', 'pathCycleSort', subMenu, true));
 	}
 	{
 		const subMenu = menu.newMenu('Art effects', mainMenuName, this.useCover ? MF_STRING : MF_GRAYED);

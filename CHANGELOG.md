@@ -44,8 +44,10 @@
 - UI: added new setting to control colors shift on styles using gradients, from 0 (reversed) to 1 (standard). 0.5 may be used to display symmetric gradients (centered).
 - UI: added new setting to background for art crop: center (default), bottom, top.
 - UI: added new setting to background for art zoom, similar to the effect at Library-Tree-SMP (in that case is based on blur level).
+- UI: added new art mode 'Folder' to background which allows to display any image from a given folder path, like 'thumbs.js' SMP/JSplitter sample. Along this mode, added new cycle settings and file sorting (by name or date) to control how images are chosen.
 ### Changed
 - UI: reworked background submenu.
+- UI: 'Folder' and 'Path' art modes on background now support TF expressions.
 - UI: current time indicator now uses the built-in effect for the given style for ffprobe too, unless the point width is too small (taking into consideration normalized width settings). This condition now applies to any binary mode used.
 - Dependencies: internal changes to how binaries are handled.
 - Code cleanup and performance improvements if panel is disabled or during startup.
