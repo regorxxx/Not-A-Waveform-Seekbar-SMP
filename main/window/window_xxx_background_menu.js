@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/12/25
+//27/12/25
 
 /* exported createBackgroundMenu */
 
@@ -13,7 +13,19 @@ include('..\\..\\helpers\\helpers_xxx_input.js');
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
 /* global ntc:readable */
 
-function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, parentMenu, options = { nameColors: false /* Requires Chroma */, onInit: null /* (menu) => void(0) */ }) { // NOSONAR [Must be bound to _background() instance]
+/**
+ * Background settings menu. Must be bound to _background() instance
+ *
+ * @function
+ * @name createBackgroundMenu
+ * @kind function
+ * @this {_background}
+ * @param {{menuName: string, subMenuFrom: string, flags: number}} appendTo
+ * @param {_menu} parentMenu
+ * @param {{ nameColors: boolean, onInit: (menu:_menu) => void(0) }} options? - nameColors requires Chroma
+ * @returns {_menu}
+ */
+function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: false , onInit: null }) { // NOSONAR
 	// Constants
 	if (Object.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
 	const menu = parentMenu || new _menu();
@@ -100,27 +112,27 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 		[
 			{ isEq: null, key: this.coverModeOptions.bNowPlaying, value: null, newValue: !this.coverModeOptions.bNowPlaying, entryText: 'Follow now playing' }
 		].forEach(createMenuOption('coverModeOptions', 'bNowPlaying', subMenu, true));
-		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bNoSelection, value: null, newValue: !this.coverModeOptions.bNoSelection, entryText: 'No selection (as fallback)' }
 		].forEach(createMenuOption('coverModeOptions', 'bNoSelection', subMenu, true));
-		menu.getLastEntry().flags = this.coverMode === 'none' || !this.coverModeOptions.bNowPlaying ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = !this.useCover || !this.coverModeOptions.bNowPlaying ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bProportions, value: null, newValue: !this.coverModeOptions.bProportions, entryText: 'Maintain proportions' }
 		].forEach(createMenuOption('coverModeOptions', 'bProportions', subMenu, true));
-		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bFill, value: null, newValue: !this.coverModeOptions.bFill, entryText: 'Fill panel' }
 		].forEach(createMenuOption('coverModeOptions', 'bFill', subMenu, true));
-		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
 		].forEach(createMenuOption('coverModeOptions', 'bProcessColors', subMenu, true));
-		menu.getLastEntry().flags = this.coverMode === 'none' ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = !this.useCover' ? MF_GRAYED : MF_STRING;
 		[
 			{ isEq: null, key: this.coverModeOptions.bCircularBlur, value: null, newValue: !this.coverModeOptions.bCircularBlur, entryText: 'Circular blur' }
 		].forEach(createMenuOption('coverModeOptions', 'bCircularBlur', subMenu, true));
-		menu.getLastEntry().flags = this.coverMode === 'none' || this.coverModeOptions.blur === 0 ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = this.coverModeOptions.blur === 0 || !this.showCover ? MF_GRAYED : MF_STRING;
 		menu.newSeparator(subMenu);
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
@@ -134,7 +146,7 @@ function createBackgroundMenu(appendTo /* {menuName, subMenuFrom, flags} */, par
 					if (input === null) { return; }
 					const newVal = option.key === 'alpha' ? Math.round(input * 255 / 100) : input;
 					this.changeConfig({ config: { coverModeOptions: { [option.key]: newVal } }, callbackArgs: { bSaveProperties: true } });
-				}, flags: this.coverMode === 'none' ? MF_GRAYED : MF_STRING
+				}, flags: this.useCover && (option.key === 'alpha' || this.showCover) ? MF_STRING : MF_GRAYED
 			});
 		});
 	}

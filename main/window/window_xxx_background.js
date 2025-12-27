@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/12/25
+//27/12/25
 
 /* exported _background */
 
@@ -39,12 +39,13 @@ function _background({
 	this.updateImageBg = debounce((bForce = false, onDone = null, bRepaint = true) => {
 		const path = _resolvePath(this.coverModeOptions.path || '');
 		const bPath = this.coverMode.toLowerCase() === 'path' && path.length;
-		if (this.coverMode.toLowerCase() === 'none') {
+		if (!this.useCover) {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
-		if (this.colorMode.toLowerCase() === 'none') { this.colorImg = null; }
+		if (!this.useColors) { this.colorImg = null; }
+		if (!this.useCover) { return; }
 		const handle = (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null)
 			|| (this.coverModeOptions.bNowPlaying && this.coverModeOptions.bNoSelection ? null : fb.GetFocusItem(true));
 		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.handle === path)) { return; }
@@ -77,16 +78,18 @@ function _background({
 			if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
 				this.coverImg.art.colors = this.coverImg.art.image.GetColourScheme(6);
 			}
-			if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
-				if (this.coverModeOptions.bCircularBlur) {
-					this.coverImg.art.image.StackBlur(Math.max(this.coverModeOptions.blur / 10, 10));
-					applyAsMask(
-						this.coverImg.art.image,
-						(img) => img.StackBlur(this.coverModeOptions.blur),
-						(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
-					);
-				} else {
-					this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
+			if (this.coverModeOptions.alpha > 0) {
+				if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
+					if (this.coverModeOptions.bCircularBlur) {
+						this.coverImg.art.image.StackBlur(Math.max(this.coverModeOptions.blur / 5, 1));
+						applyAsMask(
+							this.coverImg.art.image,
+							(img) => img.StackBlur(this.coverModeOptions.blur),
+							(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
+						);
+					} else {
+						this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
+					}
 				}
 			}
 		}).catch(() => {
@@ -101,7 +104,7 @@ function _background({
 	}, 250);
 
 	this.paintImage = (gr, limits = { x, y, w, h, offsetH }, fill = null /* {transparency: 20} */) => { // NOSONAR
-		if (this.coverImg.art.image) {
+		if (this.coverImg.art.image && this.coverModeOptions.alpha > 0) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.coverImg.art.image;
 			if (fill) {
@@ -249,7 +252,7 @@ function _background({
 		};
 	};
 	this.getArtColors = () => {
-		return this.coverMode.toLowerCase() === 'none'
+		return !this.useCover
 			? null
 			: this.coverImg.art.image ? [...this.coverImg.art.colors] : null;
 	};
@@ -277,11 +280,25 @@ function _background({
 		return this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
 	};
 	/** @type {boolean} */
+	this.useColors;
+	Object.defineProperty(this, 'useColors', {
+		enumerable: true,
+		configurable: false,
+		get: () => this.colorMode.toLowerCase() !== 'none'
+	});
+	/** @type {boolean} */
 	this.useCover;
 	Object.defineProperty(this, 'useCover', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.coverMode.toLowerCase() !== 'none'
+	});
+	/** @type {boolean} */
+	this.showCover;
+	Object.defineProperty(this, 'showCover', {
+		enumerable: true,
+		configurable: false,
+		get: () => this.useCover && this.coverModeOptions.alpha > 0
 	});
 	this.init = () => {
 		Object.entries(this.defaults()).forEach((pair) => {
