@@ -117,28 +117,52 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.bNoSelection, value: null, newValue: !this.coverModeOptions.bNoSelection, entryText: 'No selection (as fallback)' }
 		].forEach(createMenuOption('coverModeOptions', 'bNoSelection', subMenu, true));
 		menu.getLastEntry().flags = !this.useCover || !this.coverModeOptions.bNowPlaying ? MF_GRAYED : MF_STRING;
-		[
-			{ isEq: null, key: this.coverModeOptions.bProportions, value: null, newValue: !this.coverModeOptions.bProportions, entryText: 'Maintain proportions' }
-		].forEach(createMenuOption('coverModeOptions', 'bProportions', subMenu, true));
-		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
-		[
-			{ isEq: null, key: this.coverModeOptions.bFill, value: null, newValue: !this.coverModeOptions.bFill, entryText: 'Fill panel' }
-		].forEach(createMenuOption('coverModeOptions', 'bFill', subMenu, true));
-		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
+		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
 		].forEach(createMenuOption('coverModeOptions', 'bProcessColors', subMenu, true));
-		menu.getLastEntry().flags = !this.useCover' ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
+	}
+	{
+		const subMenu = menu.newMenu('Art crop', mainMenuName, this.showCover ? MF_STRING : MF_GRAYED);
+		[
+			{ isEq: null, key: this.coverModeOptions.bProportions, value: null, newValue: !this.coverModeOptions.bProportions, entryText: 'Maintain proportions' }
+		].forEach(createMenuOption('coverModeOptions', 'bProportions', subMenu, true));
+		menu.newSeparator(subMenu);
+		[
+			{ isEq: null, key: this.coverModeOptions.bFill, value: false, newValue: false, entryText: 'None' }
+		].forEach((opt) => {
+			createMenuOption('coverModeOptions', 'bFill', subMenu)(opt);
+			menu.newCheckMenuLast(() => !this.coverModeOptions.bProportions || !this.coverModeOptions.bFill);
+			menu.getLastEntry().flags = !this.coverModeOptions.bProportions ? MF_GRAYED : MF_STRING;
+		});
+		[
+			{ isEq: null, key: this.coverModeOptions.fillCrop, value: null, newValue: 'top', entryText: 'Top' },
+			{ isEq: null, key: this.coverModeOptions.fillCrop, value: null, newValue: 'center', entryText: 'Center' },
+			{ isEq: null, key: this.coverModeOptions.fillCrop, value: null, newValue: 'bottom', entryText: 'Bottom' },
+		].forEach((opt) => {
+			createMenuOption('coverModeOptions', 'fillCrop', subMenu, false, () => {
+				this.changeConfig({ config: { coverModeOptions: { bFill: true } }, callbackArgs: { bSaveProperties: true } });
+			})(opt);
+			menu.newCheckMenuLast(() => this.coverModeOptions.bFill && this.coverModeOptions.bProportions && this.coverModeOptions.fillCrop === opt.newValue);
+			menu.getLastEntry().flags = !this.coverModeOptions.bProportions ? MF_GRAYED : MF_STRING;
+		});
+	}
+	{
+		const subMenu = menu.newMenu('Art effects', mainMenuName, this.useCover ? MF_STRING : MF_GRAYED);
 		[
 			{ isEq: null, key: this.coverModeOptions.bCircularBlur, value: null, newValue: !this.coverModeOptions.bCircularBlur, entryText: 'Circular blur' }
 		].forEach(createMenuOption('coverModeOptions', 'bCircularBlur', subMenu, true));
 		menu.getLastEntry().flags = this.coverModeOptions.blur === 0 || !this.showCover ? MF_GRAYED : MF_STRING;
-		menu.newSeparator(subMenu);
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
+			{ entryText: menu.separator},
 			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)' },
+			{ key: 'zoom', entryText: 'Zoom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is full image, 100 is fully zoomed.\n(0 to 100)' },
+			{ entryText: menu.separator},
 			{ key: 'alpha', entryText: 'Transparency...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
 		].forEach((option) => {
+			if (menu.isSeparator(option)) { menu.newSeparator(subMenu); return; }
 			const prevVal = option.key === 'alpha' ? Math.round(this.coverModeOptions[option.key] * 100 / 255) : this.coverModeOptions[option.key];
 			menu.newEntry({
 				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + ']', func: () => {
@@ -150,6 +174,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			});
 		});
 	}
+	menu.newSeparator(mainMenuName);
 	{
 		const subMenu = menu.newMenu('Color mode', mainMenuName);
 		[

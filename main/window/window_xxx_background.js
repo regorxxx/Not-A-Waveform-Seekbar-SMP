@@ -110,24 +110,97 @@ function _background({
 			if (fill) {
 				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), this.coverModeOptions.angle, fill.transparency);
 			} else {
+				const zoomX = this.coverModeOptions.zoom > 0
+					? Math.max(Math.min(this.coverModeOptions.zoom / 100, 0.99), 0) * img.Width / 2
+					: 0;
+				const zoomY = this.coverModeOptions.zoom > 0
+					? Math.max(Math.min(this.coverModeOptions.zoom / 100, 0.99), 0) * img.Height / 2
+					: 0;
 				if (this.coverModeOptions.bFill) { // NOSONAR
 					if (this.coverModeOptions.bProportions) {
-						const prop = limits.w / (limits.h - limits.offsetH);
-						if (prop > 1) {
-							const offsetY = img.Height / prop;
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, this.coverModeOptions.angle, this.coverModeOptions.alpha);
-						} else {
-							const offsetX = img.Width * prop;
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, this.coverModeOptions.angle, this.coverModeOptions.alpha);
+						switch ((this.coverModeOptions.fillCrop || '').toLowerCase()) {
+							case 'top': {
+								const prop = limits.w / (limits.h - limits.offsetH);
+								const imgProp = img.Width / img.Height;
+								if (imgProp < prop) {
+									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+										zoomX,
+										zoomY / prop,
+										img.Width - zoomX * 2,
+										(img.Width - zoomY * 2) / prop,
+										this.coverModeOptions.angle, this.coverModeOptions.alpha
+									);
+								} else {
+									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+										img.Width * (1 - prop) / 2 + zoomX * prop,
+										zoomY,
+										(img.Width - zoomX * 2) * prop,
+										img.Height - zoomY * 2,
+										this.coverModeOptions.angle, this.coverModeOptions.alpha
+									);
+								}
+								break;
+							}
+							case 'bottom': {
+								const prop = limits.w / (limits.h - limits.offsetH);
+								const imgProp = img.Width / img.Height;
+								if (imgProp < prop) {
+									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+										zoomX,
+										img.Width * (1 - 1 / prop) + zoomY / prop,
+										img.Width - zoomX * 2,
+										(img.Width - zoomY * 2) / prop,
+										this.coverModeOptions.angle, this.coverModeOptions.alpha
+									);
+								} else {
+									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+										img.Width * (1 - prop) / 2 +  zoomX * prop,
+										zoomY,
+										(img.Width - zoomX * 2) * prop,
+										img.Height - zoomY * 2,
+										this.coverModeOptions.angle, this.coverModeOptions.alpha
+									);
+								}
+								break;
+							}
+							case 'center':
+							default: {
+								const prop = limits.w / (limits.h - limits.offsetH);
+								if (prop > 1) {
+									const offsetY = (img.Height - zoomY * 2) / prop;
+									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+										zoomX,
+										(img.Height - offsetY) / 2,
+										img.Width - zoomX * 2,
+										offsetY,
+										this.coverModeOptions.angle, this.coverModeOptions.alpha
+									);
+								} else {
+									const offsetX = (img.Width - zoomX * 2) * prop;
+									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+										(img.Width - offsetX) / 2,
+										 zoomY,
+										offsetX,
+										img.Height - zoomY * 2,
+										this.coverModeOptions.angle, this.coverModeOptions.alpha
+									);
+								}
+							}
 						}
 					} else {
-						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, this.coverModeOptions.angle, this.coverModeOptions.alpha);
+						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, this.coverModeOptions.angle, this.coverModeOptions.alpha);
 					}
 				} else {
 					let w, h;
 					if (this.coverModeOptions.bProportions) { w = h = Math.min(limits.w, limits.h - limits.offsetH); }
 					else { [w, h] = [limits.w, limits.h]; }
-					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, this.coverModeOptions.angle, this.coverModeOptions.alpha);
+					gr.DrawImage(img,
+						(limits.w - w) / 2,
+						Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
+						w,
+						h,
+						zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, this.coverModeOptions.angle, this.coverModeOptions.alpha
+					);
 				}
 			}
 			gr.SetInterpolationMode(InterpolationMode.Default);
@@ -318,7 +391,7 @@ function _background({
 	this.offsetH = 0;
 	/** @type {('none'|'front'|'back'|'disc'|'icon'|'artist'|'path')} */
 	this.coverMode = '';
-	/** @type {{ blur:Number, angle:Number, alpha:Number, path:String, bNowPlaying:Boolean, bNoSelection:Boolean, bProportions:Boolean, bFill:Boolean, bProcessColors:Boolean }} */
+	/** @type {{ blur:Number, angle:Number, alpha:Number, path:String, bNowPlaying:Boolean, bNoSelection:Boolean, bProportions:Boolean, bFill:Boolean, fillCrop:string, zoom:number, bProcessColors:Boolean }} */
 	this.coverModeOptions = {};
 	/** @type {('single'|'gradient'|'bigradient'|'none')} */
 	this.colorMode = '';
@@ -338,7 +411,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front', // none | front | back | disc | icon | artist | path
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'auto', zoom: 0, bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'bigradient', // none | single | gradient | bigradient
 		colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
