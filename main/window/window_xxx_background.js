@@ -11,7 +11,7 @@ include('window_xxx_helpers.js');
  *
  * @class
  * @name _background
- * @param {{ x: any y: any w: any h: any offsetH?: any coverMode: any coverModeOptions: any colorMode: any colorModeOptions: any timer: any callbacks: any }} { x, y, w, h, offsetH, coverMode, coverModeOptions, colorMode, colorModeOptions, timer, callbacks, }?
+ * @param {{ x: number, y: number, w: number, h: number, offsetH?: number, coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, colorModeOptions: colorModeOptions, timer: number, callbacks: callbacks }} { x, y, w, h, offsetH, coverMode, coverModeOptions, colorMode, colorModeOptions, timer, callbacks, }?
  */
 function _background({
 	x, y, w, h,
@@ -20,10 +20,20 @@ function _background({
 	coverMode, coverModeOptions,
 	colorMode, colorModeOptions,
 	timer,
-	callbacks,
+	callbacks
 	/* eslint-enable no-unused-vars */
 } = {}) {
-
+	/**
+	 * Updates background image based from preferred handle and calls color callbacks.
+	 * @property
+	 * @name updateImageBg
+	 * @kind method
+	 * @memberof _background
+	 * @type {function}
+	 * @param {Boolean} bForce - [=false]
+	 * @param {Function?} onDone - [=null]
+	 * @returns {_background['defaults']}
+	 */
 	this.defaults = _background.defaults;
 	/**
 	 * Updates background image based from preferred handle and calls color callbacks.
@@ -102,8 +112,18 @@ function _background({
 			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
 		});
 	}, 250);
-
-	this.paintImage = (gr, limits = { x, y, w, h, offsetH }, fill = null /* {transparency: 20} */) => { // NOSONAR
+	/**
+	 * Changes panel config
+	 * @property
+	 * @name paintImage
+	 * @kind method
+	 * @memberof _background
+	 * @param {GdiGraphics} gr - From on_paint
+	 * @param {{x?:number, y?:number, w?:number, h?:number, offsetH?:number}} limits - Drawing coordinates
+	 * @param {{transparency:number}|null} fill - Used for panel filling instead of internal settings
+	 * @returns {void}
+	 */
+	this.paintImage = (gr, limits = { x, y, w, h, offsetH }, fill = null) => {
 		if (this.coverImg.art.image && this.coverModeOptions.alpha > 0) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
 			const img = this.coverImg.art.image;
@@ -154,7 +174,7 @@ function _background({
 									);
 								} else {
 									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										img.Width * (1 - prop) / 2 +  zoomX * prop,
+										img.Width * (1 - prop) / 2 + zoomX * prop,
 										zoomY,
 										(img.Width - zoomX * 2) * prop,
 										img.Height - zoomY * 2,
@@ -179,7 +199,7 @@ function _background({
 									const offsetX = (img.Width - zoomX * 2) * prop;
 									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
 										(img.Width - offsetX) / 2,
-										 zoomY,
+										zoomY,
 										offsetX,
 										img.Height - zoomY * 2,
 										this.coverModeOptions.angle, this.coverModeOptions.alpha
@@ -206,7 +226,15 @@ function _background({
 			gr.SetInterpolationMode(InterpolationMode.Default);
 		}
 	};
-
+	/**
+	 * Panel painting
+	 * @property
+	 * @name paintImage
+	 * @kind method
+	 * @memberof _background
+	 * @param {GdiGraphics} gr - From on_paint
+	 * @returns {void}
+	 */
 	this.paint = (gr) => {
 		if (this.w <= 1 || this.h <= 1) { return; }
 		const colorMode = this.colorMode.toLowerCase();
@@ -258,6 +286,16 @@ function _background({
 				break;
 		}
 	};
+	/**
+	 * Color image dithering
+	 * @property
+	 * @name dither
+	 * @kind method
+	 * @memberof _background
+	 * @param {GdiBitmap} img - Color image
+	 * @param {GdiGraphics} gr - From on_paint
+	 * @returns {GdiBitmap}
+	 */
 	this.dither = (img, gr) => {
 		const color1 = RGBA(...toRGB(this.colorModeOptions.color[0]), 20);
 		const color2 = RGBA(...toRGB(this.colorModeOptions.color[1]), 10);
@@ -274,9 +312,28 @@ function _background({
 		img.StackBlur(scale * 2);
 		return img;
 	};
+	/**
+	 * Helper for debounced repainting
+	 *
+	 * @constant
+	 * @name debounced
+	 * @kind variable
+	 * @private
+	 * @memberof _background.constructor
+	 * @type {{ [key:number]: (x:number, y:number, w:number, h:number, bForce:boolean) => void }}
+	 */
 	const debounced = {
 		[this.timer]: debounce(window.RepaintRect, this.timer, false, window)
 	};
+	/**
+	 * Panel repainting (debounced)
+	 * @property
+	 * @name repaint
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} timeout - [=0] If >0 it's debounced
+	 * @returns {void}
+	 */
 	this.repaint = (timeout = 0) => {
 		if (timeout === 0) { window.RepaintRect(this.x, this.y, this.x + this.w, this.y + this.h); }
 		else {
@@ -284,9 +341,28 @@ function _background({
 			debounced[timeout](this.x, this.y, this.x + this.w, this.y + this.h, true);
 		}
 	};
+	/**
+	 * Panel mouse tracing
+	 * @property
+	 * @name trace
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {Boolean}
+	 */
 	this.trace = (x, y) => {
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
 	};
+	/**
+	 * Panel resizing
+	 * @property
+	 * @name resize
+	 * @kind method
+	 * @memberof _background
+	 * @param {{ x?: number, y?: number, w?:number, h?:number, bRepaint?:boolean }}
+	 * @returns {void}
+	 */
 	this.resize = ({ x = this.x, y = this.y, w = this.w, h = this.h, bRepaint = true } = {}) => {
 		this.x = x;
 		this.y = y;
@@ -294,6 +370,16 @@ function _background({
 		this.h = h;
 		if (bRepaint) { this.repaint(); }
 	};
+	/**
+	 * Change panel config and call .change callback if provided to save to properties
+	 *
+	 * @method
+	 * @name changeConfig
+	 * @kind variable
+	 * @memberof _background
+	 * @type {{ config?: { x: number, y: number, w: number, h: number, offsetH?: number, coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, colorModeOptions: colorModeOptions, timer: number, callbacks: callbacks }, bRepaint?: boolean, callback?: (config, arguments, callbackArgs) => void, callbackArgs? }}
+	 * @returns {void}
+	 */
 	this.changeConfig = ({ config, bRepaint = true, callback = this.callbacks.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null } = {}) => {
 		if (!config) { return; }
 		Object.entries(config).forEach((pair) => {
@@ -314,26 +400,49 @@ function _background({
 		this.resize({ bRepaint });
 		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(), arguments[0], callbackArgs); }
 	};
+	/**
+	 * Gets panel settings ready to be saved as properties
+	 * @property
+	 * @name exportConfig
+	 * @kind method
+	 * @param {boolean} bPosition - Flag to include panel position
+	 * @memberof _background
+	 * @returns {{coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, x?:number, y?:number, w?:number, h?:number, offsetH?:number, timer: number }}
+	 */
 	this.exportConfig = (bPosition = false) => {
 		return {
 			coverMode: this.coverMode,
 			coverModeOptions: { ...this.coverModeOptions },
 			colorMode: this.colorMode,
 			colorModeOptions: { ...this.colorModeOptions },
-			...(bPosition ? { x: this.x, y: this.y, w: this.w, h: this.h } : {}),
+			...(bPosition ? { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } : {}),
 			timer: this.timer
 		};
 	};
+	/**
+	 * Gets all art colors from panel if available
+	 * @property
+	 * @name getArtColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {number[]|null}
+	 */
 	this.getArtColors = () => {
 		return !this.useCover
 			? null
 			: this.coverImg.art.image ? [...this.coverImg.art.colors] : null;
 	};
+	/**
+	 * Gets the 2 main colors from panel (either art or color settings)
+	 * @property
+	 * @name getColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {[number, number]}
+	 */
 	this.getColors = () => {
-		if (['front', 'back', 'disc', 'icon', 'artist', 'path'].includes(this.coverMode.toLowerCase())) {
-			if (this.coverImg.art.colors && this.coverImg.art.colors.length && this.coverModeOptions.alpha !== 0) {
-				return this.coverImg.art.colors.slice(0, 2);
-			}
+		if (this.useCover && this.coverImg.art.colors && this.coverImg.art.colors.length) {
+			return this.coverImg.art.colors.slice(0, 2);
 		}
 		return this.colorModeOptions.color.filter(Boolean).length
 			? [
@@ -344,10 +453,26 @@ function _background({
 				window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1)
 			);
 	};
+	/**
+	 * Called when colors are extracted from art, to apply colors to other elements within panel
+	 * @property
+	 * @name applyArtColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
 	this.applyArtColors = (bRepaint) => {
 		if (!this.callbacks.artColors) { return false; }
 		this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null, void (0), bRepaint);
 	};
+	/**
+	 * Called when colors are extracted from art, to use as color server
+	 * @property
+	 * @name notifyArtColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
 	this.notifyArtColors = () => {
 		if (!this.callbacks.artColorsNotify) { return false; }
 		return this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
@@ -359,20 +484,28 @@ function _background({
 		configurable: false,
 		get: () => this.colorMode.toLowerCase() !== 'none'
 	});
-	/** @type {boolean} */
+	/** @type {boolean} - Flag which indicates wether panel is using any art or not  */
 	this.useCover;
 	Object.defineProperty(this, 'useCover', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.coverMode.toLowerCase() !== 'none'
 	});
-	/** @type {boolean} */
+	/** @type {boolean} - Flag which indicates if panel is using any art and also if it's visible */
 	this.showCover;
 	Object.defineProperty(this, 'showCover', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.useCover && this.coverModeOptions.alpha > 0
 	});
+	/**
+	 * Panel init.
+	 * @property
+	 * @name init
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
 	this.init = () => {
 		Object.entries(this.defaults()).forEach((pair) => {
 			const key = pair[0];
@@ -382,24 +515,58 @@ function _background({
 		this.changeConfig({ config: arguments[0], bRepaint: false });
 		this.updateImageBg();
 	};
+	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: number[]|null }, handle: FbMetadbHandle|null, id: string|null }} */
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: number[]|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
 	this.coverImg = { art: { path: '', image: null, colors: null }, handle: null, id: null };
-	/** @type {Number} */
+	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
-	/** @type {Number} */
+	/** @type {Number} - Height margin for image drawing */
 	this.offsetH = 0;
-	/** @type {('none'|'front'|'back'|'disc'|'icon'|'artist'|'path')} */
+	/**
+	 * @typedef {'none'|'front'|'back'|'disc'|'icon'|'artist'|'path'} coverMode - Available art modes
+	 */
+	/** @type {coverMode} - Art type used by panel */
 	this.coverMode = '';
-	/** @type {{ blur:Number, angle:Number, alpha:Number, path:String, bNowPlaying:Boolean, bNoSelection:Boolean, bProportions:Boolean, bFill:Boolean, fillCrop:string, zoom:number, bProcessColors:Boolean }} */
+	/**
+	 * @typedef {object} coverModeOptions - Art settings
+	 * @property {number} blur - Blur effect in px
+	 * @property {number} angle - Image angle drawing (0-360)
+	 * @property {number} alpha - Image transparency (0-100)
+	 * @property {String} path - Img path for 'path' coverMode
+	 * @property {boolean} bNowPlaying - Follow now playing
+	 * @property {boolean} bNoSelection - Skip updates on selection changes
+	 * @property {boolean} bProportions - Maintain art proportions
+	 * @property {boolean} bFill - Fill panel
+	 * @property {string} fillCrop - Fill panel mode
+	 * @property {number} zoom - Image zoom (0-100)
+	 * @property {boolean} bProcessColors - Process art colors (required as color server)
+	 */
+	/** @type {coverModeOptions} - Panel art settings */
 	this.coverModeOptions = {};
-	/** @type {('single'|'gradient'|'bigradient'|'none')} */
+	/**
+	 * @typedef {'single'|'gradient'|'bigradient'|'none'} colorMode - Available color modes
+	 */
+	/** @type {colorMode} - Color type used by panel */
 	this.colorMode = '';
-	/** @type {{ bDither:Boolean, angle:Number, focus:Number, color:Number[] }} */
+	/**
+	 * @typedef {object} colorModeOptions - Art settings
+	 * @property {Boolean} bDither - Flag to apply dither effect
+	 * @property {number} angle - Gradient angle (0-360)
+	 * @property {number} focus - Gradient focus (0-1)
+	 * @property {[Number, Number]} color - Array of colors (at least 2 required for gradient usage)
+	 */
+	/** @type {colorModeOptions} - Color settings */
 	this.colorModeOptions = {};
-	/** @type {Number} */
+	/** @type {Number} - Repainting max refresh rate */
 	this.timer = 0;
-	/** @type {{ change: function(config, arguments, callbackArgs), artColors: function(colorArray, bForced, bRepaint), artColorsNotify: function(colorArray, bForced) }} */
+	/**
+	 * @typedef {object} callbacks - Callbacks for third party integration
+	 * @property {(config, arguments, callbackArgs) => void} change - Called on config changes
+	 * @property {(colorArray:num[], bForced:boolean, bRepaint:boolean) => void} artColors - Called when colors are extracted from art, to apply colors to other elements within panel
+	 * @property {(colorArray:num[], bForced:boolean) => void} artColorsNotify - Called when colors are extracted from art, to use as color server
+	 */
+	/** @type {callbacks} - Callbacks for third party integration */
 	this.callbacks = {};
 
 	this.init();
