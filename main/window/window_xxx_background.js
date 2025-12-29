@@ -1,10 +1,10 @@
 ﻿'use strict';
-//27/12/25
+//29/12/25
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable */
 
 /**
  * Background for panel with different cover options
@@ -24,24 +24,24 @@ function _background({
 	/* eslint-enable no-unused-vars */
 } = {}) {
 	/**
-	 * Updates background image based from preferred handle and calls color callbacks.
+	 * Retrieves default settings
 	 * @property
-	 * @name updateImageBg
+	 * @name defaults
 	 * @kind method
 	 * @memberof _background
 	 * @type {function}
-	 * @param {Boolean} bForce - [=false]
-	 * @param {Function?} onDone - [=null]
-	 * @returns {_background['defaults']}
+	 * @param {Boolean} bPosition - [=false]
+	 * @param {Boolean?} bCallbacks - [=false]
+	 * @returns {object}
 	 */
 	this.defaults = _background.defaults;
 	/**
 	 * Updates background image based from preferred handle and calls color callbacks.
-	 * @property
+	 * @function
 	 * @name updateImageBg
 	 * @kind method
 	 * @memberof _background
-	 * @type {function}
+	 * @type {(bForce:boolean, onDone:function) => void}
 	 * @param {Boolean} bForce - [=false]
 	 * @param {Function?} onDone - [=null]
 	 * @returns {void}
@@ -56,9 +56,9 @@ function _background({
 		if (!this.useCover) { return; }
 		const handle = this.getHandle();
 		const bPath = ['path', 'folder'].includes(this.coverMode.toLowerCase());
-		const path = bPath ? this.getArtPath(void(0), handle) : '';
+		const path = bPath ? this.getArtPath(void (0), handle) : '';
 		const bFoundPath = bPath && path.length;
-		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || this.coverImg.art.path === path)) { return; }
+		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return; }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
@@ -399,7 +399,7 @@ function _background({
 		if (config.coverMode || config.coverModeOptions) { this.updateImageBg(true); }
 		if (config.colorMode || config.colorModeOptions) { this.colorImg = null; }
 		this.resize({ bRepaint });
-		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(), arguments[0], callbackArgs); }
+		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(true), arguments[0], callbackArgs); }
 	};
 	/**
 	 * Gets panel settings ready to be saved as properties
@@ -426,10 +426,10 @@ function _background({
 	 * @name getArtPath
 	 * @kind method
 	 * @memberof _background
-	 * @param {boolean} bNext - Use next image for folder path
+	 * @param {1|-1|void} next - Use next image for folder path
 	 * @returns {string}
 	 */
-	this.getArtPath = (bNext, handle) => {
+	this.getArtPath = (next, handle) => {
 		let path = _resolvePath(this.coverModeOptions.path || '');
 		if (path.includes('$') || path.includes('%')) {
 			if (!handle) { handle = this.getHandle(); }
@@ -438,22 +438,33 @@ function _background({
 				: fb.TitleFormat(path).Eval();
 		}
 		if (this.coverMode.toLowerCase() === 'folder' && path.length) {
-			if (artFiles.root !== path) { this.resetArtFiles(path); bNext = true; }
-			if (bNext) {
+			if (artFiles.root !== path) { this.resetArtFiles(path); next = 1; }
+			if (typeof next === 'number') {
+				next = Math.sign(next);
 				if (this.coverModeOptions.pathCycleTimer > 0) {
-					artFiles.timer = setTimeout(() => this.updateImageBg(!!this.getArtPath(true)), this.coverModeOptions.pathCycleTimer);
+					artFiles.timer = setTimeout(() => this.cycleArtFolder(), this.coverModeOptions.pathCycleTimer);
 				}
 				const files = this.coverModeOptions.pathCycleSort.toLowerCase() === 'date'
 					? getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
-						.map((file) => { return { file, date: lastModified(file, true) };})
+						.map((file) => { return { file, date: lastModified(file, true) }; })
 						.sort((a, b) => b.date - a.date).map((o) => o.file)
 					: getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
 						.sort((a, b) => strNumCollator.compare(a, b));
 				artFiles.num = files.length;
-				for (let file of files) {
-					if (file && file.length && !artFiles.shown.has(file)) {
-						artFiles.shown.add(file);
-						return file;
+				if (next === -1) {
+					files.reverse();
+					for (let file of files) {
+						if (file && file.length && artFiles.shown.has(file)) {
+							artFiles.shown.delete(file);
+							return file;
+						}
+					}
+				} else {
+					for (let file of files) {
+						if (file && file.length && !artFiles.shown.has(file)) {
+							artFiles.shown.add(file);
+							return file;
+						}
 					}
 				}
 				if (files[0] && files[0].length) {
@@ -466,6 +477,88 @@ function _background({
 			}
 		}
 		return path;
+	};
+	/**
+	 * Cycles files within set art folder
+	 * @property
+	 * @name cycleArtFolder
+	 * @kind method
+	 * @memberof _background
+	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @returns {string} New image path
+	 */
+	this.cycleArtFolder = (next = 1) => {
+		const path = this.getArtPath(next);
+		this.updateImageBg(!!path);
+		return path;
+	};
+	/**
+	 * Cycles art mode between front-back-disc-icon-artist
+	 * @property
+	 * @name cycleArtMode
+	 * @kind method
+	 * @memberof _background
+	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @returns {string} New art mode
+	 */
+	this.cycleArtMode = (next = 1, callbackArgs) => {
+		const modes = [...trackCoverModes].rotate(trackCoverModes.indexOf(this.coverMode) + Math.sign(next));
+		this.changeConfig({ config: { coverMode: modes[0] }, callbackArgs });
+		return modes[0];
+	};
+	/**
+	 * Cycles art mode between front-back-disc-icon-artist but only if such art type exists
+	 * @property
+	 * @async
+	 * @name cycleArtModeAsync
+	 * @kind method
+	 * @memberof _background
+	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @returns {Promise.<string>} New art mode
+	 */
+	this.cycleArtModeAsync = async (next = 1, callbackArgs) => {
+		const modes = [...trackCoverModes].rotate(trackCoverModes.indexOf(this.coverMode) + Math.sign(next));
+		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
+		let bDone;
+		for (let i = 0; i < modes.length; i++) {
+			bDone = await utils.GetAlbumArtAsyncV2(void (0), this.getHandle(), AlbumArtId[modes[0]] || 0, true, false, true)
+				.then((artPromise) => {
+					if (artPromise.path.length) {
+						this.changeConfig({ config: { coverMode: modes[0] }, callbackArgs });
+						return true;
+					}
+					return false;
+				});
+			if (bDone) { break; }
+			modes.rotate(1);
+		}
+		return modes[0];
+	};
+	/**
+	 * Cycles art mode (all) or folder image according to current mode
+	 * @property
+	 * @name cycleArt
+	 * @kind method
+	 * @memberof _background
+	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @returns {string}
+	 */
+	this.cycleArt = (next = 1, callbackArgs) => {
+		if (this.coverMode === 'folder') { return this.cycleArtFolder(next); }
+		else if (trackCoverModes.includes(this.coverMode.toLowerCase())) { return this.cycleArtMode(next, callbackArgs); }
+	};
+	/**
+	 * Cycles art mode (only between those available) or folder image according to current mode
+	 * @property
+	 * @name cycleArt
+	 * @kind method
+	 * @memberof _background
+	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @returns {Promise.<string>}
+	 */
+	this.cycleArtAsync = (next = 1, callbackArgs) => {
+		if (this.coverMode === 'folder') { return Promise.resolve(this.cycleArtFolder(next)); }
+		else if (trackCoverModes.includes(this.coverMode.toLowerCase())) { return this.cycleArtModeAsync(next, callbackArgs); }
 	};
 	/**
 	 * Resets visited art files history
@@ -590,6 +683,72 @@ function _background({
 		get: () => this.useCover && this.coverModeOptions.alpha > 0
 	});
 	/**
+	 * Called on on_mouse_move.
+	 *
+	 * @property
+	 * @name move
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {boolean}
+	*/
+	this.move = (x, y) => {
+		if (!window.ID) { return false; }
+		if (this.trace(x, y)) {
+			this.mx = x;
+			this.my = y;
+			return true;
+		}
+		this.leave();
+		return false;
+	};
+	/**
+	 * Called on on_mouse_move.
+	 *
+	 * @property
+	 * @name leave
+	 * @kind method
+	 * @memberof _background
+	 * @returns {boolean}
+	*/
+	this.leave = () => {
+		if (!window.ID) { return false; }
+		this.mx = -1;
+		this.my = -1;
+		return true;
+	};
+	/**
+	 * Called on on_mouse_wheel.
+	 *
+	 * @property
+	 * @name wheelResize
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} step
+	 * @param {boolean} bForce
+	 * @returns {boolean}
+	*/
+	this.wheelResize = (step, bForce, callbackArgs) => {
+		if ((this.trace(this.mx, this.my) || bForce) && step !== 0) {
+			let key, min, max, delta = Math.sign(step);
+			switch (true) {
+				case true:
+					key = ['offsetH']; min = 0; max = this.h - 1; delta = - Math.sign(step) * _scale(5); break;
+			}
+			if (!key) { return; }
+			else {
+				const newConfig = {};
+				const value = Math.min(Math.max(min, getNested(this, ...key) + delta), max);
+				addNested(newConfig, value, ...key);
+				this.changeConfig({ config: newConfig, bRepaint: true, callbackArgs });
+			}
+			this.repaint(this.timer);
+			return true;
+		}
+		return false;
+	};
+	/**
 	 * Panel init.
 	 * @property
 	 * @name init
@@ -598,7 +757,7 @@ function _background({
 	 * @returns {void}
 	 */
 	this.init = () => {
-		Object.entries(this.defaults()).forEach((pair) => {
+		Object.entries(this.defaults(true, true)).forEach((pair) => {
 			const key = pair[0];
 			const value = pair[1];
 			this[key] = value;
@@ -619,6 +778,8 @@ function _background({
 	 */
 	/** @type {coverMode} - Art type used by panel */
 	this.coverMode = '';
+	/** @type {coverMode[]} - Art types used by panel */
+	const trackCoverModes = ['front', 'back', 'disc', 'icon', 'artist'];
 	/**
 	 * @typedef {object} coverModeOptions - Art settings
 	 * @property {number} blur - Blur effect in px
@@ -661,6 +822,10 @@ function _background({
 	 */
 	/** @type {callbacks} - Callbacks for third party integration */
 	this.callbacks = {};
+	/** @type {number} - Cached X position */
+	this.mx = -1;
+	/** @type {number} - Cached Y position */
+	this.my = -1;
 
 	this.init();
 }
@@ -671,7 +836,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'auto', zoom: 0, bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'bigradient',
 		colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks

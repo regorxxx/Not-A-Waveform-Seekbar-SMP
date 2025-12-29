@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/25
+//29/12/25
 
 /* exported createBackgroundMenu */
 
@@ -25,7 +25,7 @@ include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
  * @param {{ nameColors: boolean, onInit: (menu:_menu) => void(0) }} options? - nameColors requires Chroma
  * @returns {_menu}
  */
-function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: false , onInit: null }) { // NOSONAR
+function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: false, onInit: null }) { // NOSONAR
 	// Constants
 	if (Object.hasOwn(this, 'tooltip')) { this.tooltip.SetValue(null); }
 	const menu = parentMenu || new _menu();
@@ -136,8 +136,8 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.bFill, value: false, newValue: false, entryText: 'None' }
 		].forEach((opt) => {
 			createMenuOption('coverModeOptions', 'bFill', subMenu)(opt);
-			menu.newCheckMenuLast(() => !this.coverModeOptions.bProportions || !this.coverModeOptions.bFill);
-			menu.getLastEntry().flags = !this.coverModeOptions.bProportions ? MF_GRAYED : MF_STRING;
+			menu.newCheckMenuLast(() => this.coverModeOptions.bProportions && !this.coverModeOptions.bFill);
+			menu.getLastEntry().flags = this.coverModeOptions.bProportions ? MF_STRING : MF_GRAYED;
 		});
 		[
 			{ isEq: null, key: this.coverModeOptions.fillCrop, value: null, newValue: 'top', entryText: 'Top' },
@@ -148,7 +148,15 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				this.changeConfig({ config: { coverModeOptions: { bFill: true } }, callbackArgs: { bSaveProperties: true } });
 			})(opt);
 			menu.newCheckMenuLast(() => this.coverModeOptions.bFill && this.coverModeOptions.bProportions && this.coverModeOptions.fillCrop === opt.newValue);
-			menu.getLastEntry().flags = !this.coverModeOptions.bProportions ? MF_GRAYED : MF_STRING;
+			menu.getLastEntry().flags = this.coverModeOptions.bProportions ? MF_STRING : MF_GRAYED;
+		});
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: (this.coverModeOptions.bProportions && !this.coverModeOptions.bFill ? 'Margin (Y-axis)' : 'Enlarge (Y-Axis)')+ '\t[' + this.offsetH + ']', func: () => {
+				const input = Input.number('int positive', this.offsetH, 'Enter number:\n(integer number ≥0)', window.Name + ' (' + window.ScriptInfo.Name + '): Y-axis margin', 2);
+				if (input === null) { return; }
+				this.changeConfig({ config: { offsetH: input }, callbackArgs: { bSaveProperties: true } });
+			}, flags: this.coverModeOptions.bProportions ? MF_STRING : MF_GRAYED
 		});
 	}
 	{
@@ -175,10 +183,10 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		menu.getLastEntry().flags = this.coverModeOptions.blur === 0 || !this.showCover ? MF_GRAYED : MF_STRING;
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
-			{ entryText: menu.separator},
+			{ entryText: menu.separator },
 			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)' },
 			{ key: 'zoom', entryText: 'Zoom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is full image, 100 is fully zoomed.\n(0 to 100)' },
-			{ entryText: menu.separator},
+			{ entryText: menu.separator },
 			{ key: 'alpha', entryText: 'Transparency...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
 		].forEach((option) => {
 			if (menu.isSeparator(option)) { menu.newSeparator(subMenu); return; }

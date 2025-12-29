@@ -1,10 +1,10 @@
 'use strict';
-//25/12/25
+//29/12/25
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.3.0-beta' }); }
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable */
+/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable */
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable, MK_LBUTTON:readable */
 include('helpers\\helpers_xxx_UI.js');
@@ -400,10 +400,12 @@ addEventListener('on_mouse_move', (x, y, mask) => {
 		}
 	} else { seekbar.tooltip.Deactivate(); }
 	seekbar.move(x, y, mask);
+	background.move(x, y, mask);
 });
 
 addEventListener('on_mouse_leave', () => {
 	seekbar.leave();
+	background.leave();
 });
 
 addEventListener('on_script_unload', () => {
@@ -419,11 +421,11 @@ addEventListener('on_mouse_rbtn_up', (x, y) => {
 });
 
 addEventListener('on_mouse_wheel', (step) => {
-	if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT) && seekbar.wheelResize(step)) {
-		seekbar.saveProperties();
-	} else {
-		seekbar.wheel(step);
-	}
+	if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {
+		if (utils.IsKeyPressed(VK_SHIFT)) { background.wheelResize(step, void (0), { bSaveProperties: true }); }
+		else if (seekbar.wheelResize(step)) { seekbar.saveProperties(); }
+	} else if (utils.IsKeyPressed(VK_SHIFT)) { background.cycleArtAsync(step); }
+	else { seekbar.wheel(step); }
 });
 
 addEventListener('on_mouse_wheel_h', (step) => {
