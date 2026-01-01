@@ -1,5 +1,5 @@
 'use strict';
-//24/12/25
+//01/01/26
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -472,7 +472,7 @@ function _seekbar({
 	/** @type {Preset['waveMode'][]} - Supported wavemodes */
 	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'processbar', 'processbarfilled', 'processbargradient', 'processbargradientscaled', 'vumeter'];
 	/** @type {Preset['waveMode'][]} - Wavemodes which require wider repainting */
-	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
+	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halfbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
 	/** @type {Preset['waveMode'][]} - Wavemodes which use gradient painting */
 	const waveModesGrad = ['soundcloudgradient', 'barsgradient', 'halfbarsgradient', 'processbargradient', 'processbargradientscaled'];
 	/** @type {Number} - Last time update */
@@ -1456,13 +1456,13 @@ function _seekbar({
 			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-			const extraNormOffset = this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 0;
+			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 1) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
 						? Infinity
 						: this.preset.futureSecs / this.timeConstant * barW + barW
-					: 2.5 * barW * 2,
+					: barW * 2,
 				this.w - currX + barW
 			) + barW * extraNormOffset;
 			throttlePaintRect(currX - barW * extraNormOffset, this.y, prePaintW, this.h);
@@ -2657,13 +2657,13 @@ function _seekbar({
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
 			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-			const extraNormOffset = this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 0;
+			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 1) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
 						? Infinity
 						: this.preset.futureSecs / this.timeConstant * barW + barW
-					: 2.5 * barW * 2,
+					: barW * 2,
 				this.w - currX + barW
 			) + barW * extraNormOffset;
 			throttlePaintRect(currX - barW * extraNormOffset, this.y, prePaintW, this.h);
