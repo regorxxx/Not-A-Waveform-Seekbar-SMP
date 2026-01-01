@@ -1,5 +1,5 @@
 'use strict';
-//29/12/25
+//01/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.3.0-beta' }); }
 
@@ -238,7 +238,7 @@ seekbar.shareUiSettings = function (mode = 'popup') {
 
 seekbar.applyUiSettings = function (settings, bForce) {
 	window.highlight = true;
-	window.Repaint();
+	if (window.IsVisible) { window.Repaint(); }
 	const answer = bForce
 		? popup.yes
 		: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.FullPanelName, popup.question + popup.yes_no);
@@ -257,7 +257,7 @@ seekbar.applyUiSettings = function (settings, bForce) {
 		this.saveProperties();
 	}
 	window.highlight = false;
-	window.Repaint();
+	if (window.IsVisible) { window.Repaint(); }
 };
 
 seekbar.tooltip = new _tt(null);
@@ -452,7 +452,7 @@ addEventListener('on_notify_data', (name, info) => {
 				if (seekbar.ui.colors.currPos !== -1 && hasColor('currPos')) { seekbar.ui.colors.currPos = getColor('currPos'); }
 				if (seekbar.ui.colors.mainFuture !== -1 && hasColor('mainFuture')) { seekbar.ui.colors.mainFuture = getColor('mainFuture'); }
 				if (seekbar.ui.colors.altFuture !== -1 && hasColor('altFuture')) { seekbar.ui.colors.altFuture = getColor('altFuture'); }
-				window.Repaint();
+				if (window.IsVisible) { window.Repaint(); }
 			}
 			break;
 		}
@@ -473,7 +473,7 @@ addEventListener('on_notify_data', (name, info) => {
 {
 	const initHandle = seekbar.getHandle();
 	if (initHandle) {
-		window.Repaint();
+		if (window.IsVisible) { window.Repaint(); }
 		if (seekbar.getPreferredTrackMode() === 'selected') {
 			setTimeout(() => { on_item_focus_change(); }, 0);
 		} else {

@@ -627,7 +627,7 @@ function _seekbar({
 		const wasActive = this.active;
 		this.active = bEnable;
 		if (!wasActive && this.active) {
-			window.Repaint();
+			if (window.IsVisible) { window.Repaint(); }
 			setTimeout(() => {
 				const handle = this.getHandle();
 				this.newTrack(handle, void (0), true);
@@ -1456,7 +1456,7 @@ function _seekbar({
 			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 1) * widerModesScale;
+			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.25 : 1) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
@@ -1610,6 +1610,7 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.paint = (gr) => {
+		if (!window.IsVisible) { return; }
 		profilerPaint.Reset();
 		const colors = this.getColors();
 		// Panel background
@@ -2644,6 +2645,7 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.paintAnimation = (gr, frames, currX, bPrePaint, bVisualizer, bPartial, bVuMeter) => {
+		if (!window.IsVisible) { return; }
 		const bFullAnimated = !bPartial && this.preset.bAnimate;
 		// Incrementally draw animation on small steps
 		if ((bPrePaint && this.preset.bAnimate) || bFullAnimated || bVisualizer) {
@@ -2657,7 +2659,7 @@ function _seekbar({
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
 			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
-			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.5 : 1) * widerModesScale;
+			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.25 : 1) * widerModesScale;
 			const prePaintW = Math.min(
 				bPrePaint && this.preset.futureSecs !== Infinity || this.preset.bAnimate
 					? this.preset.futureSecs === Infinity && this.preset.bAnimate
@@ -2779,7 +2781,7 @@ function _seekbar({
 				}
 				this.updateConfig(newConfig);
 			}
-			throttlePaint();
+			if (window.IsVisible) { throttlePaint(); }
 			return true;
 		}
 		return false;
