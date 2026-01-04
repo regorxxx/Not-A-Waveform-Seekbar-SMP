@@ -1,10 +1,10 @@
 ﻿'use strict';
-//29/12/25
+//01/01/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, getBrightness:readable */
 
 /**
  * Background for panel with different cover options
@@ -113,7 +113,7 @@ function _background({
 		});
 	}, 250);
 	/**
-	 * Changes panel config
+	 * Paints art and/or reflected imgs
 	 * @property
 	 * @name paintImage
 	 * @kind method
@@ -215,7 +215,7 @@ function _background({
 					if (this.coverModeOptions.bProportions) { w = h = Math.min(limits.w, limits.h - limits.offsetH); }
 					else { [w, h] = [limits.w, limits.h]; }
 					gr.DrawImage(img,
-						(limits.w - w) / 2,
+						limits.x + (limits.w - w) / 2,
 						Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
 						w,
 						h,
@@ -229,7 +229,7 @@ function _background({
 	/**
 	 * Panel painting
 	 * @property
-	 * @name paintImage
+	 * @name paint
 	 * @kind method
 	 * @memberof _background
 	 * @param {GdiGraphics} gr - From on_paint
@@ -369,7 +369,7 @@ function _background({
 		this.y = y;
 		this.w = w;
 		this.h = h;
-		if (bRepaint) { this.repaint(); }
+		if (bRepaint) { this.repaint(this.timer); }
 	};
 	/**
 	 * Change panel config and call .change callback if provided to save to properties
@@ -378,7 +378,11 @@ function _background({
 	 * @name changeConfig
 	 * @kind variable
 	 * @memberof _background
-	 * @type {{ config?: { x: number, y: number, w: number, h: number, offsetH?: number, coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, colorModeOptions: colorModeOptions, timer: number, callbacks: callbacks }, bRepaint?: boolean, callback?: (config, arguments, callbackArgs) => void, callbackArgs? }}
+	 * @param {object} o - arguments
+	 * @param {{x: number, y: number, w: number, h: number, offsetH?: number, coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, colorModeOptions: colorModeOptions, timer: number, callbacks: callbacks }} o.config
+	 * @param {boolean} o.bRepaint
+	 * @param {(config, arguments, callbackArgs) => void} o.callback
+	 * @param {any} o.callbackArgs
 	 * @returns {void}
 	 */
 	this.changeConfig = ({ config, bRepaint = true, callback = this.callbacks.change /* (config, arguments, callbackArgs) => void(0) */, callbackArgs = null } = {}) => {
@@ -809,6 +813,7 @@ function _background({
 	 * @property {number} angle - Gradient angle (0-360)
 	 * @property {number} focus - Gradient focus (0-1)
 	 * @property {[Number, Number]} color - Array of colors (at least 2 required for gradient usage)
+	 * @property {boolean} bDarkBiGradOut - Flag to ensure the darkest color is used on bigradient mode
 	 */
 	/** @type {colorModeOptions} - Color settings */
 	this.colorModeOptions = {};
@@ -838,7 +843,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		coverMode: 'front',
 		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'bigradient',
-		colorModeOptions: { bDither: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
+		colorModeOptions: { bDither: true, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
 			? {
 				callbacks: {

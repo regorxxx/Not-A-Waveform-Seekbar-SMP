@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/12/25
+//01/01/26
 
 /* exported createBackgroundMenu */
 
@@ -229,7 +229,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		].forEach(createMenuOption('colorModeOptions', 'bDither', subMenu, true));
 		menu.newSeparator(subMenu);
 		[
-			{ key: 'angle', entryText: 'Gradient angle...', type: 'int positive', checks: [(num) => num > 0 && num < 360], inputHint: '\nClockwise.\n(0 to 360)' },
+			{ key: 'angle', entryText: 'Gradient angle...', type: 'int positive', checks: [(num) => num >= 0 && num < 360], inputHint: '\nClockwise.\n(0 to 360)' },
 			{ key: 'focus', entryText: 'Gradient focus...', type: 'real positive', checks: [(num) => num >= 0 && num <= 1], inputHint: '\nWhere the centred color will be at its highest intensity.\n(0 to 1)' },
 		].forEach((option) => {
 			menu.newEntry({
@@ -240,6 +240,10 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				}, flags: ['gradient', 'bigradient'].includes(this.colorMode.toLowerCase()) ? MF_STRING : MF_GRAYED
 			});
 		});
+		[
+			{ isEq: null, key: this.colorModeOptions.bDarkBiGradOut, value: null, newValue: !this.colorModeOptions.bDarkBiGradOut, entryText: 'Gradient prefer dark out' }
+		].forEach(createMenuOption('colorModeOptions', 'bDarkBiGradOut', subMenu, true));
+		menu.getLastEntry().flags = ['bigradient'].includes(this.colorMode.toLowerCase()) ? MF_STRING : MF_GRAYED;
 	}
 
 	if (options.onInit) { options.onInit(menu); }
