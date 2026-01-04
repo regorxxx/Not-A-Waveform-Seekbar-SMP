@@ -1,10 +1,10 @@
 ﻿'use strict';
-//01/01/26
+//04/01/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, getBrightness:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable */
 
 /**
  * Background for panel with different cover options
@@ -113,20 +113,39 @@ function _background({
 		});
 	}, 250);
 	/**
-	 * Paints art and/or reflected imgs
+	 * Paints art
 	 * @property
 	 * @name paintImage
 	 * @kind method
 	 * @memberof _background
-	 * @param {GdiGraphics} gr - From on_paint
-	 * @param {{x?:number, y?:number, w?:number, h?:number, offsetH?:number}} limits - Drawing coordinates
-	 * @param {{transparency:number}|null} fill - Used for panel filling instead of internal settings
+	 * @param {Object} o - Arguments
+	 * @param {GdiGraphics} o.gr - From on_paint
+	 * @param {{x?:number, y?:number, w?:number, h?:number, offsetH?:number}} o.limits - Drawing coordinates
+	 * @param {number} o.rotateFlip - Rotation/flip transformation
+	 * @param {(mask, gr, w, h) => void} o.fadeMask - Fading mask for reflections. Use something like (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w, h, 0, 0xFFFFFFFF, 0xFF000000)
+	 * @param {{transparency:number}|null} o.fill - Used for panel filling instead of internal settings
 	 * @returns {void}
 	 */
-	this.paintImage = (gr, limits = { x, y, w, h, offsetH }, fill = null) => {
-		if (this.coverImg.art.image && this.coverModeOptions.alpha > 0) {
+	this.paintImage = ({
+		gr,
+		limits = { x, y, w, h, offsetH },
+		rotateFlip = RotateFlipType.RotateNoneFlipNone,
+		fadeMask = null,
+		fill = null, alpha = this.coverModeOptions.alpha
+	} = {}) => {
+		if (this.coverImg.art.image && alpha > 0) {
 			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
-			const img = this.coverImg.art.image;
+			const img = fadeMask
+				? this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
+				: this.coverImg.art.image;
+			if (rotateFlip !== RotateFlipType.RotateNoneFlipNone) { img.RotateFlip(rotateFlip); }
+			if (fadeMask) {
+				applyMask(
+					img,
+					fadeMask,
+					true
+				);
+			}
 			if (fill) {
 				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), this.coverModeOptions.angle, fill.transparency);
 			} else {
@@ -136,94 +155,145 @@ function _background({
 				const zoomY = this.coverModeOptions.zoom > 0
 					? Math.max(Math.min(this.coverModeOptions.zoom / 100, 0.99), 0) * img.Height / 2
 					: 0;
-				if (this.coverModeOptions.bFill) { // NOSONAR
-					if (this.coverModeOptions.bProportions) {
+				if (this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
+					const prop = limits.w / (limits.h - limits.offsetH);
+					const imgProp = img.Width / img.Height;
+					if (imgProp > prop) {
+						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+							img.Width * (1 - prop / imgProp) / 2 + zoomX * prop / imgProp,
+							zoomY,
+							(img.Width - zoomX * 2) * prop / imgProp,
+							img.Height - zoomY * 2,
+							this.coverModeOptions.angle, alpha
+						);
+					} else {
 						switch ((this.coverModeOptions.fillCrop || '').toLowerCase()) {
 							case 'top': {
-								const prop = limits.w / (limits.h - limits.offsetH);
-								const imgProp = img.Width / img.Height;
-								if (imgProp < prop) {
-									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										zoomX,
-										zoomY / prop,
-										img.Width - zoomX * 2,
-										(img.Width - zoomY * 2) / prop,
-										this.coverModeOptions.angle, this.coverModeOptions.alpha
-									);
-								} else {
-									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										img.Width * (1 - prop) / 2 + zoomX * prop,
-										zoomY,
-										(img.Width - zoomX * 2) * prop,
-										img.Height - zoomY * 2,
-										this.coverModeOptions.angle, this.coverModeOptions.alpha
-									);
-								}
+								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+									zoomX,
+									zoomY / prop,
+									img.Width - zoomX * 2,
+									(img.Width - zoomY * 2) / prop,
+									this.coverModeOptions.angle, alpha
+								);
 								break;
 							}
 							case 'bottom': {
-								const prop = limits.w / (limits.h - limits.offsetH);
-								const imgProp = img.Width / img.Height;
-								if (imgProp < prop) {
-									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										zoomX,
-										img.Width * (1 - 1 / prop) + zoomY / prop,
-										img.Width - zoomX * 2,
-										(img.Width - zoomY * 2) / prop,
-										this.coverModeOptions.angle, this.coverModeOptions.alpha
-									);
-								} else {
-									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										img.Width * (1 - prop) / 2 + zoomX * prop,
-										zoomY,
-										(img.Width - zoomX * 2) * prop,
-										img.Height - zoomY * 2,
-										this.coverModeOptions.angle, this.coverModeOptions.alpha
-									);
-								}
+								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+									zoomX,
+									(img.Height - img.Width / prop) + zoomY / prop,
+									img.Width - zoomX * 2,
+									(img.Width - zoomY * 2) / prop,
+									this.coverModeOptions.angle, alpha
+								);
 								break;
 							}
 							case 'center':
 							default: {
-								const prop = limits.w / (limits.h - limits.offsetH);
-								if (prop > 1) {
-									const offsetY = (img.Height - zoomY * 2) / prop;
-									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										zoomX,
-										(img.Height - offsetY) / 2,
-										img.Width - zoomX * 2,
-										offsetY,
-										this.coverModeOptions.angle, this.coverModeOptions.alpha
-									);
-								} else {
-									const offsetX = (img.Width - zoomX * 2) * prop;
-									gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-										(img.Width - offsetX) / 2,
-										zoomY,
-										offsetX,
-										img.Height - zoomY * 2,
-										this.coverModeOptions.angle, this.coverModeOptions.alpha
-									);
-								}
+								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+									zoomX,
+									(img.Height - img.Width / prop) / 2 + zoomY / prop,
+									img.Width - zoomX * 2,
+									(img.Width - zoomY * 2) / prop,
+									this.coverModeOptions.angle, alpha
+								);
 							}
 						}
-					} else {
-						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, this.coverModeOptions.angle, this.coverModeOptions.alpha);
 					}
 				} else {
 					let w, h;
-					if (this.coverModeOptions.bProportions) { w = h = Math.min(limits.w, limits.h - limits.offsetH); }
-					else { [w, h] = [limits.w, limits.h]; }
+					if (this.coverModeOptions.bProportions) {
+						const prop = limits.w / (limits.h - limits.offsetH);
+						const imgProp = img.Width / img.Height;
+						if (imgProp > prop) {
+							w = limits.w;
+							h = (limits.h - limits.offsetH) / imgProp * prop;
+						} else {
+							w = limits.w * imgProp / prop;
+							h = (limits.h - limits.offsetH);
+						}
+					} else { [w, h] = [limits.w, limits.h]; }
 					gr.DrawImage(img,
 						limits.x + (limits.w - w) / 2,
 						Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
 						w,
 						h,
-						zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, this.coverModeOptions.angle, this.coverModeOptions.alpha
+						zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, this.coverModeOptions.angle, alpha
 					);
 				}
 			}
 			gr.SetInterpolationMode(InterpolationMode.Default);
+		}
+	};
+	/**
+	 * Paints reflected imgs
+	 * @property
+	 * @name paintReflection
+	 * @kind method
+	 * @memberof _background
+	 * @param {Object} o - Arguments
+	 * @param {GdiGraphics} o.gr - From on_paint
+	 * @param {reflectionMode} o.mode - Drawing coordinates
+	 * @returns {void}
+	 */
+	this.paintReflection = ({
+		gr,
+		mode
+	}) => {
+		if (this.coverImg.art.image && this.coverModeOptions.alpha > 0) {
+			const prop = this.w / (this.h - this.offsetH);
+			const imgProp = this.coverImg.art.image.Width / this.coverImg.art.image.Height;
+			switch (mode) {
+				case 'asymmetric': {
+					const offsetX = Math.max(0, this.coverModeOptions.bProportions && !this.coverModeOptions.bFill
+						? prop > 2 * imgProp
+							? this.w / 2 - this.h * imgProp + 1
+							: 0
+						: 0
+					);
+					const x = this.x + this.w / 8;
+					const w = this.w / 2;
+					this.paintImage({ gr, limits: { x: x + (prop > 2 * imgProp ? offsetX / 4 : 0), y: this.y, w, h: this.h, offsetH: this.offsetH } });
+					this.paintImage({
+						gr,
+						limits: { x: Math.floor(x + w - offsetX + (prop > 2 * imgProp ? offsetX / 4 : 0)), y: this.y, w, h: this.h, offsetH: this.offsetH },
+						rotateFlip: RotateFlipType.RotateNoneFlipX,
+						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2, h, 0.1, 0xFF000000, 0xFFFFFFFF),
+						alpha: this.coverModeOptions.alpha
+					});
+					break;
+				}
+				case 'symmetric':
+				default: {
+					const offsetX = this.coverModeOptions.bProportions && !this.coverModeOptions.bFill
+						? prop > 2 * imgProp
+							? this.w / 2 - this.h * imgProp + 1
+							: this.w / 2 - this.h * imgProp + 1 - this.h * imgProp / prop
+						: 0;
+					const w = Math.round(this.coverModeOptions.bProportions && !this.coverModeOptions.bFill
+						? prop > 2 * imgProp
+							? this.w / 2
+							: this.w / 2 + this.h * imgProp / prop * 2
+						: this.w / 2
+					);
+					const x = Math.round(this.x - this.w / 4 + offsetX);
+					this.paintImage({
+						gr,
+						limits: { x, y: this.y, w, h: this.h, offsetH: this.offsetH },
+						rotateFlip: RotateFlipType.RotateNoneFlipX,
+						fadeMask: (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w / 2, h, 0.1, 0xFFFFFFFF, 0xFF000000),
+						alpha: this.coverModeOptions.alpha
+					});
+					this.paintImage({
+						gr,
+						limits: { x: this.w - x - w, y: this.y, w, h: this.h, offsetH: this.offsetH },
+						rotateFlip: RotateFlipType.RotateNoneFlipX,
+						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2, h, 0.1, 0xFF000000, 0xFFFFFFFF),
+						alpha: this.coverModeOptions.alpha
+					});
+					this.paintImage({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+				}
+			}
 		}
 	};
 	/**
@@ -251,8 +321,12 @@ function _background({
 			}
 			case 'bigradient': {
 				if (bCreateImg || !this.colorModeOptions.bDither) {
-					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), color[0], color[1] || color[0], this.colorModeOptions.focus);
-					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h / 2, this.colorModeOptions.angle, color[0], color[1] || color[0], this.colorModeOptions.focus);
+					const gradColors = [color[0], color[1] || color[0]];
+					if (this.colorModeOptions.bDarkBiGradOut && (this.colorModeOptions.angle < 200 || this.colorModeOptions.angle > 350)) {
+						if (getBrightness(...toRGB(gradColors[0])) > getBrightness(...toRGB(gradColors[1]))) { gradColors.reverse(); }
+					}
+					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), gradColors[0], gradColors[1], this.colorModeOptions.focus);
+					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h / 2, this.colorModeOptions.angle, gradColors[0], gradColors[1], this.colorModeOptions.focus);
 				}
 				break;
 			}
@@ -279,7 +353,11 @@ function _background({
 			case 'artist':
 			case 'path':
 			case 'folder': {
-				this.paintImage(gr, { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH });
+				if ((this.coverModeOptions.reflection || '').toLowerCase() !== 'none' && !this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
+					this.paintReflection({ gr, mode: this.coverModeOptions.reflection });
+				} else {
+					this.paintImage({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+				}
 				break;
 			}
 			case 'none':
@@ -784,6 +862,8 @@ function _background({
 	this.coverMode = '';
 	/** @type {coverMode[]} - Art types used by panel */
 	const trackCoverModes = ['front', 'back', 'disc', 'icon', 'artist'];
+	/** @typedef {'symmetric'|'asymmetric'|'none'} reflectionMode - Available reflection modes */
+	/** @typedef {'top'|'center'|'bottom'} fillCropMode - Available fill panel modes */
 	/**
 	 * @typedef {object} coverModeOptions - Art settings
 	 * @property {number} blur - Blur effect in px
@@ -796,15 +876,14 @@ function _background({
 	 * @property {boolean} bNoSelection - Skip updates on selection changes
 	 * @property {boolean} bProportions - Maintain art proportions
 	 * @property {boolean} bFill - Fill panel
-	 * @property {string} fillCrop - Fill panel mode
+	 * @property {reflectionMode} reflection - Reflection mode
+	 * @property {fillCropMode} fillCrop - Fill panel mode
 	 * @property {number} zoom - Image zoom (0-100)
 	 * @property {boolean} bProcessColors - Process art colors (required as color server)
 	 */
 	/** @type {coverModeOptions} - Panel art settings */
 	this.coverModeOptions = {};
-	/**
-	 * @typedef {'single'|'gradient'|'bigradient'|'none'} colorMode - Available color modes
-	 */
+	/** @typedef {'single'|'gradient'|'bigradient'|'none'} colorMode - Available color modes */
 	/** @type {colorMode} - Color type used by panel */
 	this.colorMode = '';
 	/**
@@ -841,7 +920,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'bigradient',
 		colorModeOptions: { bDither: true, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks

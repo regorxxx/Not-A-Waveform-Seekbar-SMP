@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/01/26
+//04/01/26
 
 /* exported createBackgroundMenu */
 
@@ -8,6 +8,8 @@ include('window_xxx_helpers.js');
 /* global MF_GRAYED:readable, MF_STRING:readable,  */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
+include('..\\..\\helpers\\helpers_xxx_file.js');
+/* global _explorer:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
@@ -125,6 +127,15 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
 		].forEach(createMenuOption('coverModeOptions', 'bProcessColors', subMenu, true));
 		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
+		if (['path', 'folder'].includes(this.coverMode.toLowerCase())) {
+			menu.newSeparator(subMenu);
+			menu.newEntry({
+				menuName: subMenu, entryText: 'Open folder...', func: () => {
+					const path = this.getArtPath();
+					if (path) { _explorer(path); }
+				},
+			});
+		}
 	}
 	{
 		const subMenu = menu.newMenu('Art crop', mainMenuName, this.showCover ? MF_STRING : MF_GRAYED);
@@ -174,6 +185,15 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'name', entryText: 'By name' },
 			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'date', entryText: 'By date (last modified)' },
 		].forEach(createMenuOption('coverModeOptions', 'pathCycleSort', subMenu, true));
+	}
+	{
+		const bAvailable = this.useCover && this.coverModeOptions.bProportions && !this.coverModeOptions.bFill;
+		const subMenu = menu.newMenu('Art reflection' + (bAvailable ? '' : '\t[none crop]'), mainMenuName, bAvailable ? MF_STRING : MF_GRAYED);
+		[
+			{ isEq: null, key: this.coverModeOptions.reflection, value: null, newValue: 'none', entryText: 'None' },
+			{ isEq: null, key: this.coverModeOptions.reflection, value: null, newValue: 'asymmetric', entryText: 'Asymmetrical' },
+			{ isEq: null, key: this.coverModeOptions.reflection, value: null, newValue: 'Symmetric', entryText: 'Symmetrical' },
+		].forEach(createMenuOption('coverModeOptions', 'reflection', subMenu, true));
 	}
 	{
 		const subMenu = menu.newMenu('Art effects', mainMenuName, this.useCover ? MF_STRING : MF_GRAYED);
