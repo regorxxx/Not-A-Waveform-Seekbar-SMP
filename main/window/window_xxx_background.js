@@ -818,6 +818,17 @@ function _background({
 			).filter((c) => c !== null);
 	};
 	/**
+	 * Gets colors from DUI/CUI settings
+	 * @property
+	 * @name getUiColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {[number]}
+	 */
+	this.getUiColors = () => {
+		return [window.InstanceType === 0 ? window.GetColourCUI(3) : window.GetColourDUI(1), window.InstanceType === 0 ? window.GetColourCUI(3) : window.GetColourDUI(1)];
+	};
+	/**
 	 * Gets upt to 2 main colors from panel (either art or color settings)
 	 * @property
 	 * @name getPanelColors
@@ -826,7 +837,7 @@ function _background({
 	 * @returns {[number, number?]|null}
 	 */
 	this.getPanelColors = () => {
-		return (this.getArtColors() || this.getDrawColors()).slice(0, 2);
+		return (this.getArtColors() || this.getDrawColors() || this.getUiColors()).slice(0, 2);
 	};
 	/**
 	 * Gets average color of a color scheme
@@ -872,11 +883,23 @@ function _background({
 		return this.getAvgColor(this.getDrawColors());
 	};
 	/**
+	 * Gets average color from DUI/CUI settings
+	 * @property
+	 * @name getAvgDrawColor
+	 * @kind method
+	 * @memberof _background
+	 * @returns {number|null}
+	 */
+	this.getAvgUiColor = () => {
+		return this.getUiColors()[0];
+	};
+	/**
 	 * Gets average color of panel, taking into consideration actual art and color settings
 	 * @property
 	 * @name getAvgColor
 	 * @kind method
 	 * @memberof _background
+	 * @param {{col:number, freq:number}[]} extraColors
 	 * @returns {number|null}
 	 */
 	this.getAvgPanelColor = (extraColors = []) => {
@@ -884,7 +907,8 @@ function _background({
 			[
 				{ col: this.getAvgArtColor(), freq: this.coverModeOptions.alpha / 255 },
 				{ col: this.getAvgDrawColor(), freq: (255 - this.coverModeOptions.alpha) / 255 },
-				...extraColors
+				{ col: this.getAvgUiColor(), freq: this.useCover && !this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (!this.useCover && !this.useColors ? 1 : 0) },
+				...extraColors.map((c) => { return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : 1 / extraColors.length }; })
 			].filter(Boolean).filter((c) => c.col !== null)
 		);
 	};
@@ -894,6 +918,7 @@ function _background({
 	 * @name applyArtColors
 	 * @kind method
 	 * @memberof _background
+	 * @param {Boolean} bRepaint
 	 * @returns {void}
 	 */
 	this.applyArtColors = (bRepaint) => {
