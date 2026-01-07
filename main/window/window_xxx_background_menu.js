@@ -246,6 +246,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		[
 			{ isEq: null, key: this.colorModeOptions.bDither, value: null, newValue: !this.colorModeOptions.bDither, entryText: 'Apply dither' }
 		].forEach(createMenuOption('colorModeOptions', 'bDither', subMenu, true));
+		menu.getLastEntry().flags = this.useColors ? MF_STRING : MF_GRAYED;
 		menu.newSeparator(subMenu);
 		[
 			{ key: 'angle', entryText: 'Gradient angle...', type: 'int positive', checks: [(num) => num >= 0 && num < 360], inputHint: '\nClockwise.\n(0 to 360)' },

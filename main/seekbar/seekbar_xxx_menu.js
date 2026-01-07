@@ -28,7 +28,7 @@ const Chroma = require('..\\helpers-external\\chroma.js\\chroma.min'); // Relati
  */
 function settingsMenu(bClear = true) {
 	if (!this.menu) { this.menu = new _menu(); }
- 	/** @type {_menu} */
+	/** @type {_menu} */
 	const menu = this.menu;
 	if (bClear) { menu.clear(true); } // Reset on every call
 	// helper
@@ -661,7 +661,7 @@ function settingsMenu(bClear = true) {
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Dynamic (background art mode)', func: () => {
 					seekbarProperties.bDynamicColors[1] = !seekbarProperties.bDynamicColors[1];
-					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are DOMStringList.', window.ScriptInfo.Name + ': Dynamic colors'); }
+					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are doing.', window.ScriptInfo.Name + ': Dynamic colors'); }
 					this.saveProperties();
 					if (seekbarProperties.bDynamicColors[1]) {
 						// Ensure it's applied with compatible settings
@@ -671,7 +671,7 @@ function settingsMenu(bClear = true) {
 						}
 						background.updateImageBg(true);
 					} else {
-						background.callbacks.artColors(void(0), true);
+						background.callbacks.artColors(void (0), true);
 					}
 				}
 			});
@@ -680,13 +680,13 @@ function settingsMenu(bClear = true) {
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Listen to color-servers', func: () => {
 					seekbarProperties.bOnNotifyColors[1] = !seekbarProperties.bOnNotifyColors[1];
-					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are DOMStringList.', window.ScriptInfo.Name + ': Dynamic colors'); }
+					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are doing.', window.ScriptInfo.Name + ': Dynamic colors'); }
 					this.saveProperties();
 					if (seekbarProperties.bOnNotifyColors[1]) {
 						window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
 						window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
 					} else if (!seekbarProperties.bDynamicColors[1]) {
-						background.callbacks.artColors(void(0), true);
+						background.callbacks.artColors(void (0), true);
 					}
 				}
 			});
