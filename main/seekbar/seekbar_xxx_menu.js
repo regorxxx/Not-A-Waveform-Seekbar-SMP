@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/12/25
+//07/01/26
 
 /* exported settingsMenu, importSettingsMenu */
 
@@ -671,10 +671,7 @@ function settingsMenu(bClear = true) {
 						}
 						background.updateImageBg(true);
 					} else {
-						const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
-						this.updateConfig({ ui: { colors: defColors } });
-						background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(seekbarProperties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
-						this.saveProperties();
+						background.callbacks.artColors(void(0), true);
 					}
 				}
 			});
@@ -688,6 +685,8 @@ function settingsMenu(bClear = true) {
 					if (seekbarProperties.bOnNotifyColors[1]) {
 						window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
 						window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
+					} else if (!seekbarProperties.bDynamicColors[1]) {
+						background.callbacks.artColors(void(0), true);
 					}
 				}
 			});

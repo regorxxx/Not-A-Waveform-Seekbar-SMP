@@ -1,5 +1,5 @@
 'use strict';
-//01/01/26
+//07/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.3.0-beta' }); }
 
@@ -150,14 +150,14 @@ const background = new _background({
 			else if (colArray) {
 				const { main, sec, note, mainAlt, secAlt } = dynamicColors(
 					colArray,
-					seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getColors()[0],
+					seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getAvgPanelColor(),
 					seekbar.preset.waveMode !== 'vumeter'
 				);
 				if (seekbar.ui.colors.main !== -1) { seekbar.ui.colors.main = main; }
 				if (seekbar.ui.colors.alt !== -1) { seekbar.ui.colors.alt = sec; }
 				if (seekbar.ui.colors.currPos !== -1) {
 					seekbar.ui.colors.currPos = mostContrastColor(
-						seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getColors()[0],
+						seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getAvgPanelColor(),
 						[note, blendColors(note, RGB(0, 0, 0), 0.4), blendColors(note, RGB(255, 255, 255), 0.4)]
 					).color;
 				}
@@ -165,9 +165,8 @@ const background = new _background({
 				if (seekbar.ui.colors.altFuture !== -1) { seekbar.ui.colors.altFuture = secAlt; }
 			} else {
 				const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
-				for (const key in seekbar.ui.colors.colors) {
-					seekbar.ui.colors[key] = defColors[key];
-				}
+				this.updateConfig({ ui: { colors: defColors } });
+				background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(seekbarProperties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
 			}
 			if (bRepaint) { window.Repaint(); }
 		},
@@ -192,7 +191,7 @@ const seekbar = new _seekbar({
 	analysis: JSON.parse(seekbarProperties.analysis[1], (key, value) => value === null ? Infinity : value),
 	preset: JSON.parse(seekbarProperties.preset[1], (key, value) => value === null ? Infinity : value),
 	ui: { ...JSON.parse(seekbarProperties.ui[1]), gFont: _gdiFont(globFonts.standardBig.name, _scale(globFonts.standardBig.size)), pos: { scaleH: 0.9, scaleW: 1 / 30 } },
-	callbacks: { backgroundColor: () => background.getColors()[0] },
+	callbacks: { backgroundColor: () => background.getAvgPanelColor() },
 	logging: JSON.parse(seekbarProperties.logging[1]),
 });
 if (!seekbarProperties.bEnabled[1]) { seekbar.switch(); }
@@ -444,7 +443,7 @@ addEventListener('on_notify_data', (name, info) => {
 				const colors = clone(info);
 				const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'main', 'alt', 'currPos', 'mainFuture', 'altFuture'].indexOf(key)];
 				const hasColor = (key) => typeof getColor(key) !== 'undefined';
-				if (background.colorMode !== 'none' && hasColor('background')) {
+				if (background.useColors && hasColor('background')) {
 					background.changeConfig({ config: { colorModeOptions: { color: getColor('background') } }, callbackArgs: { bSaveProperties: false } });
 				}
 				if (seekbar.ui.colors.main !== -1 && hasColor('main')) { seekbar.ui.colors.main = getColor('main'); }

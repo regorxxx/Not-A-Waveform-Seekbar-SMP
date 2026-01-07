@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/26
+//07/01/26
 
 /* exported _background */
 
@@ -11,7 +11,7 @@ include('window_xxx_helpers.js');
  *
  * @class
  * @name _background
- * @param {{ x: number, y: number, w: number, h: number, offsetH?: number, coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, colorModeOptions: colorModeOptions, timer: number, callbacks: callbacks }} { x, y, w, h, offsetH, coverMode, coverModeOptions, colorMode, colorModeOptions, timer, callbacks, }?
+ * @param {{ x: number, y: number, w: number, h: number, offsetH?: number, coverMode: CoverMode, coverModeOptions: CoverModeOptions, colorMode: ColorMode, colorModeOptions: ColorModeOptions, timer: number, callbacks: Callbacks, logging: Logging }} { x, y, w, h, offsetH, coverMode, coverModeOptions, colorMode, colorModeOptions, timer, callbacks, }?
  */
 function _background({
 	x, y, w, h,
@@ -20,7 +20,8 @@ function _background({
 	coverMode, coverModeOptions,
 	colorMode, colorModeOptions,
 	timer,
-	callbacks
+	callbacks,
+	logging
 	/* eslint-enable no-unused-vars */
 } = {}) {
 	/**
@@ -69,12 +70,15 @@ function _background({
 			}
 		}
 		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
+		let profiler;
+		if (this.logging.bProfile) { profiler = new FbProfiler('loadImg'); }
 		const promise = bFoundPath
 			? gdi.LoadImageAsyncV2('', path)
 			: handle
 				? utils.GetAlbumArtAsyncV2(void (0), handle, AlbumArtId[this.coverMode] || 0, true, false, false)
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
+			if (this.logging.bProfile) { profiler.Print(); }
 			if (bFoundPath) {
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = path;
@@ -85,23 +89,8 @@ function _background({
 				this.coverImg.handle = handle.RawPath;
 				this.coverImg.id = id;
 			}
-			if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
-				this.coverImg.art.colors = this.coverImg.art.image.GetColourScheme(6);
-			}
-			if (this.coverModeOptions.alpha > 0) {
-				if (this.coverImg.art.image && this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
-					if (this.coverModeOptions.bCircularBlur) {
-						this.coverImg.art.image.StackBlur(Math.max(this.coverModeOptions.blur / 5, 1));
-						applyAsMask(
-							this.coverImg.art.image,
-							(img) => img.StackBlur(this.coverModeOptions.blur),
-							(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
-						);
-					} else {
-						this.coverImg.art.image.StackBlur(this.coverModeOptions.blur);
-					}
-				}
-			}
+			this.processArtColors();
+			this.processArtEffects();
 		}).catch(() => {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
@@ -112,6 +101,94 @@ function _background({
 			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
 		});
 	}, 250);
+	/**
+	 * Processes and retrieves art colors according to panel settings
+	 * @property
+	 * @name processArtColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {{col:number, freq:number}[]|null}
+	 */
+	this.processArtColors = () => {
+		let profiler;
+		if (this.logging.bProfile) { profiler = new FbProfiler('processArtColors'); }
+		if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
+			this.coverImg.art.colors = JSON.parse(this.coverImg.art.image.GetColourSchemeJSON(6));
+		}
+		if (this.logging.bProfile) { profiler.Print(); }
+		return this.coverImg.art.colors;
+	};
+	/**
+	 * Formats art image according with different effects to panel settings
+	 * @property
+	 * @name processArtEffects
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
+	this.processArtEffects = () => {
+		let profiler;
+		if (this.logging.bProfile) { profiler = new FbProfiler('processArtEffects'); }
+		if (this.coverModeOptions.alpha > 0 && !!this.coverImg.art.image) {
+			let intensity;
+			if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
+				intensity = Math.max(Math.min(this.coverModeOptions.mute / 100 * 255, 255), 0);
+				applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
+					gr.DrawImage(this.coverImg.art.image, 0, 0, w, h, 0, 0, w, h, 0, intensity / 2);
+					mask.StackBlur(5);
+				});
+				applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
+					gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+					mask.StackBlur(10);
+				});
+			}
+			if (this.coverModeOptions.edgeGlow !== 0 && Number.isInteger(this.coverModeOptions.edgeGlow)) {
+				intensity = Math.max(Math.min(this.coverModeOptions.edgeGlow / 100 * 255, 255), 0);
+				applyAsMask(
+					this.coverImg.art.image,
+					(img, gr, w, h) => {
+						gr.FillSolidRect(0, 0, w, h, RGBA(0, 0, 0));
+					},
+					(mask, gr, w, h) => {
+						gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+						mask.StackBlur(1);
+					}, true
+				);
+			}
+			if (this.coverModeOptions.bloom !== 0 && Number.isInteger(this.coverModeOptions.bloom)) {
+				intensity = Math.max(Math.min(this.coverModeOptions.bloom / 100 * 255, 255), 0);
+				applyAsMask(
+					this.coverImg.art.image,
+					(img, gr, w, h) => {
+						gr.FillSolidRect(0, 0, w, h, RGBA(255, 255, 255));
+					},
+					(mask, gr, w, h) => {
+						gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+						mask.StackBlur(50);
+					}, true
+				);
+				applyAsMask(
+					this.coverImg.art.image,
+					(img) => img.StackBlur(10),
+					(mask, gr, w, h) => { gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h); },
+				);
+			}
+			if (this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
+				intensity = Math.max(this.coverModeOptions.blur, 0);
+				if (this.coverModeOptions.bCircularBlur) {
+					this.coverImg.art.image.StackBlur(Math.max(intensity / 5, 1));
+					applyAsMask(
+						this.coverImg.art.image,
+						(img) => img.StackBlur(intensity),
+						(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
+					);
+				} else {
+					this.coverImg.art.image.StackBlur(intensity);
+				}
+			}
+		}
+		if (this.logging.bProfile) { profiler.Print(); }
+	};
 	/**
 	 * Paints art
 	 * @property
@@ -226,14 +303,14 @@ function _background({
 		}
 	};
 	/**
-	 * Paints reflected imgs
+	 * Paints reflected art
 	 * @property
 	 * @name paintReflection
 	 * @kind method
 	 * @memberof _background
 	 * @param {Object} o - Arguments
 	 * @param {GdiGraphics} o.gr - From on_paint
-	 * @param {reflectionMode} o.mode - Drawing coordinates
+	 * @param {ReflectionMode} o.mode - Drawing coordinates
 	 * @returns {void}
 	 */
 	this.paintReflection = ({
@@ -297,16 +374,15 @@ function _background({
 		}
 	};
 	/**
-	 * Panel painting
+	 * Paints color fill
 	 * @property
-	 * @name paint
+	 * @name paintColors
 	 * @kind method
 	 * @memberof _background
 	 * @param {GdiGraphics} gr - From on_paint
 	 * @returns {void}
 	 */
-	this.paint = (gr) => {
-		if (this.w <= 1 || this.h <= 1) { return; }
+	this.paintColors = (gr) => {
 		const colorMode = this.colorMode.toLowerCase();
 		let grImg, bCreateImg;
 		if (this.colorModeOptions.bDither && !['single', 'none'].includes(colorMode)) {
@@ -322,7 +398,7 @@ function _background({
 			case 'bigradient': {
 				if (bCreateImg || !this.colorModeOptions.bDither) {
 					const gradColors = [color[0], color[1] || color[0]];
-					if (this.colorModeOptions.bDarkBiGradOut && (this.colorModeOptions.angle < 200 || this.colorModeOptions.angle > 350)) {
+					if (this.colorModeOptions.bDarkBiGradOut && (this.colorModeOptions.angle < 200 || this.colorModeOptions.angle > 350) && this.colorModeOptions.focus < 0.5) {
 						if (getBrightness(...toRGB(gradColors[0])) > getBrightness(...toRGB(gradColors[1]))) { gradColors.reverse(); }
 					}
 					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), gradColors[0], gradColors[1], this.colorModeOptions.focus);
@@ -345,6 +421,22 @@ function _background({
 			this.colorImg.ReleaseGraphics(grImg);
 			gr.DrawImage(this.colorImg, this.x, this.y, this.w, this.h, 0, 0, this.colorImg.Width, this.colorImg.Height);
 		}
+	};
+	/**
+	 * Panel painting
+	 * @property
+	 * @name paint
+	 * @kind method
+	 * @memberof _background
+	 * @param {GdiGraphics} gr - From on_paint
+	 * @returns {void}
+	 */
+	this.paint = (gr) => {
+		if (this.w <= 1 || this.h <= 1) { return; }
+		let profiler;
+		if (this.logging.bProfile) { profiler = fb.CreateProfiler('paint'); }
+		this.paintColors(gr);
+		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
 		switch (this.coverMode.toLowerCase()) {
 			case 'front':
 			case 'back':
@@ -364,6 +456,7 @@ function _background({
 			default:
 				break;
 		}
+		if (this.logging.bProfile) { profiler.Print('image'); }
 	};
 	/**
 	 * Color image dithering
@@ -457,7 +550,7 @@ function _background({
 	 * @kind variable
 	 * @memberof _background
 	 * @param {object} o - arguments
-	 * @param {{x: number, y: number, w: number, h: number, offsetH?: number, coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, colorModeOptions: colorModeOptions, timer: number, callbacks: callbacks }} o.config
+	 * @param {{x: number, y: number, w: number, h: number, offsetH?: number, coverMode: CoverMode, coverModeOptions: CoverModeOptions, colorMode: ColorMode, colorModeOptions: ColorModeOptions, timer: number, callbacks: Callbacks }} o.config
 	 * @param {boolean} o.bRepaint
 	 * @param {(config, arguments, callbackArgs) => void} o.callback
 	 * @param {any} o.callbackArgs
@@ -490,7 +583,7 @@ function _background({
 	 * @kind method
 	 * @param {boolean} bPosition - Flag to include panel position
 	 * @memberof _background
-	 * @returns {{coverMode: coverMode, coverModeOptions: coverModeOptions, colorMode: colorMode, x?:number, y?:number, w?:number, h?:number, offsetH?:number, timer: number }}
+	 * @returns {{coverMode: CoverMode, coverModeOptions: CoverModeOptions, colorMode: ColorMode, x?:number, y?:number, w?:number, h?:number, offsetH?:number, timer: number }}
 	 */
 	this.exportConfig = (bPosition = false) => {
 		return {
@@ -694,30 +787,106 @@ function _background({
 	 * @returns {number[]|null}
 	 */
 	this.getArtColors = () => {
-		return !this.useCover
-			? null
-			: this.coverImg.art.image ? [...this.coverImg.art.colors] : null;
+		return this.useCover && !!this.coverImg.art.image && !!this.coverImg.art.colors
+			? this.coverImg.art.colors.map((c) => c.col)
+			: null;
 	};
 	/**
-	 * Gets the 2 main colors from panel (either art or color settings)
+	 * Gets colors from color settings
 	 * @property
-	 * @name getColors
+	 * @name getDrawColors
 	 * @kind method
 	 * @memberof _background
-	 * @returns {[number, number]}
+	 * @returns {[number, number?]|null}
 	 */
-	this.getColors = () => {
-		if (this.useCover && this.coverImg.art.colors && this.coverImg.art.colors.length) {
-			return this.coverImg.art.colors.slice(0, 2);
-		}
-		return this.colorModeOptions.color.filter(Boolean).length
-			? [
-				this.colorModeOptions.color[0],
-				this.colorModeOptions.color[1] || this.colorModeOptions.color[0]
-			]
-			: [-1, -1].fill(
-				window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1)
-			);
+	this.getDrawColors = () => {
+		return this.colorMode === 'none'
+			? null
+			: (this.colorModeOptions.color.filter(Boolean).length
+				? [
+					this.colorModeOptions.color[0],
+					this.colorMode === 'bigradient' || this.colorMode === 'gradient'
+						? this.colorModeOptions.color[1] || this.colorModeOptions.color[0]
+						: null
+				]
+				: [
+					window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1),
+					this.colorMode === 'bigradient' || this.colorMode === 'gradient'
+						? window.InstanceType === 0 ? window.GetColourCUI(1) : window.GetColourDUI(1)
+						: null
+				]
+			).filter((c) => c !== null);
+	};
+	/**
+	 * Gets upt to 2 main colors from panel (either art or color settings)
+	 * @property
+	 * @name getPanelColors
+	 * @kind method
+	 * @memberof _background
+	 * @returns {[number, number?]|null}
+	 */
+	this.getPanelColors = () => {
+		return (this.getArtColors() || this.getDrawColors()).slice(0, 2);
+	};
+	/**
+	 * Gets average color of a color scheme
+	 * @property
+	 * @name getAvgColor
+	 * @kind method
+	 * @memberof _background
+	 * @param {{col:number, freq:number}[]|number[]}
+	 * @returns {number|null}
+	 */
+	this.getAvgColor = (colorScheme) => {
+		if (!colorScheme) { return null; }
+		let rgb = [0, 0, 0];
+		let total = 0;
+		colorScheme.map((c) => {
+			return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : 1 / colorScheme.length };
+		}).forEach((c) => {
+			toRGB(c.col).forEach((v, i) => rgb[i] += v ** 2 * c.freq);
+			total += c.freq;
+		});
+		return RGBA(...rgb.map((v) => Math.min(Math.max(Math.round(Math.sqrt(v / total)), 0), 255)));
+	};
+	/**
+	 * Gets average color of art color scheme
+	 * @property
+	 * @name getAvgArtColor
+	 * @kind method
+	 * @memberof _background
+	 * @returns {number|null}
+	 */
+	this.getAvgArtColor = () => {
+		return this.getAvgColor(this.coverImg.art.colors);
+	};
+	/**
+	 * Gets average color from color settings
+	 * @property
+	 * @name getAvgDrawColor
+	 * @kind method
+	 * @memberof _background
+	 * @returns {number|null}
+	 */
+	this.getAvgDrawColor = () => {
+		return this.getAvgColor(this.getDrawColors());
+	};
+	/**
+	 * Gets average color of panel, taking into consideration actual art and color settings
+	 * @property
+	 * @name getAvgColor
+	 * @kind method
+	 * @memberof _background
+	 * @returns {number|null}
+	 */
+	this.getAvgPanelColor = (extraColors = []) => {
+		return this.getAvgColor(
+			[
+				{ col: this.getAvgArtColor(), freq: this.coverModeOptions.alpha / 255 },
+				{ col: this.getAvgDrawColor(), freq: (255 - this.coverModeOptions.alpha) / 255 },
+				...extraColors
+			].filter(Boolean).filter((c) => c.col !== null)
+		);
 	};
 	/**
 	 * Called when colors are extracted from art, to apply colors to other elements within panel
@@ -729,7 +898,7 @@ function _background({
 	 */
 	this.applyArtColors = (bRepaint) => {
 		if (!this.callbacks.artColors) { return false; }
-		this.callbacks.artColors(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null, void (0), bRepaint);
+		this.callbacks.artColors(this.getArtColors(), void (0), bRepaint);
 	};
 	/**
 	 * Called when colors are extracted from art, to use as color server
@@ -741,7 +910,7 @@ function _background({
 	 */
 	this.notifyArtColors = () => {
 		if (!this.callbacks.artColorsNotify) { return false; }
-		return this.callbacks.artColorsNotify(this.coverImg.art.colors ? [...this.coverImg.art.colors] : null);
+		return this.callbacks.artColorsNotify(this.getArtColors());
 	};
 	/** @type {boolean} */
 	this.useColors;
@@ -849,26 +1018,27 @@ function _background({
 	};
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: number[]|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
 	this.coverImg = { art: { path: '', image: null, colors: null }, handle: null, id: null };
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} - Height margin for image drawing */
 	this.offsetH = 0;
 	/**
-	 * @typedef {'none'|'front'|'back'|'disc'|'icon'|'artist'|'path'|'folder'} coverMode - Available art modes
+	 * @typedef {'none'|'front'|'back'|'disc'|'icon'|'artist'|'path'|'folder'} CoverMode - Available art modes
 	 */
-	/** @type {coverMode} - Art type used by panel */
+	/** @type {CoverMode} - Art type used by panel */
 	this.coverMode = '';
-	/** @type {coverMode[]} - Art types used by panel */
+	/** @type {CoverMode[]} - Art types used by panel */
 	const trackCoverModes = ['front', 'back', 'disc', 'icon', 'artist'];
-	/** @typedef {'symmetric'|'asymmetric'|'none'} reflectionMode - Available reflection modes */
-	/** @typedef {'top'|'center'|'bottom'} fillCropMode - Available fill panel modes */
+	/** @typedef {'symmetric'|'asymmetric'|'none'} ReflectionMode - Available reflection modes */
+	/** @typedef {'top'|'center'|'bottom'} FillCropMode - Available fill panel modes */
 	/**
-	 * @typedef {object} coverModeOptions - Art settings
+	 * @typedef {object} CoverModeOptions - Art settings
 	 * @property {number} blur - Blur effect in px
 	 * @property {number} angle - Image angle drawing (0-360)
-	 * @property {number} alpha - Image transparency (0-100)
+	 * @property {number} alpha - Image transparency (0-255)
+	 * @property {number} mute - Image mute effect (0-100)
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
 	 * @property {'name'|'date'} pathCycleSort - Art sorting when using 'folder' coverMode
@@ -876,40 +1046,46 @@ function _background({
 	 * @property {boolean} bNoSelection - Skip updates on selection changes
 	 * @property {boolean} bProportions - Maintain art proportions
 	 * @property {boolean} bFill - Fill panel
-	 * @property {reflectionMode} reflection - Reflection mode
-	 * @property {fillCropMode} fillCrop - Fill panel mode
+	 * @property {ReflectionMode} reflection - Reflection mode
+	 * @property {FillCropMode} fillCrop - Fill panel mode
 	 * @property {number} zoom - Image zoom (0-100)
 	 * @property {boolean} bProcessColors - Process art colors (required as color server)
 	 */
-	/** @type {coverModeOptions} - Panel art settings */
+	/** @type {CoverModeOptions} - Panel art settings */
 	this.coverModeOptions = {};
-	/** @typedef {'single'|'gradient'|'bigradient'|'none'} colorMode - Available color modes */
-	/** @type {colorMode} - Color type used by panel */
+	/** @typedef {'single'|'gradient'|'bigradient'|'none'} ColorMode - Available color modes */
+	/** @type {ColorMode} - Color type used by panel */
 	this.colorMode = '';
 	/**
-	 * @typedef {object} colorModeOptions - Art settings
+	 * @typedef {object} ColorModeOptions - Art settings
 	 * @property {Boolean} bDither - Flag to apply dither effect
 	 * @property {number} angle - Gradient angle (0-360)
 	 * @property {number} focus - Gradient focus (0-1)
 	 * @property {[Number, Number]} color - Array of colors (at least 2 required for gradient usage)
 	 * @property {boolean} bDarkBiGradOut - Flag to ensure the darkest color is used on bigradient mode
 	 */
-	/** @type {colorModeOptions} - Color settings */
+	/** @type {ColorModeOptions} - Color settings */
 	this.colorModeOptions = {};
 	/** @type {Number} - Repainting max refresh rate */
 	this.timer = 0;
 	/**
-	 * @typedef {object} callbacks - Callbacks for third party integration
+	 * @typedef {object} Callbacks - Callbacks for third party integration
 	 * @property {(config, arguments, callbackArgs) => void} change - Called on config changes
 	 * @property {(colorArray:num[], bForced:boolean, bRepaint:boolean) => void} artColors - Called when colors are extracted from art, to apply colors to other elements within panel
 	 * @property {(colorArray:num[], bForced:boolean) => void} artColorsNotify - Called when colors are extracted from art, to use as color server
 	 */
-	/** @type {callbacks} - Callbacks for third party integration */
+	/** @type {Callbacks} - Callbacks for third party integration */
 	this.callbacks = {};
 	/** @type {number} - Cached X position */
 	this.mx = -1;
 	/** @type {number} - Cached Y position */
 	this.my = -1;
+	/**
+	 * @typedef {object} Logging - Panel logging related settings.
+	 * @property {boolean} [bProfile] - Profiling logging flag.
+	 */
+	/** @type {Logging} - Panel logging related settings */
+	this.logging = {};
 
 	this.init();
 }
@@ -920,7 +1096,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, mute: 0, edgeGlow: 0, bloom: 0, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'bigradient',
 		colorModeOptions: { bDither: true, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
@@ -932,6 +1108,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 				}
 			}
 			: {}
-		)
+		),
+		logging: { bProfile: false }
 	};
 };

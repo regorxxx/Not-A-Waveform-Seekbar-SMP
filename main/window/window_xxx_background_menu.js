@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/01/26
+//07/01/26
 
 /* exported createBackgroundMenu */
 
@@ -122,11 +122,6 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.bNoSelection, value: null, newValue: !this.coverModeOptions.bNoSelection, entryText: 'No selection (as fallback)' }
 		].forEach(createMenuOption('coverModeOptions', 'bNoSelection', subMenu, true));
 		menu.getLastEntry().flags = !this.useCover || !this.coverModeOptions.bNowPlaying ? MF_GRAYED : MF_STRING;
-		menu.newSeparator(subMenu);
-		[
-			{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
-		].forEach(createMenuOption('coverModeOptions', 'bProcessColors', subMenu, true));
-		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
 		if (['path', 'folder'].includes(this.coverMode.toLowerCase())) {
 			menu.newSeparator(subMenu);
 			menu.newEntry({
@@ -207,6 +202,10 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)' },
 			{ key: 'zoom', entryText: 'Zoom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is full image, 100 is fully zoomed.\n(0 to 100)' },
 			{ entryText: menu.separator },
+			{ key: 'mute', entryText: 'Mute...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
+			{ key: 'bloom', entryText: 'Bloom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
+			{ key: 'edgeGlow', entryText: 'Edge...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
+			{ entryText: menu.separator },
 			{ key: 'alpha', entryText: 'Transparency...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
 		].forEach((option) => {
 			if (menu.isSeparator(option)) { menu.newSeparator(subMenu); return; }
@@ -265,6 +264,11 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		].forEach(createMenuOption('colorModeOptions', 'bDarkBiGradOut', subMenu, true));
 		menu.getLastEntry().flags = ['bigradient'].includes(this.colorMode.toLowerCase()) ? MF_STRING : MF_GRAYED;
 	}
+	menu.newSeparator(mainMenuName);
+	[
+		{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
+	].forEach(createMenuOption('coverModeOptions', 'bProcessColors', mainMenuName, true));
+	menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
 
 	if (options.onInit) { options.onInit(menu); }
 
