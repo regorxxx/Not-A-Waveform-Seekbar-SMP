@@ -903,14 +903,24 @@ function _background({
 	 * @returns {number|null}
 	 */
 	this.getAvgPanelColor = (extraColors = []) => {
-		return this.getAvgColor(
-			[
-				{ col: this.getAvgArtColor(), freq: this.coverModeOptions.alpha / 255 },
-				{ col: this.getAvgDrawColor(), freq: (255 - this.coverModeOptions.alpha) / 255 },
-				{ col: this.getAvgUiColor(), freq: this.useCover && !this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (!this.useCover && !this.useColors ? 1 : 0) },
-				...extraColors.map((c) => { return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : 1 / extraColors.length }; })
-			].filter(Boolean).filter((c) => c.col !== null)
-		);
+		const bgColors = [
+			{ col: this.getAvgArtColor(), freq: this.useCover ? this.coverModeOptions.alpha / 255 : 0 },
+			{ col: this.getAvgDrawColor(), freq: this.useCover && this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (this.useColors ? 1 : 0) },
+			{ col: this.getAvgUiColor(), freq: this.useCover && !this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (!this.useCover && !this.useColors ? 1 : 0) }
+		].filter((c) => c.col !== null);
+		if (extraColors && extraColors.length) {
+			const extraFreq = extraColors.reduce((prev, curr) => prev + Object.hasOwn(curr, 'freq') ? curr.freq : 0, 0);
+			if (extraFreq !== 0) {
+				const freqLeft = Math.max(1 - extraFreq, 0);
+				bgColors.forEach((c) => c.freq = freqLeft / c.freq);
+			} else {
+				const freqLeft = Math.max(1 - bgColors.reduce((prev, curr) => prev + curr.freq, 0), 0);
+				extraColors.map((c) => {
+					return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : freqLeft / extraColors.length };
+				}).forEach((c) => bgColors.push(c));
+			}
+		}
+		return this.getAvgColor(bgColors.filter((c) => c.col !== null));
 	};
 	/**
 	 * Called when colors are extracted from art, to apply colors to other elements within panel
