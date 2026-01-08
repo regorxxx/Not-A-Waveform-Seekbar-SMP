@@ -201,7 +201,7 @@ function _background({
 	 * @param {{x?:number, y?:number, w?:number, h?:number, offsetH?:number}} o.limits - Drawing coordinates
 	 * @param {number} o.rotateFlip - Rotation/flip transformation
 	 * @param {(mask, gr, w, h) => void} o.fadeMask - Fading mask for reflections. Use something like (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w, h, 0, 0xFFFFFFFF, 0xFF000000)
-	 * @param {{transparency:number}|null} o.fill - Used for panel filling instead of internal settings
+	 * @param {{opacity:number}|null} o.fill - Used for panel filling instead of internal settings
 	 * @returns {void}
 	 */
 	this.paintImage = ({
@@ -225,7 +225,7 @@ function _background({
 				);
 			}
 			if (fill) {
-				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), this.coverModeOptions.angle, fill.transparency);
+				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), this.coverModeOptions.angle, fill.opacity);
 			} else {
 				const zoomX = this.coverModeOptions.zoom > 0
 					? Math.max(Math.min(this.coverModeOptions.zoom / 100, 0.99), 0) * img.Width / 2
@@ -334,7 +334,7 @@ function _background({
 					this.paintImage({ gr, limits: { x: Math.round(x + (prop > 2 * imgProp ? offsetX / 4 : 0)), y: this.y, w: Math.ceil(w), h: this.h, offsetH: this.offsetH } });
 					this.paintImage({
 						gr,
-						limits: { x: Math.floor(x + w - offsetX + (prop > 2 * imgProp ? offsetX / 4 : 0)), y: this.y, w:  Math.ceil(w), h: this.h, offsetH: this.offsetH },
+						limits: { x: Math.floor(x + w - offsetX + (prop > 2 * imgProp ? offsetX / 4 : 0)), y: this.y, w: Math.ceil(w), h: this.h, offsetH: this.offsetH },
 						rotateFlip: RotateFlipType.RotateNoneFlipX,
 						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2, h, 0.1, 0xFF000000, 0xFFFFFFFF),
 						alpha: this.coverModeOptions.alpha * 0.4
@@ -367,7 +367,7 @@ function _background({
 						gr,
 						limits: { x: this.w - x - w, y: this.y, w, h: this.h, offsetH: this.offsetH },
 						rotateFlip: RotateFlipType.RotateNoneFlipX,
-						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2 + w/4, h, 0.1, 0xFF000000, 0xFFFFFFFF),
+						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2 + w / 4, h, 0.1, 0xFF000000, 0xFFFFFFFF),
 						alpha: this.coverModeOptions.alpha * 0.75
 					});
 					this.paintImage({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
@@ -381,36 +381,44 @@ function _background({
 	 * @name paintColors
 	 * @kind method
 	 * @memberof _background
-	 * @param {GdiGraphics} gr - From on_paint
+	 * @param {Object} o - Arguments
+	 * @param {GdiGraphics} o.gr - From on_paint
+	 * @param {{x?:number, y?:number, w?:number, h?:number}} o.limits - Drawing coordinates
 	 * @returns {void}
 	 */
-	this.paintColors = (gr) => {
+	this.paintColors = ({
+		gr,
+		limits = { x, y, w, h }
+	}) => {
 		const colorMode = this.colorMode;
 		let grImg, bCreateImg;
 		if (this.colorModeOptions.bDither && !['single', 'none'].includes(colorMode)) {
-			if (!this.colorImg || this.colorImg.Width !== this.w || this.colorImg.Height !== this.h) { this.colorImg = gdi.CreateImage(this.w, this.h); bCreateImg = true; }
+			if (!this.colorImg || this.colorImg.Width !== limits.w || this.colorImg.Height !== limits.h) { this.colorImg = gdi.CreateImage(limits.w, limits.h); bCreateImg = true; }
 			grImg = this.colorImg.GetGraphics();
 		}
 		const color = this.colorModeOptions.color;
 		switch (colorMode) {
 			case 'single': {
-				gr.FillSolidRect(this.x, this.y, this.w, this.h, color[0]);
+				gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, color[0]);
 				break;
 			}
-			case 'bigradient': {
+			case 'blend': {
+				if (this.coverImg.art.image) { break; }
+			}
+			case 'bigradient': { // eslint-disable-line no-fallthrough
 				if (bCreateImg || !this.colorModeOptions.bDither) {
 					const gradColors = [color[0], color[1] || color[0]];
 					if (this.colorModeOptions.bDarkBiGradOut && (this.colorModeOptions.angle < 200 || this.colorModeOptions.angle > 350) && this.colorModeOptions.focus <= 0.5) {
 						if (getBrightness(...toRGB(gradColors[0])) > getBrightness(...toRGB(gradColors[1]))) { gradColors.reverse(); }
 					}
-					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h / 2, Math.abs(360 - this.colorModeOptions.angle), gradColors[0], gradColors[1], this.colorModeOptions.focus);
-					(grImg || gr).FillGradRect(this.x, this.h / 2, this.w, this.h / 2, this.colorModeOptions.angle, gradColors[0], gradColors[1], this.colorModeOptions.focus);
+					(grImg || gr).FillGradRect(limits.x, limits.y, limits.w, limits.h / 2, Math.abs(360 - this.colorModeOptions.angle), gradColors[0], gradColors[1], this.colorModeOptions.focus);
+					(grImg || gr).FillGradRect(limits.x, limits.h / 2, limits.w, limits.h / 2, this.colorModeOptions.angle, gradColors[0], gradColors[1], this.colorModeOptions.focus);
 				}
 				break;
 			}
 			case 'gradient': {
 				if (bCreateImg || !this.colorModeOptions.bDither) {
-					(grImg || gr).FillGradRect(this.x, this.y, this.w, this.h, this.colorModeOptions.angle, color[0], color[1] || color[0]);
+					(grImg || gr).FillGradRect(limits.x, limits.y, limits.w, limits.h, this.colorModeOptions.angle, color[0], color[1] || color[0]);
 				}
 				break;
 			}
@@ -421,8 +429,36 @@ function _background({
 		if (this.colorModeOptions.bDither && this.colorImg) {
 			if (bCreateImg) { this.dither(this.colorImg, grImg); }
 			this.colorImg.ReleaseGraphics(grImg);
-			gr.DrawImage(this.colorImg, this.x, this.y, this.w, this.h, 0, 0, this.colorImg.Width, this.colorImg.Height);
+			gr.DrawImage(this.colorImg, limits.x, limits.y, limits.w, limits.h, 0, 0, this.colorImg.Width, this.colorImg.Height);
 		}
+	};
+	/**
+	 * Paints blend fill from art
+	 * @property
+	 * @name paintBlend
+	 * @kind method
+	 * @memberof _background
+	 * @param {Object} o - Arguments
+	 * @param {GdiGraphics} o.gr - From on_paint
+	 * @param {{x?:number, y?:number, w?:number, h?:number}} o.limits - Drawing coordinates
+	 * @returns {boolean}
+	 */
+	this.paintBlend = ({
+		gr,
+		limits = { x, y, w, h },
+		alpha = this.colorModeOptions.blendAlpha
+	}) => {
+		if (this.colorMode === 'blend' && this.coverImg.art.image) {
+			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
+			const img = this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
+				.Resize(limits.w * intensity / 100, limits.h * intensity / 100, 2)
+				.Resize(limits.w, limits.h, 2);
+			const offset = 90 - intensity;
+			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
+			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, offset / 2, offset / 2, img.Width - offset, img.Height - offset, this.coverModeOptions.angle, alpha);
+			return true;
+		}
+		return false;
 	};
 	/**
 	 * Panel painting
@@ -437,7 +473,9 @@ function _background({
 		if (this.w <= 1 || this.h <= 1) { return; }
 		let profiler;
 		if (this.logging.bProfile) { profiler = fb.CreateProfiler('paint'); }
-		this.paintColors(gr);
+		this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+		if (this.logging.bProfile) { profiler.Print('blend'); profiler.Reset(); }
+		this.paintColors({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
 		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
 		switch (this.coverMode) {
 			case 'front':
@@ -578,6 +616,7 @@ function _background({
 		if (config.colorMode || config.colorModeOptions) {
 			this.colorImg = null;
 			if (this.colorModeOptions.bUiColors) { this.colorsChanged(false, false, false); }
+			if (config.colorMode === 'blend' && !(config.coverMode || config.coverModeOptions)) { this.updateImageBg(true); }
 		}
 		this.resize({ bRepaint });
 		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(true), arguments[0], callbackArgs); }
@@ -598,6 +637,7 @@ function _background({
 		this.coverModeOptions.fillCrop = (this.coverModeOptions.fillCrop || 'center').toLowerCase();
 		this.coverModeOptions.path = this.coverModeOptions.path || '';
 		this.coverModeOptions.pathCycleSort = (this.coverModeOptions.pathCycleSort || 'date').toLowerCase();
+		if (!this.useCover && this.colorMode === 'blend') { this.colorMode = 'bigradient'; }
 	};
 	/**
 	 * Gets panel settings ready to be saved as properties
@@ -1144,7 +1184,7 @@ function _background({
 	 * @typedef {object} CoverModeOptions - Art settings
 	 * @property {number} blur - Blur effect in px
 	 * @property {number} angle - Image angle drawing (0-360)
-	 * @property {number} alpha - Image transparency (0-255)
+	 * @property {number} alpha - Image opacity (0-255)
 	 * @property {number} mute - Image mute effect (0-100)
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
@@ -1160,7 +1200,7 @@ function _background({
 	 */
 	/** @type {CoverModeOptions} - Panel art settings */
 	this.coverModeOptions = {};
-	/** @typedef {'single'|'gradient'|'bigradient'|'none'} ColorMode - Available color modes */
+	/** @typedef {'single'|'gradient'|'bigradient'|'blend'|'none'} ColorMode - Available color modes */
 	/** @type {ColorMode} - Color type used by panel */
 	this.colorMode = '';
 	/**
@@ -1205,8 +1245,8 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		timer: 60,
 		coverMode: 'front',
 		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 85, mute: 0, edgeGlow: 0, bloom: 0, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bCacheAlbum: true, bProcessColors: true },
-		colorMode: 'bigradient',
-		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121] }, // RGB(45,45,45), RGB(33,33,33)
+		colorMode: 'blend',
+		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
 			? {
 				callbacks: {
