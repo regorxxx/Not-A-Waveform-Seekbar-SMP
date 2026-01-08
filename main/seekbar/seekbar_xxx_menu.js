@@ -614,7 +614,7 @@ function settingsMenu(bClear = true) {
 		}
 		menu.newSeparator(subMenu);
 		{
-			const subMenuTwo = menu.newMenu('Transparency', subMenu);
+			const subMenuTwo = menu.newMenu('Opacity', subMenu);
 			menu.newEntry({ menuName: subMenuTwo, entryText: 'Ctrl + Click to reset:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuTwo);
 			[
@@ -631,12 +631,12 @@ function settingsMenu(bClear = true) {
 				} else {
 					const bEnabled = (!o.bPrepaint || this.preset.paintMode === 'partial' && this.preset.bPrePaint) && (!o.bPartial || this.preset.paintMode === 'partial');
 					menu.newEntry({
-						menuName: subMenuTwo, entryText: o.name + '\t' + _b(this.ui.transparency[o.key]), func: () => {
+						menuName: subMenuTwo, entryText: o.name + '\t' + _b(this.ui.opacity[o.key]), func: () => {
 							const input = utils.IsKeyPressed(VK_CONTROL)
 								? 100
-								: Input.number('int', this.ui.transparency[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', 'Seekbar: ' + o.name + ' transparency', 50, [(n) => n >= 0 && n <= 100]);
+								: Input.number('int', this.ui.opacity[o.key], 'Enter value:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', 'Seekbar: ' + o.name + ' opacity', 50, [(n) => n >= 0 && n <= 100]);
 							if (input === null) { return; }
-							this.updateConfig({ ui: { transparency: { [o.key]: input } } });
+							this.updateConfig({ ui: { opacity: { [o.key]: input } } });
 							this.saveProperties();
 						}, flags: bEnabled ? MF_STRING : MF_GRAYED
 					});

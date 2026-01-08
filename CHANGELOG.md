@@ -52,6 +52,7 @@
 - UI: added new background setting for basic art manipulation.
 - UI: added DUI/CUI color settings for background, which are applied on the color mode used.
 ### Changed
+- UI: all settings mentioning transparency have been changed to opacity, some properties will be lost on update as result.
 - UI: cleanup and rework of background submenu and its integration with other settings.
 - UI: 'Folder' and 'Path' art modes on background now support TF expressions.
 - UI: improvements on dynamic colors handling related to background color identification (mixing the art, color settings, etc.).

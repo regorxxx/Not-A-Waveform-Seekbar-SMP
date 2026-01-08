@@ -82,7 +82,7 @@ let seekbarProperties = {
 				altFuture: 0xFF061A40,
 				currPos: 0xFFB9D6F2 // White
 			},
-			transparency: {
+			opacity: {
 				bg: 30,
 				main: 75,
 				alt: 75,
@@ -352,7 +352,7 @@ addEventListener('on_paint', (gr) => {
 	if (!window.Width || !window.Height) { return; }
 	if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
 	// Skip background if it will not be seen
-	if (Math.round(seekbar.ui.transparency.bg) !== 100 || seekbar.preset.paintMode === 'partial' && Math.round(seekbar.ui.transparency.bgFuture) !== 100) {
+	if (Math.round(seekbar.ui.opacity.bg) !== 100 || seekbar.preset.paintMode === 'partial' && Math.round(seekbar.ui.opacity.bgFuture) !== 100) {
 		background.paint(gr);
 	}
 	seekbar.paint(gr);

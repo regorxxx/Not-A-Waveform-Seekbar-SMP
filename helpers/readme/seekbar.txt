@@ -76,8 +76,8 @@ FAQ:
 	if listen to color-servers setting is enabled.
 
 • How to show the artwork as background instead of a solid color:
-	◦ Art mode transparency must be non-zero, and slider background
+	◦ Art mode opacity must be non-zero, and slider background
 	color must be disabled (-none-) too. In such case the background
 	ill be governed only by the background sub-menu settings.
-	Adjusting the transparency and color mode, different overlays
+	Adjusting the opacity and color mode, different overlays
 	may be drawn too.

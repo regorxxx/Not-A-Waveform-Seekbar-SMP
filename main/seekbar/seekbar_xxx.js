@@ -1,5 +1,5 @@
 'use strict';
-//01/01/26
+//08/01/26
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -54,7 +54,7 @@ function _seekbar({
 			altFuture: 0xFFF9FF99, // Lemon RGB(249,255,153)
 			currPos: 0xFFFFFFFF // White RGB(255,255,255)
 		},
-		transparency: {
+		opacity: {
 			bg: 30,
 			main: 75,
 			alt: 75,
@@ -138,7 +138,7 @@ function _seekbar({
 				altFuture: 0xFFF9FF99, // Lemon RGB(249,255,153)
 				currPos: 0xFFFFFFFF // White RGB(255,255,255)
 			},
-			transparency: {
+			opacity: {
 				bg: 100,
 				main: 100,
 				alt: 100,
@@ -220,8 +220,8 @@ function _seekbar({
 		else if (this.ui.wheel.step > 100 && this.ui.wheel.unit === '%') { this.ui.wheel.step = 100; }
 		this.preset.displayChannels.sort((a, b) => a - b);
 		if (this.ui.gradientFocus < 0 || this.ui.gradientFocus > 100) { this.ui.gradientFocus = Math.max(0, Math.min(1, this.ui.gradientFocus)); }
-		for (let key in this.ui.transparency) {
-			if (this.ui.transparency[key] < 0 || this.ui.transparency[key] > 100) { this.ui.transparency[key] = Math.max(0, Math.min(100, this.ui.transparency[key])); }
+		for (let key in this.ui.opacity) {
+			if (this.ui.opacity[key] < 0 || this.ui.opacity[key] > 100) { this.ui.opacity[key] = Math.max(0, Math.min(100, this.ui.opacity[key])); }
 		}
 	};
 	/**
@@ -279,14 +279,14 @@ function _seekbar({
 	 * @property {number} colors.mainFuture - After current time main color
 	 * @property {number} colors.altFuture - After current time alt color
 	 * @property {number} colors.currPos - Current time indicator color
-	 * @property {object} transparency - Transparecy settings [0-100]
-	 * @property {number} transparency.bg - Background transparency [0-100]
-	 * @property {number} transparency.main - Waveform main transparency [0-100]
-	 * @property {number} transparency.alt - Waveform alt transparency [0-100]
-	 * @property {number} transparency.bgFuture - After current time background transparency [0-100]
-	 * @property {number} transparency.mainFuture - After current time main transparency [0-100]
-	 * @property {number} transparency.altFuture - After current time alt transparency [0-100]
-	 * @property {number} transparency.currPos - Current time indicator transparency [0-100]
+	 * @property {object} opacity - Opacity settings [0-100]
+	 * @property {number} opacity.bg - Background opacity [0-100]
+	 * @property {number} opacity.main - Waveform main opacity [0-100]
+	 * @property {number} opacity.alt - Waveform alt opacity [0-100]
+	 * @property {number} opacity.bgFuture - After current time background opacity [0-100]
+	 * @property {number} opacity.mainFuture - After current time main opacity [0-100]
+	 * @property {number} opacity.altFuture - After current time alt opacity [0-100]
+	 * @property {number} opacity.currPos - Current time indicator opacity [0-100]
 	 * @property {number} gradientFocus - Focus for gradient related methods [0-1]
 	 * @property {object} pos - Panel coordinates
 	 * @property {number} pos.x - X-Axis position
@@ -323,7 +323,7 @@ function _seekbar({
 	 * @property {Number[]?} displayChannels - Channels which will be displayed, 0-based. An empty array will display all.
 	 * @property {boolean} bDownMixToMono - Flag to downmix selected display channels into a single channel-
 	 */
-	/** @type {Preset} - Waveform display related settings.*/
+	/** @type {Preset} - Waveform display related settings */
 	this.preset = preset;
 	/**
 	 * @typedef {object} Analysis - Analysis related settings.
@@ -338,13 +338,13 @@ function _seekbar({
 	 * @property {boolean} bVisualizerFallbackAnalysis - Flag to use visualizer mode while analyzing files.
 	 * @property {boolean} bMultiChannel - Flag to output analysis data files compatible with multichannel or downmixed to mono. Data files from both modes are not compatible, so changing it requires tracks to be analyzed again. Both data files may be present at match path though. Note using the multichannel mode still allows downmixing to mono via {@link Preset.bDownMixToMono} without requiring to analyze files again, so multichannel mode covers all use cases (but uses more disk space proportional to  track channels).
 	 */
-	/** @type {Analysis} - Waveform display related settings.*/
+	/** @type {Analysis} - Waveform display related settings */
 	this.analysis = analysis;
 	/**
 	 * @typedef {object} Callbacks - Panel callbacks related settings.
 	 * @property {() => number} backgroundColor - Sets the fallback color for text when there is no background color set for the waveform, otherwise will be white.
 	 */
-	/** @type {Callbacks} - Panel callbacks related settings. */
+	/** @type {Callbacks} - Panel callbacks related settings */
 	this.callbacks = callbacks;
 	/**
 	 * @typedef {object} Logging - Panel logging related settings.
@@ -354,7 +354,7 @@ function _seekbar({
 	 * @property {boolean} [bSave] - On seekbar file save logging flag.
 	 * @property {boolean} [bError] - On seekbar errors logging flag.
 	 */
-	/** @type {Logging} - Panel logging related settings. */
+	/** @type {Logging} - Panel logging related settings */
 	this.logging = logging;
 	// Easy access
 	/** @type {number} - X-Axis position */
@@ -1561,7 +1561,7 @@ function _seekbar({
 		if (!state) { [60, 250, 500, 750, 1000].forEach((time) => setTimeout(throttlePaint, time)); }
 	};
 	/**
-	 * Retrieves current panel colors with transparency applied
+	 * Retrieves current panel colors with opacity applied
 	 *
 	 * @property
 	 * @name getColors
@@ -1571,13 +1571,13 @@ function _seekbar({
 	*/
 	this.getColors = () => {
 		return Object.fromEntries(
-			Object.keys(this.ui.transparency).map((key) => {
+			Object.keys(this.ui.opacity).map((key) => {
 				return [
 					key,
-					this.ui.colors[key] !== -1 && this.ui.transparency[key] !== 0
-						? Math.round(this.ui.transparency[key]) === 100
+					this.ui.colors[key] !== -1 && this.ui.opacity[key] !== 0
+						? Math.round(this.ui.opacity[key]) === 100
 							? this.ui.colors[key]
-							: this.applyAlpha(this.ui.colors[key], this.ui.transparency[key])
+							: this.applyAlpha(this.ui.colors[key], this.ui.opacity[key])
 						: -1
 				];
 			})
