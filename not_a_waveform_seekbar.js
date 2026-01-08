@@ -1,5 +1,5 @@
 'use strict';
-//07/01/26
+//08/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.3.0-beta' }); }
 
@@ -293,38 +293,31 @@ const queueSelection = () => {
 	}
 };
 
+{
+	const callback = () => {
+		if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
+			background.updateImageBg(void (0), void (0), seekbar.isOnDemandTrack());
+		}
+	};
+	['on_item_focus_change', 'on_selection_changed', 'on_playlists_changed', 'on_playlist_items_added', 'on_playlist_items_removed', 'on_playlist_switch'].forEach((e) => addEventListener(e, callback));
+
+	addEventListener('on_playback_stop', (reason) => {
+		if (reason !== 2) { // Invoked by user or Starting another track
+			if (background.useCover && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
+		}
+	});
+
+	addEventListener('on_colours_changed', () => {
+		background.colorsChanged();
+	});
+}
+
 addEventListener('on_size', (width, height) => {
 	background.resize({ w: width, h: height, bPaint: false });
 	seekbar.resize(width, height);
 });
 
-addEventListener('on_selection_changed', () => {
-	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg(void (0), void (0), seekbar.isOnDemandTrack());
-	}
-	queueSelection();
-});
-
-addEventListener('on_item_focus_change', () => {
-	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg(void (0), void (0), seekbar.isOnDemandTrack());
-	}
-	queueSelection();
-});
-
-addEventListener('on_playlist_switch', () => {
-	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg(void (0), void (0), seekbar.isOnDemandTrack());
-	}
-	queueSelection();
-});
-
-addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
-	if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
-		background.updateImageBg(void (0), void (0), seekbar.isOnDemandTrack());
-	}
-	queueSelection();
-});
+['on_item_focus_change', 'on_selection_changed', 'on_playlists_changed', 'on_playlist_items_added', 'on_playlist_items_removed', 'on_playlist_switch'].forEach((e) => addEventListener(e, queueSelection));
 
 addEventListener('on_playback_new_track', (handle) => {
 	const bChangeTrack = seekbar.getPreferredTrackMode() === 'playing' && !seekbar.compareTrack(handle);
@@ -345,9 +338,6 @@ addEventListener('on_playback_seek', (time) => {
 });
 
 addEventListener('on_playback_stop', (reason) => {
-	if (reason !== 2) { // Invoked by user or Starting another track
-		if (background.useCover && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
-	}
 	if (!seekbar.isOnDemandTrack()) { seekbar.stop(reason); }
 	else if (seekbar.analysis.binaryMode === 'visualizer') { seekbar.resetAnimation(); }
 	queueSelection() || seekbar.updateTime(0);
