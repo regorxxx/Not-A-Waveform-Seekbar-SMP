@@ -1,5 +1,5 @@
 'use strict';
-//08/01/26
+//12/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.3.0-beta' }); }
 
@@ -365,14 +365,14 @@ addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
 });
 
 addEventListener('on_playback_seek', (time) => { // Seeking outside panel
-	if (seekbar.mx === -1 || seekbar.my === -1) {
+	if (seekbar.mX === -1 || seekbar.mY === -1) {
 		seekbar.updateTime(Math.round(time));
 	}
 });
 
 addEventListener('on_mouse_move', (x, y, mask) => {
 	if (seekbarProperties.bShowTooltip[1]) {
-		if (seekbar.mx !== x || seekbar.my !== y) {
+		if (seekbar.mX !== x || seekbar.mY !== y) {
 			if (!seekbarProperties.bShowTooltipOnClick[1] || utils.IsKeyPressed(MK_LBUTTON)) {
 				seekbar.tooltip.tooltip.TrackPosition(x, y);
 				seekbar.tooltip.SetValueDebounced(

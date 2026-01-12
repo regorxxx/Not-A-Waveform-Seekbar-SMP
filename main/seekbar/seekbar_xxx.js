@@ -1,5 +1,5 @@
 'use strict';
-//08/01/26
+//12/01/26
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -449,9 +449,9 @@ function _seekbar({
 	/** @type {FbMetadbHandle} - Current handle being displayed */
 	this.currentHandle = null;
 	/** @type {number} - Last x mouse position within panel */
-	this.mx = -1;
+	this.mX = -1;
 	/** @type {number} - Last y mouse position within panel */
-	this.my = -1;
+	this.mY = -1;
 	// Private
 	/** @type {{paint: boolean, analysis: boolean}} - Used when this.analysis.bVisualizerFallbackAnalysis is true, to track current step on processing */
 	const bFallbackMode = { paint: false, analysis: false };
@@ -2758,7 +2758,7 @@ function _seekbar({
 	 * @returns {boolean}
 	*/
 	this.wheelResize = (step, bForce) => {
-		if ((this.trace(this.mx, this.my) || bForce) && step !== 0) {
+		if ((this.trace(this.mX, this.mY) || bForce) && step !== 0) {
 			let key, min, max;
 			switch (true) {
 				case true:
@@ -2799,8 +2799,8 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.move = (x, y, mask) => {
-		this.mx = x;
-		this.my = y;
+		this.mX = x;
+		this.mY = y;
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}
@@ -2815,8 +2815,8 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.leave = () => {
-		this.mx = -1;
-		this.my = -1;
+		this.mX = -1;
+		this.mY = -1;
 	};
 	/**
 	 * Called on on_size. Resizes panel.
