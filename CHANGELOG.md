@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [3.4.0](#340---2026-01-12)
 - [3.3.0](#330---2025-12-23)
 - [3.2.1](#321---2025-12-12)
 - [3.2.0](#320---2025-11-25)
@@ -36,6 +37,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [3.4.0] - 2026-01-12
 ### Added
 - Styles: added 'Process bar' similar to a loading bar without any waveform-amplitude data.
 - Styles: added 'Process bar (filled)' similar to 'Process bar' but with filled interior.
@@ -427,7 +434,8 @@
 ### Fixed
 
 
-[Unreleased]: ../../compare/v3.3.0...HEAD
+[Unreleased]: ../../compare/v3.4.0...HEAD
+[3.4.0]: ../../compare/v3.3.0...v3.4.0
 [3.3.0]: ../../compare/v3.2.1...v3.3.0
 [3.2.1]: ../../compare/v3.2.0...v3.2.1
 [3.2.0]: ../../compare/v3.1.1...v3.2.0
