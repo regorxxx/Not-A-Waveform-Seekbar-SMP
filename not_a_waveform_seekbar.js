@@ -1,5 +1,5 @@
 'use strict';
-//12/01/26
+//14/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -16,7 +16,7 @@ include('helpers\\helpers_xxx_prototypes.js');
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_properties.js');
-/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable */
+/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, checkJsonProperties:readable */
 include('helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('main\\seekbar\\seekbar_xxx.js');
@@ -120,6 +120,7 @@ let seekbarProperties = {
 Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarProperties[p][1]));
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
+checkJsonProperties(seekbarProperties);
 
 {	// Delete pos property bug size
 	const ui = JSON.parse(seekbarProperties.ui[1]);

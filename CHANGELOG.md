@@ -41,6 +41,7 @@
 ### Changed
 ### Removed
 ### Fixed
+- UI: fixed art cycling glitch on background folder mode after using the mouse wheel.
 
 ## [3.4.0] - 2026-01-12
 ### Added
