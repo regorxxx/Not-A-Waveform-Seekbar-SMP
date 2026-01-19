@@ -1,5 +1,5 @@
 'use strict';
-//14/01/26
+//19/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -149,16 +149,19 @@ const background = new _background({
 		artColors: (colArray, bForced, bRepaint = true) => {
 			if (!bForced && !seekbarProperties.bDynamicColors[1]) { return; }
 			else if (colArray) {
+				const bgColor = seekbar.ui.colors.bg !== -1 && seekbar.ui.opacity.bg !== 0
+					? background.getAvgPanelColor([{ col: seekbar.ui.colors.bg, freq: seekbar.ui.opacity.bg / 100 }])
+					: background.getAvgPanelColor();
 				const { main, sec, note, mainAlt, secAlt } = dynamicColors(
 					colArray,
-					seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getAvgPanelColor(),
+					bgColor,
 					seekbar.preset.waveMode !== 'vumeter'
 				);
 				if (seekbar.ui.colors.main !== -1) { seekbar.ui.colors.main = main; }
 				if (seekbar.ui.colors.alt !== -1) { seekbar.ui.colors.alt = sec; }
 				if (seekbar.ui.colors.currPos !== -1) {
 					seekbar.ui.colors.currPos = mostContrastColor(
-						seekbar.ui.colors.bg !== -1 ? seekbar.ui.colors.bg : background.getAvgPanelColor(),
+						bgColor,
 						[note, blendColors(note, RGB(0, 0, 0), 0.4), blendColors(note, RGB(255, 255, 255), 0.4)]
 					).color;
 				}

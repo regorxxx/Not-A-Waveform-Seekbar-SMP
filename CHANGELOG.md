@@ -39,6 +39,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: improvements on dynamic colors application in some cases.
 ### Removed
 ### Fixed
 - UI: small fixes for background blend color mode.
