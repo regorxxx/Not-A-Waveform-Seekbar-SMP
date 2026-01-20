@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //19/01/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
