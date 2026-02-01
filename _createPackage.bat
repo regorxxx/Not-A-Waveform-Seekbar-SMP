@@ -627,6 +627,7 @@ CALL :copy_file _TIPS.txt
 REM main
 CALL :copy_folder main\autobackup
 CALL :copy_folder main\bio
+CALL :copy_folder main\checksum
 CALL :copy_folder main\filter_and_query
 CALL :copy_folder main\fingerprint
 CALL :copy_folder main\last_list
@@ -730,7 +731,7 @@ CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\easy-table-1.2.0
 CALL :copy_folder helpers-external\exiftool
 CALL :copy_folder helpers-external\essentia
-CALL :copy_folder helpers-external\exiftool
+CALL :copy_folder helpers-external\exactfile
 CALL :copy_folder helpers-external\fastmap-0.1.2
 CALL :copy_folder helpers-external\ffmpeg
 CALL :copy_folder helpers-external\fooid-utils-js
