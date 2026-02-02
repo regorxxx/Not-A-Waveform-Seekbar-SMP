@@ -62,7 +62,6 @@ function settingsMenu(bClear = true) {
 		const options = [
 			{ name: 'FFprobe', key: 'ffprobe' },
 			{ name: 'Audiowaveform', key: 'audiowaveform' },
-			{ name: 'Audio-Wizard', key: 'audiowizard' },
 			{ name: 'Visualizer', key: 'visualizer' }
 		].filter((o) => typeof this.binaries[o.key] !== 'string' || this.binaries[o.key].length);
 		if (options.length) {
