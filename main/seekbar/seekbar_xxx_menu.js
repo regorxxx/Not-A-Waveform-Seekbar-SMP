@@ -1,7 +1,7 @@
 ﻿'use strict';
-//08/01/26
+//02/02/26
 
-/* exported settingsMenu, importSettingsMenu */
+/* exported settingsMenu, onRbtnUpImportSettings */
 
 /* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable */
 
@@ -62,6 +62,7 @@ function settingsMenu(bClear = true) {
 		const options = [
 			{ name: 'FFprobe', key: 'ffprobe' },
 			{ name: 'Audiowaveform', key: 'audiowaveform' },
+			{ name: 'Audio-Wizard', key: 'audiowizard' },
 			{ name: 'Visualizer', key: 'visualizer' }
 		].filter((o) => typeof this.binaries[o.key] !== 'string' || this.binaries[o.key].length);
 		if (options.length) {
@@ -878,15 +879,16 @@ function settingsMenu(bClear = true) {
 	return menu;
 }
 
-function importSettingsMenu() {
+function onRbtnUpImportSettings(properties = this.properties || {}) {
 	const menu = new _menu();
 	menu.newEntry({ entryText: 'Panel menu: ' + window.Name, flags: MF_GRAYED });
+	menu.newEntry({ entryText: 'Version: ' + window.ScriptInfo.Version, flags: MF_GRAYED });
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Export panel settings...', func: () => {
 			const bData = WshShell.Popup('Also export track\'s analysis data files?', 0, window.ScriptInfo.Name + ': Export panel settings', popup.question + popup.yes_no);
 			exportSettings(
-				seekbarProperties,
+				properties,
 				bData
 					? [folders.temp + 'settings.json', folders.data + 'seekbar\\']
 					: [],
@@ -918,7 +920,7 @@ function importSettingsMenu() {
 						return true;
 					}
 				},
-				seekbarProperties,
+				properties,
 				window.ScriptInfo.Name
 			);
 		}
@@ -936,6 +938,29 @@ function importSettingsMenu() {
 	menu.newEntry({
 		entryText: 'Panel properties...', func: () => window.ShowProperties()
 	});
+	menu.newSeparator();
+	{
+		const subMenu = menu.newMenu('Updates');
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Automatically check for updates', func: () => {
+				seekbarProperties.bAutoUpdateCheck[1] = !seekbarProperties.bAutoUpdateCheck[1];
+				this.saveProperties();
+				if (seekbarProperties.bAutoUpdateCheck[1]) {
+					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+					setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
+				}
+			}
+		});
+		menu.newCheckMenuLast(() => seekbarProperties.bAutoUpdateCheck[1]);
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Check for updates...', func: () => {
+				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.FullPanelName + ': Update check'));
+			}
+		});
+	}
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Reload panel', func: () => window.Reload()

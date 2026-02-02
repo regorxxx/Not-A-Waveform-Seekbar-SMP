@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/01/26
+//02/02/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -22,7 +22,7 @@ include('helpers\\menu_xxx.js');
 include('main\\seekbar\\seekbar_xxx.js');
 /* global _seekbar:readable */
 include('main\\seekbar\\seekbar_xxx_menu.js');
-/* global settingsMenu:readable, importSettingsMenu:readable, Input:readable */
+/* global settingsMenu:readable, onRbtnUpImportSettings:readable, Input:readable */
 include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
@@ -407,7 +407,7 @@ addEventListener('on_script_unload', () => {
 
 addEventListener('on_mouse_rbtn_up', (x, y) => {
 	if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
-		return importSettingsMenu.call(seekbar).btn_up(x, y);
+		return onRbtnUpImportSettings.call(seekbar, seekbarProperties).btn_up(x, y);
 	}
 	seekbar.rbtn_up(x, y);
 	return true; // left shift + left windows key will bypass this callback and will open default context menu.
