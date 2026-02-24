@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/02/26
+//24/02/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -12,7 +12,7 @@ include('helpers\\helpers_xxx_UI.js');
 include('helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, _save:readable, _foldPath:readable, _isFile:readable, _isFolder:readable, _copyDependencies:readable */
 include('helpers\\helpers_xxx_prototypes.js');
-/* global isJSON:readable, isBoolean:readable, isString:readable, clone:readable */
+/* global isJSON:readable, isBoolean:readable, isString:readable, clone:readable, isInt:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
 /* global extendGR:readable */
 include('helpers\\helpers_xxx_properties.js');
@@ -37,6 +37,7 @@ if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'a
 globProfiler.Print('helpers');
 
 let seekbarProperties = {
+	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0,1]] }],
 	binaries: ['Binaries paths',
 		JSON.stringify({
 			ffprobe: _foldPath(folders.binaries) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
@@ -121,6 +122,9 @@ Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarPro
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 checkJsonProperties(seekbarProperties);
+
+// GDI/D2D draw mode
+window.DrawMode = seekbarProperties.drawMode[1];
 
 {	// Delete pos property bug size
 	const ui = JSON.parse(seekbarProperties.ui[1]);
