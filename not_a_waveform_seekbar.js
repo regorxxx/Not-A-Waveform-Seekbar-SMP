@@ -1,7 +1,10 @@
 ﻿'use strict';
-//24/02/26
+//26/02/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
+
+// GDI/D2D draw mode
+window.DrawMode = Math.max(Math.min(window.GetProperty('Draw mode: GDI (0), D2D (1)', 0), 1), 0);
 
 include('helpers\\helpers_xxx.js');
 /* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable */
@@ -62,7 +65,7 @@ let seekbarProperties = {
 	preset: ['Preset config',
 		JSON.stringify({
 			analysisMode: 'peak_level',
-			waveMode: 'waveform',
+			waveMode: 'soundcloudgradient',
 			paintMode: 'partial',
 			bPrePaint: true,
 			bPaintCurrent: true,
@@ -94,8 +97,8 @@ let seekbarProperties = {
 			},
 			refreshRate: 200,
 			bVariableRefreshRate: true,
-			bNormalizeWidth: false,
-			normalizeWidth: _scale(4),
+			bNormalizeWidth: true,
+			normalizeWidth: _scale(2),
 			bLogScale: true
 		}), { func: isJSON, forceDefaults: true }],
 	logging: ['Logging config',
@@ -122,9 +125,6 @@ Object.keys(seekbarProperties).forEach(p => seekbarProperties[p].push(seekbarPro
 setProperties(seekbarProperties, '', 0); //This sets all the panel properties at once
 seekbarProperties = getPropertiesPairs(seekbarProperties, '', 0);
 checkJsonProperties(seekbarProperties);
-
-// GDI/D2D draw mode
-window.DrawMode = seekbarProperties.drawMode[1];
 
 {	// Delete pos property bug size
 	const ui = JSON.parse(seekbarProperties.ui[1]);
@@ -173,7 +173,7 @@ const background = new _background({
 				if (seekbar.ui.colors.altFuture !== -1) { seekbar.ui.colors.altFuture = secAlt; }
 			} else {
 				const defColors = JSON.parse(seekbarProperties.ui[1]).colors;
-				this.updateConfig({ ui: { colors: defColors } });
+				seekbar.updateConfig({ ui: { colors: defColors } });
 				background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(seekbarProperties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
 			}
 			if (bRepaint) { window.Repaint(); }
