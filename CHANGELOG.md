@@ -38,6 +38,7 @@
 
 ## [Unreleased][]
 ### Added
+- Console: added on paint profile logging setting. Can be used to compare D2D vs GDI painting performance for ex. Only enable it while needed, it will flood the console log!
 ### Changed
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - UI: improvements on dynamic colors application in some cases.

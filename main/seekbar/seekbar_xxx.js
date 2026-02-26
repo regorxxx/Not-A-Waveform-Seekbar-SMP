@@ -1,5 +1,5 @@
 'use strict';
-//20/01/26
+//26/02/26
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -94,6 +94,7 @@ function _seekbar({
 	logging = {
 		bDebug: false,
 		bProfile: false,
+		bProfilePaint: false,
 		bLoad: true,
 		bSave: true,
 		bError: true,
@@ -174,6 +175,7 @@ function _seekbar({
 		const defLogging = {
 			bDebug: false,
 			bProfile: false,
+			bProfilePaint: false,
 			bLoad: true,
 			bSave: true,
 			bError: true
@@ -305,7 +307,6 @@ function _seekbar({
 	 * @property {Boolean} bNormalizeWidth - Flag to use data interpolation to display it normalized to the window width adjusted by normalizeWidth param (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
 	 * @property {number} normalizeWidth - Size unit for normalization.
 	 * @property {Boolean} bLogScale - Flag to display VU Meter scale in log (dB) or linear scale.
-	 * @property {number} refreshRate - Size unit for normalization.
 	 */
 	/** @type {UI} - Panel UI related settings */
 	this.ui = ui;
@@ -350,6 +351,7 @@ function _seekbar({
 	 * @typedef {object} Logging - Panel logging related settings.
 	 * @property {boolean} [bDebug] - Debug logging flag.
 	 * @property {boolean} [bProfile] - Profiling logging flag.
+	 * @property {boolean} [bProfilePaint] - On Paint Profiling logging flag.
 	 * @property {boolean} [bLoad] - On seekbar file load logging flag.
 	 * @property {boolean} [bSave] - On seekbar file save logging flag.
 	 * @property {boolean} [bError] - On seekbar errors logging flag.
@@ -483,7 +485,7 @@ function _seekbar({
 	let throttlePaint;
 	/** @type {(x:number, y:number, w:number, h:number, bForce = false) => void(0)} - Repaint part of window throttled */
 	let throttlePaintRect;
-	/** @type {FbProfiler} - Used for profiling when this.logging.bProfile is true */
+	/** @type {FbProfiler} - Used for profiling when this.logging.bProfilePaint is true, also for variable refresh rate */
 	const profilerPaint = new FbProfiler('paint');
 
 	// Check & Init
@@ -1611,7 +1613,7 @@ function _seekbar({
 	*/
 	this.paint = (gr) => {
 		if (!window.IsVisible) { return; }
-		profilerPaint.Reset();
+		if (this.ui.bVariableRefreshRate || this.logging.bProfilePaint) { profilerPaint.Reset(); }
 		const colors = this.getColors();
 		// Panel background
 		if (colors.bg !== -1) { gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg); }
@@ -2674,6 +2676,7 @@ function _seekbar({
 			if (profilerPaint.Time > this.ui.refreshRate) { this.updateConfig({ ui: { refreshRate: this.ui.refreshRate + 50 } }); }
 			else if (profilerPaint.Time < this.ui.refreshRate && profilerPaint.Time >= this.ui.refreshRateOpt) { this.updateConfig({ ui: { refreshRate: this.ui.refreshRate - 25 } }); }
 		}
+		if (this.logging.bProfilePaint) { profilerPaint.Print('On Paint'); }
 	};
 	/**
 	 * Checks if position is over panel
