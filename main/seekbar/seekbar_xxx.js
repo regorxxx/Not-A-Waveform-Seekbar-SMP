@@ -1,5 +1,5 @@
 'use strict';
-//26/02/26
+//05/03/26
 
 /* exported _seekbar */
 /* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
@@ -1613,7 +1613,19 @@ function _seekbar({
 	*/
 	this.paint = (gr) => {
 		if (!window.IsVisible) { return; }
-		if (this.ui.bVariableRefreshRate || this.logging.bProfilePaint) { profilerPaint.Reset(); }
+		if (this.ui.bVariableRefreshRate || this.logging.bProfilePaint) { profilerPaint.CheckPoint('Paint'); }
+		if (this.logging.bProfilePaint) {
+			if (!profilerPaint.HasCheckPoint('FPS')) { profilerPaint.CheckPoint('FPS'); }
+			else { profilerPaint.CheckPointStep('FPS'); }
+			if (!profilerPaint.HasCheckPointPrintInterval('Paint') && fb.IsPlaying) {
+				profilerPaint.CheckPointPrintInterval(60000, 'Paint', ' - ' + (window.DrawMode === 1 ? 'D2D' : 'GDI+'), { bAverage: true, bPerInterval: true, bOnVisible: true });
+				profilerPaint.CheckPointPrintInterval(60000, 'FPS', ' - ' + (window.DrawMode === 1 ? 'D2D' : 'GDI+'), { bAverage: true, bPerInterval: true, bOnVisible: true });
+			}
+		}
+		if ((!this.logging.bProfilePaint || !fb.IsPlaying) && profilerPaint.HasCheckPointPrintInterval('Paint')) {
+			profilerPaint.CheckPointPrintInterval(0, 'Paint');
+			profilerPaint.CheckPointPrintInterval(0, 'FPS');
+		}
 		const colors = this.getColors();
 		// Panel background
 		if (colors.bg !== -1) { gr.FillSolidRect(this.x, this.y, this.w, this.h, colors.bg); }
@@ -1767,6 +1779,7 @@ function _seekbar({
 				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bVuMeter);
 			}
 		}
+		if (this.logging.bProfilePaint) { profilerPaint.CheckPointStep('Paint'); }
 	};
 	/**
 	 * Draws current time indicator.
@@ -2676,7 +2689,6 @@ function _seekbar({
 			if (profilerPaint.Time > this.ui.refreshRate) { this.updateConfig({ ui: { refreshRate: this.ui.refreshRate + 50 } }); }
 			else if (profilerPaint.Time < this.ui.refreshRate && profilerPaint.Time >= this.ui.refreshRateOpt) { this.updateConfig({ ui: { refreshRate: this.ui.refreshRate - 25 } }); }
 		}
-		if (this.logging.bProfilePaint) { profilerPaint.Print('On Paint'); }
 	};
 	/**
 	 * Checks if position is over panel
