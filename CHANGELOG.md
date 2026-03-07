@@ -39,6 +39,7 @@
 ## [Unreleased][]
 ### Added
 - Console: added on paint profile logging setting. Can be used to compare D2D vs GDI painting performance for ex. Only enable it while needed, it will flood the console log while playing every 60 seconds! See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1078621.html#msg1078621)
+- UI: new available values for normalized width, specially at low range.
 ### Changed
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - UI: improvements on dynamic colors application in some cases.

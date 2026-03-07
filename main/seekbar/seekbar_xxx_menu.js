@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/02/26
+//07/03/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -344,15 +344,15 @@ function settingsMenu(bClear = true) {
 		});
 		if (menu.getLastEntry().flags !== MF_GRAYED) {
 			const subMenuThree = menu.newMenu('Width', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
-			[20, 10, 8, 6, 4, 2, 1]
+			[...new Set([_scale(20), _scale(10), _scale(8), _scale(6), _scale(4), _scale(3), _scale(2), _scale(1), 3, 2, 1.5, 1, 0.5].sort((a, b) => b - a))]
 				.forEach((s) => {
 					menu.newEntry({
 						menuName: subMenuThree, entryText: s, func: () => {
-							this.updateConfig({ ui: { normalizeWidth: _scale(s) } });
+							this.updateConfig({ ui: { normalizeWidth: s } });
 							this.saveProperties();
 						}, flags: (this.analysis.binaryMode === 'visualizer' || !this.ui.bNormalizeWidth) ? MF_GRAYED : MF_STRING
 					});
-					menu.newCheckMenuLast(() => (this.ui.normalizeWidth === _scale(s)));
+					menu.newCheckMenuLast(() => (this.ui.normalizeWidth === s));
 				});
 		}
 		menu.newEntry({
@@ -660,7 +660,7 @@ function settingsMenu(bClear = true) {
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu);
 			menu.newEntry({
 				menuName: subMenuTwo, entryText: 'Dynamic (background art mode)', func: () => {
-					seekbarProperties.bDynamicColors[1] =  !(seekbarProperties.bDynamicColors[1] && background.useCoverColors);
+					seekbarProperties.bDynamicColors[1] = !(seekbarProperties.bDynamicColors[1] && background.useCoverColors);
 					if (seekbarProperties.bDynamicColors[1] && seekbarProperties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are doing.', window.ScriptInfo.Name + ': Dynamic colors'); }
 					this.saveProperties();
 					if (seekbarProperties.bDynamicColors[1]) {
