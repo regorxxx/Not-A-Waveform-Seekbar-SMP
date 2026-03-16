@@ -1649,7 +1649,6 @@ function _seekbar({
 			const bIsTrackPlaying = this.isTrackPlaying();
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
-			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			const bBars = this.preset.waveMode === 'bars';
 			const bHalfBars = this.preset.waveMode === 'halfbars';
 			const bWaveForm = this.preset.waveMode === 'waveform';
@@ -1679,6 +1678,7 @@ function _seekbar({
 			const bPaintCurrent = barW > _scale(2);
 			const minPointDiff = 1; // in px
 			const timeConstant = this.timeConstant;
+			gr.SetSmoothingMode(SmoothingMode.AntiAlias);
 			for (let c = 0; c < channelsNum; c++) {
 				const offsetY = channelsNum > 1
 					? size * (c - 1 / 2 * (channelsNum - 1))
@@ -1687,7 +1687,6 @@ function _seekbar({
 				let n = 0;
 				// Paint waveform layer
 				let current, past = [{ x: 0, y: 1 }, { x: 0, y: -1 }];
-				gr.SetSmoothingMode(bFfProbe ? 3 : 4);
 				for (const frame of this.current[channel]) { // [peak]
 					current = timeConstant * n;
 					const bIsFuture = !fb.IsPlaying || current > this.time;
@@ -1771,12 +1770,12 @@ function _seekbar({
 					}
 					n++;
 				}
-				gr.SetSmoothingMode();
 				// Current position
 				if ((!bPaintCurrent || bWaveForm || bPoints || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
+			gr.SetSmoothingMode();
 			// Animate smoothly, Repaint by zone when possible. Only when not in pause!
 			if (bIsTrackPlaying && !fb.IsPaused) {
 				this.paintAnimation(gr, this.frames, currX, bPrePaint, bVisualizer, bPartial, bVuMeter);
