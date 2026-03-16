@@ -1,8 +1,11 @@
 'use strict';
-//05/03/26
+//16/03/26
 
 /* exported _seekbar */
-/* global _gdiFont:readable, _scale:readable, _isFile:readable, _isLink:readable, convertCharsetToCodepage:readable, throttle:readable, _isFolder:readable, _createFolder:readable, deepAssign:readable, clone:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, invert:readable, _p:readable, MK_LBUTTON:readable, _deleteFolder:readable, _q:readable, sanitizePath:readable, _runCmd:readable, round:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, addNested:readable, getNested:readable */
+/* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
+/* global _gdiFont:readable, _scale:readable, invert:readable */
+/* global convertCharsetToCodepage:readable, throttle:readable, deepAssign:readable, clone:readable, _p:readable, _q:readable, round:readable addNested:readable, getNested:readable */
+/* global DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, MK_LBUTTON:readable, SmoothingMode:readable */
 
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 /* global LZUTF8:readable */
@@ -1768,7 +1771,7 @@ function _seekbar({
 					}
 					n++;
 				}
-				gr.SetSmoothingMode(0);
+				gr.SetSmoothingMode();
 				// Current position
 				if ((!bPaintCurrent || bWaveForm || bPoints || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
