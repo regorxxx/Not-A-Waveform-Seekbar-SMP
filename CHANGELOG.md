@@ -40,10 +40,11 @@
 ### Added
 - Console: added on paint profile logging setting. Can be used to compare D2D vs GDI painting performance for ex. Only enable it while needed, it will flood the console log while playing every 60 seconds! See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1078621.html#msg1078621)
 - UI: new available values for normalized width, specially at low range.
+- UI: added support for D2D draw mode if JS Host supports it (currently only JSplitter 3.7.8+ or 4.1.0+). It must be set per instance, at the properties panel ('Draw mode: GDI (0), D2D (1)'). If JS Host doesn't support it, it will fallback to GDI. Note D2D mode may produce UI artifacts under Wine or not be fully equivalent to GDI, use at your own consideration and only report problems to JS host component devs.
+- UI: ported all background art effect settings to D2D effects. Note bloom will render in a similar way to GDI+ but mute and edge are noticeably different. There is a new setting while using D2D draw mode (see above) to force the GDI+ effect looks, in case D2D draw mode is preferred but also the previous effect looks. In the future, if the list of D2D effects is expanded, enabling that setting will make these new effects unavailable (since they will not have a GDI+ counterpart).
 ### Changed
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - UI: improvements on dynamic colors application in some cases.
-- UI: added support for D2D draw mode if JS Host supports it (currently only JSplitter 3.7.8+ or 4.1.0+). It must be set per instance, at the properties panel ('Draw mode: GDI (0), D2D (1)'). If JS Host doesn't support it, it will fallback to GDI. Note D2D mode may produce UI artifacts under Wine or not be fully equivalent to GDI, use at your own consideration and only report problems to JS host component devs.
 - Helpers: support for long paths (>260 chars) in multiple internal file handling functions.
 ### Removed
 ### Fixed
