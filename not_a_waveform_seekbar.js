@@ -52,7 +52,7 @@ let seekbarProperties = {
 	analysis: ['Analysis config',
 		JSON.stringify({
 			binaryMode: 'audiowaveform',
-			resolution: 2,
+			resolution: 10,
 			compressionMode: 'utf-16',
 			storeMode: 'library',
 			trackMode: ['playing', 'selected', 'blank'],

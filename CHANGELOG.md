@@ -45,6 +45,7 @@
 - UI: added multiple new background art effects and image histogram while using D2D draw mode. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1079362.html#msg1079362).
 - UI: added new art mode 'By priority' which lets you set different art types by priority order to use if one is not available for current track. The submenu will show the list of art types set and the parent menu the actual one used. This feature also allows to specify between default, stub or embedded art (contrary to the other modes). Works like 'Album art' script bundled with JSP3 panel, see [here](https://hydrogenaudio.org/index.php/topic,116509.msg1079405.html#msg1079405).
 ### Changed
+- Analysis: changed default points per second to 10.
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - UI: improvements on dynamic colors application in some cases.
 - Helpers: support for long paths (>260 chars) in multiple internal file handling functions.
