@@ -1,5 +1,5 @@
 'use strict';
-//16/03/26
+//02/04/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -763,8 +763,7 @@ function _seekbar({
 			const len = this.getHandleLength();
 			const barW = (this.w - this.marginW * 2) / this.frames;
 			let time = Math.round(len / this.frames * (x - this.x - this.marginW) / barW);
-			if (time < 0) { time = 0; }
-			else if (time > len) { time = len; }
+			time = Math.min(Math.max(time, 0), len);
 			return time;
 		}
 		return 0;
@@ -2754,11 +2753,8 @@ function _seekbar({
 					case 's':
 					default: time += scroll; break;
 				}
-				if (time < 0) { time = 0; }
-				else if (time > this.getHandleLength()) { time = this.getHandleLength(); }
-				fb.PlaybackTime = time;
-				if (window.IsVisible) { throttlePaint(true); }
-				return true;
+				time = Math.min(Math.max(Math.round(time), 0), this.getHandleLength());
+				return this.setPlaybackTime(time);
 			}
 		}
 		return false;
