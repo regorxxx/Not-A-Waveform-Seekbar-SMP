@@ -48,6 +48,8 @@
 - Analysis: changed default points per second to 10.
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - UI: improvements on dynamic colors application in some cases.
+- UI: improvements on dynamic colors handling for almost B&W art or with a lightly tinted by a single color.
+- UI: improvements on dynamic colors handling related to K-means++ with OKLAB color space when using JSplitter v3.7.10+ or v4.1.0+ as JS host. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1078415.html#msg1078415).
 - Helpers: support for long paths (>260 chars) in multiple internal file handling functions.
 ### Removed
 ### Fixed
