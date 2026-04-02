@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/02/26
+//02/04/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -7,7 +7,7 @@ if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-
 window.DrawMode = Math.max(Math.min(window.GetProperty('Draw mode: GDI (0), D2D (1)', 0), 1), 0);
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable */
+/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable, VK_RIGHT:readable, VK_UP:readable, VK_LEFT:readable, VK_DOWN:readable  */
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable, MK_LBUTTON:readable */
 include('helpers\\helpers_xxx_UI.js');
@@ -427,6 +427,11 @@ addEventListener('on_mouse_wheel', (step) => {
 
 addEventListener('on_mouse_wheel_h', (step) => {
 	seekbar.wheel(step);
+});
+
+addEventListener('on_key_down', (k) => {
+	if (k === VK_RIGHT || k === VK_UP) { seekbar.wheel(1); }
+	else if (k === VK_LEFT || k === VK_DOWN) { seekbar.wheel(-1); }
 });
 
 addEventListener('on_notify_data', (name, info) => {
