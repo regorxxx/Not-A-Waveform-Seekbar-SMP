@@ -755,14 +755,16 @@ function _seekbar({
 	 * @name getPlaybackTimeAt
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {number} [x] - X position within panel
+	 * @param {number} x - X position within panel
+	 * @param {boolean} [bRounded] - [=true] Round to seconds (except for total length value)
 	 * @returns {number}
 	*/
-	this.getPlaybackTimeAt = function (x) {
+	this.getPlaybackTimeAt = function (x, bRounded = true) {
 		if (this.frames !== 0) {
 			const len = this.getHandleLength();
 			const barW = (this.w - this.marginW * 2) / this.frames;
-			let time = Math.round(len / this.frames * (x - this.x - this.marginW) / barW);
+			let time = len / this.frames * (x - this.x - this.marginW) / barW;
+			if (bRounded) { time = Math.round(time); }
 			time = Math.min(Math.max(time, 0), len);
 			return time;
 		}
@@ -775,7 +777,7 @@ function _seekbar({
 	 * @name setPlaybackTime
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {number} [time] - Time in seconds
+	 * @param {number} time - Time in seconds (will be rounded up to ms precission)
 	 * @returns {number}
 	*/
 	this.setPlaybackTime = function (time) {
@@ -798,7 +800,7 @@ function _seekbar({
 					}, 100);
 				}
 			} else {
-				fb.PlaybackTime = time;
+				fb.PlaybackTime = round(time, 3);
 				if (window.IsVisible) { throttlePaint(true); }
 			}
 			return true;
@@ -1442,7 +1444,7 @@ function _seekbar({
 		const now = Date.now();
 		const bFull = (now - this.lastUpdate) < 500;
 		this.lastUpdate = now;
-		this.time = Number.isSafeInteger(time) ? time : 0;
+		this.time = Number.isFinite(time) && time < Number.MAX_SAFE_INTEGER ? time : 0;
 		framesVu.length = 0;
 		if (this.cache === this.current) { // Paint only once if there is no animation
 			if (this.preset.paintMode === 'full' && !this.preset.bPaintCurrent && this.analysis.binaryMode !== 'visualizer') { return; }
@@ -2751,9 +2753,9 @@ function _seekbar({
 					case 'ms': time += scroll / 1000; break;
 					case '%': time += scroll / 100 * this.getHandleLength(); break;
 					case 's':
-					default: time += scroll; break;
+					default: time = Math.round(time) + scroll; break;
 				}
-				time = Math.min(Math.max(Math.round(time), 0), this.getHandleLength());
+				time = Math.min(Math.max(time, 0), this.getHandleLength());
 				return this.setPlaybackTime(time);
 			}
 		}
