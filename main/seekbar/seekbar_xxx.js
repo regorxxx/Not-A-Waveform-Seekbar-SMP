@@ -3015,8 +3015,7 @@ function _seekbar({
 					}
 				} else if (Date.now() > timeout) { clearInterval(id); resolve(false); }
 			}, 300);
-		})
-		);
+		}));
 		if (bDone) {
 			let data = cmd
 				? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
