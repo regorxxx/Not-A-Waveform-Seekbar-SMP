@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/04/26
+//13/04/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -296,8 +296,8 @@ if (seekbarProperties.bAutoUpdateCheck[1]) {
 const queueSelection = () => {
 	if (seekbar.getPreferredTrackMode() === 'selected') {
 		const handle = seekbar.getHandle();
-		if (!seekbar.compareTrack(handle)) { seekbar.newTrackQueue(handle); return true; }
-		else { return false; }
+		if (seekbar.compareTrack(handle)) { return false; }
+		else { seekbar.newTrackQueue(handle); return true; }
 	}
 };
 
