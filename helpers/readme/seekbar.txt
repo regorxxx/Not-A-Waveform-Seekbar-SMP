@@ -1,6 +1,6 @@
-﻿UI panel which displays a seekbar, using a graphical representation
-of the track via audiowaveform or ffprobe. May be based on RMS, peak
-levels, the actual waveform or visualization presets.
+﻿UI panel which displays a seekbar, using a graphical representation of
+the track via audiowaveform or ffprobe. May be based on RMS, peak levels,
+actual waveform or visualization presets.
 
 Mode:
 -----
@@ -26,8 +26,8 @@ Analysis data:
 	components storing similar data.
 
 	• Since the script tries to load data files first, non compatible
-	formats like SACD, ISO files or zipped files may be converted
-	to compatible ones, analyzed and then deleted. As long as these
+	formats like SACD, ISO files or zipped files may be converted to
+	compatible ones, analyzed and then deleted. As long as these
 	incompatible tracks share the same path, the script will load the
 	associated data files when playing them and display the seekbar
 	properly (even if the track can not be analyzed on real time).
@@ -46,7 +46,7 @@ UI usage:
 
 	• There are multiple display options but all use the same data.
 
-	• Background is fully configurable.
+	• Independent waveform/panel background settings.
 
 	• On multi-channel mode, channels shown may be selectively set.
 
@@ -63,23 +63,23 @@ Other UI usage:
 FAQ:
 ----
 • VU Meter smoothness:
-	◦ It's recommended to use ffprobe instead of Audiowaveform
-	when using the VU Meter preset, since it's analysis data has
-	higher precision, resulting on a smoother animation.
+	◦ It's recommended to use ffprobe instead of Audiowaveform for
+	the VU Meter preset, since its analysis data may have higher
+	precision, resulting on a smoother animation.
 
 • Some tracks are not analyzed:
-	◦ Check 'Mode\Show Compatible extensions'. The list
-	of compatible files depends on the mode (binary) used. You
-	can convert them to a compatible format, analyze them and
-	delete the converted tracks afterwards though.
+	◦ Check 'Mode\Show Compatible extensions'. The list of compatible
+	files depends on the mode (binary) used. You can convert them to
+	a compatible format, analyze them and delete the converted tracks
+	afterwards though.
 
-	◦ If tracks are within a compressed file. This is
-	not supported, although if associated analysis files are
-	found, they will be used.
+	◦ Tracks within a compressed file are not supported; but if
+	associated analysis files are found, they will be used. Like
+	the example above, you can unzip and analyze them.
 
-	◦ Otherwise check the analysis files TF path at
-	'Analysis\File name format...'. Exotic paths, chars, artist
-	names or setups should be handled by the user.
+	◦ Check analysis files TF path at 'Analysis\File name format...'.
+	Exotic paths, chars, artist names or setups should be handled by
+	the users adjusting it to their needs.
 
 • How to control dynamic colors artwork source:
 	◦ It can be set at the background 'Art mode' sub-menu.
@@ -90,8 +90,28 @@ FAQ:
 	if listen to color-servers setting is enabled.
 
 • How to show the artwork as background instead of a solid color:
-	◦ Art mode opacity must be non-zero, and slider background
-	color must be disabled (-none-) too. In such case the background
-	ill be governed only by the background sub-menu settings.
-	Adjusting the opacity and color mode, different overlays
-	may be drawn too.
+	◦ There are independent settings for panel/waveform background.
+
+	◦ Background Art effect opacity must be non-zero.
+
+	◦ Background Color mode must be set to none.
+
+	◦ Both waveform background colors must be disabled (-none-).
+
+	◦ Then background will be drawn based only on artwork type
+	  selected. Then feel free to adjust the opacity, color mode
+	  and effects.
+
+• How to show make the background invisible (transparent panel):
+	◦ There are independent settings for panel/waveform background.
+
+	◦ Background Art effect opacity must be zero or Selection
+	  mode set to None.
+
+	◦ Background color mode must be set to none.
+
+	◦ Both waveform background colors must be disabled (-none-).
+
+	◦ Then background drawing will be skipped and panel may use
+	  pseudotransparency if the JS host supports it. Note it must
+	  be enabled at JSplitter/SMP configuration panel too.
