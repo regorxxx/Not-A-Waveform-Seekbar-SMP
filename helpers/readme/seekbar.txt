@@ -77,6 +77,8 @@ FAQ:
 	associated analysis files are found, they will be used. Like
 	the example above, you can unzip and analyze them.
 
+	◦ Similar comment and workarounds apply to DSD, DSF or .ISO files.
+
 	◦ Check analysis files TF path at 'Analysis\File name format...'.
 	Exotic paths, chars, artist names or setups should be handled by
 	the users adjusting it to their needs.
