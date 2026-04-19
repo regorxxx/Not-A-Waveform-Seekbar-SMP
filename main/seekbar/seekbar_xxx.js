@@ -1,5 +1,5 @@
 'use strict';
-//02/04/26
+//17/04/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -375,9 +375,9 @@ function _seekbar({
 	/** @type {number|null} - X-Axis panel fill in % of weight */
 	this.scaleW = this.ui.pos.scaleW;
 	/** @type {number} - X-axis margin in px */
-	this.marginW = this.scaleW !== null
-		? this.ui.pos.scaleW * this.w
-		: this.ui.pos.marginW;
+	this.marginW = this.scaleW === null
+		? this.ui.pos.marginW
+		: this.ui.pos.scaleW * this.w;
 	['x', 'y', 'w', 'h', 'scaleH', 'scaleW'].forEach((key) => {
 		Object.defineProperty(this, key, {
 			get() { return this.ui.pos[key]; },
@@ -386,9 +386,9 @@ function _seekbar({
 	});
 	Object.defineProperty(this, 'marginW', {
 		get() {
-			return this.scaleW !== null
-				? this.ui.pos.scaleW * this.w
-				: this.ui.pos.marginW;
+			return this.scaleW === null
+				? this.ui.pos.marginW
+				: this.ui.pos.scaleW * this.w;
 		},
 		set(val) { this.ui.pos.marginW = val; }
 	});
@@ -476,10 +476,10 @@ function _seekbar({
 	});
 	/** @type {Preset['waveMode'][]} - Supported wavemodes */
 	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'processbar', 'processbarfilled', 'processbargradient', 'processbargradientscaled', 'vumeter'];
-	/** @type {Preset['waveMode'][]} - Wavemodes which require wider repainting */
-	const waveModesWide = ['soundcloud', 'soundcloudgradient', 'bars', 'halfbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree'];
-	/** @type {Preset['waveMode'][]} - Wavemodes which use gradient painting */
-	const waveModesGrad = ['soundcloudgradient', 'barsgradient', 'halfbarsgradient', 'processbargradient', 'processbargradientscaled'];
+	/** @type {Set<Preset['waveMode']>} - Wavemodes which require wider repainting */
+	const waveModesWide = new Set(['soundcloud', 'soundcloudgradient', 'bars', 'halfbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree']);
+	/** @type {Set<Preset['waveMode']>} - Wavemodes which use gradient painting */
+	const waveModesGrad = new Set(['soundcloudgradient', 'barsgradient', 'halfbarsgradient', 'processbargradient', 'processbargradientscaled']);
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -782,7 +782,10 @@ function _seekbar({
 	*/
 	this.setPlaybackTime = function (time) {
 		if (this.frames !== 0) {
-			if (!this.isTrackPlaying()) {
+			if (this.isTrackPlaying()) {
+				fb.PlaybackTime = round(time, 3);
+				if (window.IsVisible) { throttlePaint(true); }
+			} else {
 				if (this.isTrackPlaying()) {
 					fb.Play();
 					setTimeout(() => {
@@ -799,9 +802,6 @@ function _seekbar({
 						if (window.IsVisible) { throttlePaint(true); }
 					}, 100);
 				}
-			} else {
-				fb.PlaybackTime = round(time, 3);
-				if (window.IsVisible) { throttlePaint(true); }
 			}
 			return true;
 		}
@@ -992,27 +992,27 @@ function _seekbar({
 						// After parsing JSON, restore infinity values
 						if (frame[pos] === null) { frame[pos] = -Infinity; }
 						const val = frame[pos];
-						max = Math.min(max, isFinite(val) ? val : 0);
+						max = Math.min(max, Number.isFinite(val) ? val : 0);
 					});
 					// Calculate point scale
 					let maxVal = 1;
 					const lastIdx = ffprobeDataLen + 1; // + Time
 					const maxLen = lastIdx + 1;
-					if (this.preset.analysisMode !== 'rms_level') {
+					if (this.preset.analysisMode === 'rms_level') {
 						this.current[c].forEach((frame) => {
-							if (frame.length === maxLen) { frame.length = lastIdx; }
-							frame.push(
-								isFinite(frame[pos])
-									? 1 - Math.abs(Math.pow(2, frame[pos] / 10) * (1 - Math.log2(10)))
-									// ? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max)))
-									: 1
-							);
-							if (!isFinite(frame[lastIdx])) { frame[lastIdx] = 0; }
+							frame.push(Number.isFinite(frame[pos]) ? 1 - Math.abs((frame[pos] - max) / max) : 1);
 							maxVal = Math.min(maxVal, frame[lastIdx]);
 						});
 					} else {
 						this.current[c].forEach((frame) => {
-							frame.push(isFinite(frame[pos]) ? 1 - Math.abs((frame[pos] - max) / max) : 1);
+							if (frame.length === maxLen) { frame.length = lastIdx; }
+							frame.push(
+								Number.isFinite(frame[pos])
+									? 1 - Math.abs(Math.pow(2, frame[pos] / 10) * (1 - Math.log2(10)))
+									// ? Math.abs(1 - (Math.log(Math.abs(max)) + Math.log(Math.abs(frame[pos]))) / Math.log(Math.abs(max)))
+									: 1
+							);
+							if (!Number.isFinite(frame[lastIdx])) { frame[lastIdx] = 0; }
 							maxVal = Math.min(maxVal, frame[lastIdx]);
 						});
 					}
@@ -1032,7 +1032,7 @@ function _seekbar({
 					});
 					max = Math.max(Math.abs(upper[c]), Math.abs(lower[c]));
 				}
-			} else if (['audiowaveform', 'visualizer'].some((m) => this.analysis.binaryMode === m) || this.isFallback || bFallbackMode.paint) {
+			} else if (['audiowaveform', 'visualizer'].includes(this.analysis.binaryMode) || this.isFallback || bFallbackMode.paint) {
 				for (let c = 0; c < this.channels; c++) {
 					// Calculate max values
 					let max = 0;
@@ -1176,7 +1176,7 @@ function _seekbar({
 		const monoData = [];
 		const channelsNum = this.getDisplayChannels(false).length;
 		if (this.analysis.binaryMode === 'ffprobe') {
-			const defFrame = Array(ffprobeDataLen + 1).fill(0); // + Time
+			const defFrame = new Array(ffprobeDataLen + 1).fill(0); // + Time
 			for (let i = 0; i < this.frames; i++) {
 				const frame = [...defFrame];
 				for (let c = 0; c < channelsNum; c++) {
@@ -1380,7 +1380,7 @@ function _seekbar({
 	 * @returns {string[]}
 	*/
 	this.isWideWaveMode = (mode = this.preset.waveMode) => {
-		return waveModesWide.includes(mode);
+		return waveModesWide.has(mode);
 	};
 	/**
 	 * Checks if given wave mode uses gradient painting
@@ -1394,7 +1394,7 @@ function _seekbar({
 	*/
 	this.isGradientWaveMode = (mode = this.preset.waveMode) => {
 
-		return waveModesGrad.includes(mode);
+		return waveModesGrad.has(mode);
 	};
 	/**
 	 * Sets the steps required to draw the animation for the track's BPM. By default BPM is considered 100 if not available.
@@ -1619,8 +1619,8 @@ function _seekbar({
 		if (!window.IsVisible) { return; }
 		if (this.ui.bVariableRefreshRate || this.logging.bProfilePaint) { profilerPaint.CheckPoint('Paint'); }
 		if (this.logging.bProfilePaint) {
-			if (!profilerPaint.HasCheckPoint('FPS')) { profilerPaint.CheckPoint('FPS'); }
-			else { profilerPaint.CheckPointStep('FPS'); }
+			if (profilerPaint.HasCheckPoint('FPS')) { profilerPaint.CheckPointStep('FPS'); }
+			else { profilerPaint.CheckPoint('FPS'); }
 			if (!profilerPaint.HasCheckPointPrintInterval('Paint') && fb.IsPlaying) {
 				profilerPaint.CheckPointPrintInterval(60000, 'Paint', ' - ' + (window.DrawMode === 1 ? 'D2D' : 'GDI+'), { bAverage: true, bPerInterval: true, bOnVisible: true });
 				profilerPaint.CheckPointPrintInterval(60000, 'FPS', ' - ' + (window.DrawMode === 1 ? 'D2D' : 'GDI+'), { bAverage: true, bPerInterval: true, bOnVisible: true });
@@ -1929,11 +1929,11 @@ function _seekbar({
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
 		if (z > 0) { // Split waveform in 2, and then each half in 2 for highlighting
-			if (altColor !== color) {
+			if (altColor === color) {
+				gr.DrawRect(x, axisY - z, barW, z, 1, color);
+			} else {
 				if (color !== -1) { gr.DrawRect(x, axisY - z, barW, z / 2, 1, color); }
 				if (altColor !== -1) { gr.DrawRect(x, axisY - z / 2, barW, z / 2, 1, altColor); }
-			} else {
-				gr.DrawRect(x, axisY - z, barW, z, 1, color);
 			}
 		}
 		z = bVisualizer ? - Math.abs(y) : y;
@@ -2197,8 +2197,8 @@ function _seekbar({
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
 					gr.FillGradRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 92, topColor, altColor, this.ui.gradientFocus);
-				} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
-				else { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+				} else if (color === -1) { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+				else { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, color); }
 		}
 	};
@@ -2328,7 +2328,7 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.paintSoundCloud = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
-		barW = barW * 1.80;
+		barW = barW * 1.8;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -2390,7 +2390,7 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.paintSoundCloudGrad = (gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors) => { // NOSONAR
-		barW = barW * 1.80;
+		barW = barW * 1.8;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
 		const rand = Math.sign(scale) * this.offset[n];
@@ -2543,8 +2543,8 @@ function _seekbar({
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, 0.5);
 					gr.FillGradRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 92, topColor, altColor, this.ui.gradientFocus);
-				} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
-				else { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+				} else if (color === -1) { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+				else { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, color); }
 		}
 	};
@@ -2585,8 +2585,8 @@ function _seekbar({
 					scale = Math.abs(scale);
 					const topColor = this.blendColors(altColor, color, 1 - scale);
 					gr.FillGradRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, 92, topColor, altColor, this.ui.gradientFocus);
-				} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
-				else { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+				} else if (color === -1) { gr.FillSolidRect(x, axisY + size / 2 - y, barW, y, altColor); }
+				else { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, y, color); }
 			} else if (color !== -1) { gr.FillSolidRect(x, axisY + size / 2 - 2 * y, barW, 2 * y, color); }
 		}
 	};
@@ -2625,9 +2625,9 @@ function _seekbar({
 	*/
 	this.paintPlaybackText = (gr, colors) => {
 		const center = DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-		const textColor = colors.bg !== -1
-			? invert(colors.bg, true)
-			: this.callbacks.backgroundColor ? invert(this.callbacks.backgroundColor(), true) : 0xFFFFFFFF;
+		const textColor = colors.bg === -1
+			? this.callbacks.backgroundColor ? invert(this.callbacks.backgroundColor(), true) : 0xFFFFFFFF
+			: invert(colors.bg, true);
 		if (!this.bBinaryFound) {
 			gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
@@ -2775,12 +2775,11 @@ function _seekbar({
 	this.wheelResize = (step, bForce) => {
 		if ((this.trace(this.mX, this.mY) || bForce) && step !== 0) {
 			let key, min, max;
-			switch (true) {
+			switch (true) { // NOSONAR
 				case true:
 					key = ['ui', 'normalizeWidth']; min = 0.5; max = 100; break;
 			}
-			if (!key) { return; }
-			else {
+			if (key) {
 				const newConfig = {};
 				const value = Math.min(Math.max(min, getNested(this, ...key) + Math.sign(step) / 2), max);
 				addNested(newConfig, value, ...key);
@@ -2795,7 +2794,7 @@ function _seekbar({
 					}
 				}
 				this.updateConfig(newConfig);
-			}
+			} else { return; }
 			if (window.IsVisible) { throttlePaint(); }
 			return true;
 		}
@@ -2963,7 +2962,7 @@ function _seekbar({
 		const sampleRate = fb.TitleFormat('%SAMPLERATE%').EvalWithMetadb(handle);
 		if (this.isAllowedFile && !bFallbackMode.analysis && bAuWav) {
 			if (this.logging.bProfile) { profiler = new FbProfiler('audiowaveform'); }
-			const extension = RegExp(/(?:\.)(\w+$)/i).exec(handleFileName)[1];
+			const extension = new RegExp(/(?:\.)(\w+$)/i).exec(handleFileName)[1];
 			const pxPerSecond = this.analysis.resolution <= sampleRate / 2
 				? this.analysis.resolution || 1
 				: Math.round(sampleRate / 2);
@@ -3101,15 +3100,15 @@ function _seekbar({
 	*/
 	this.processFfmpegFrame = (frame, channel) => {
 		// Save values as array to compress file as much as possible, also round decimals...
-		const rms = frame.tags['lavfi.astats.' + channel + '.RMS_level'] !== '-inf'
-			? round(Number(frame.tags['lavfi.astats.' + channel + '.RMS_level']), 1)
-			: -Infinity;
-		const rmsPeak = frame.tags['lavfi.astats.' + channel + '.RMS_peak'] !== '-inf'
-			? round(Number(frame.tags['lavfi.astats.' + channel + '.RMS_peak']), 1)
-			: -Infinity;
-		const peak = frame.tags['lavfi.astats.' + channel + '.Peak_level'] !== '-inf'
-			? round(Number(frame.tags['lavfi.astats.' + channel + '.Peak_level']), 1)
-			: -Infinity;
+		const rms = frame.tags['lavfi.astats.' + channel + '.RMS_level'] === '-inf'
+			? -Infinity
+			: round(Number(frame.tags['lavfi.astats.' + channel + '.RMS_level']), 1);
+		const rmsPeak = frame.tags['lavfi.astats.' + channel + '.RMS_peak'] === '-inf'
+			? -Infinity
+			: round(Number(frame.tags['lavfi.astats.' + channel + '.RMS_peak']), 1);
+		const peak = frame.tags['lavfi.astats.' + channel + '.Peak_level'] === '-inf'
+			? -Infinity
+			: round(Number(frame.tags['lavfi.astats.' + channel + '.Peak_level']), 1);
 		const time = round(Number(frame.pkt_pts_time), 2);
 		return [time, rms, rmsPeak, peak];
 	};
@@ -3238,7 +3237,7 @@ function _seekbar({
 		// 64/32 bit color
 		if (color < 0) { color += 4294967296; }
 		if (color > 4294967296) { color -= 4294967296; }
-		return parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
+		return Number.parseInt(hexTransparencies[Math.max(Math.min(Math.round(percent), 100), 0)] + color.toString(16).slice(2), 16);
 	};
 	const hexTransparencies = { 100: 'FF', 99: 'FC', 98: 'FA', 97: 'F7', 96: 'F5', 95: 'F2', 94: 'F0', 93: 'ED', 92: 'EB', 91: 'E8', 90: 'E6', 89: 'E3', 88: 'E0', 87: 'DE', 86: 'DB', 85: 'D9', 84: 'D6', 83: 'D4', 82: 'D1', 81: 'CF', 80: 'CC', 79: 'C9', 78: 'C7', 77: 'C4', 76: 'C2', 75: 'BF', 74: 'BD', 73: 'BA', 72: 'B8', 71: 'B5', 70: 'B3', 69: 'B0', 68: 'AD', 67: 'AB', 66: 'A8', 65: 'A6', 64: 'A3', 63: 'A1', 62: '9E', 61: '9C', 60: '99', 59: '96', 58: '94', 57: '91', 56: '8F', 55: '8C', 54: '8A', 53: '87', 52: '85', 51: '82', 50: '80', 49: '7D', 48: '7A', 47: '78', 46: '75', 45: '73', 44: '70', 43: '6E', 42: '6B', 41: '69', 40: '66', 39: '63', 38: '61', 37: '5E', 36: '5C', 35: '59', 34: '57', 33: '54', 32: '52', 31: '4F', 30: '4D', 29: '4A', 28: '47', 27: '45', 26: '42', 25: '40', 24: '3D', 23: '3B', 22: '38', 21: '36', 20: '33', 19: '30', 18: '2E', 17: '2B', 16: '29', 15: '26', 14: '24', 13: '21', 12: '1F', 11: '1C', 10: '1A', 9: '17', 8: '14', 7: '12', 6: '0F', 5: '0D', 4: '0A', 3: '08', 2: '05', 1: '03', 0: '00' };
 }

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/03/26
+//17/04/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -70,7 +70,7 @@ function settingsMenu(bClear = true) {
 				const bFound = source === true || typeof source === 'string' && _isFile(source);
 				const bBundled = bFound && (typeof source !== 'string' || source.startsWith(folders.xxxRootName + 'helpers-external\\'));
 				menu.newEntry({
-					menuName: subMenu, entryText: o.name + (!bFound ? '\t(not found)' : (bBundled ? '\t(built-in)' : '\t(external)')), func: () => {
+					menuName: subMenu, entryText: o.name + (bFound ? (bBundled ? '\t(built-in)' : '\t(external)') : '\t(not found)'), func: () => {
 						this.updateConfig({ analysis: { binaryMode: o.key } });
 						this.saveProperties();
 					}, flags: bFound ? MF_STRING : MF_GRAYED
@@ -110,7 +110,7 @@ function settingsMenu(bClear = true) {
 		];
 		options.forEach((o) => {
 			menu.newEntry({
-				menuName: subMenu, entryText: o.name + (this.analysis.binaryMode !== 'ffprobe' ? '\t (ffprobe only)' : ''), func: () => {
+				menuName: subMenu, entryText: o.name + (this.analysis.binaryMode === 'ffprobe' ? '' : '\t (ffprobe only)'), func: () => {
 					this.updateConfig({ preset: { analysisMode: o.key } });
 					this.saveProperties();
 				}, flags: this.analysis.binaryMode === 'ffprobe' ? MF_STRING : MF_GRAYED
@@ -133,7 +133,7 @@ function settingsMenu(bClear = true) {
 						this.updateConfig({ analysis: { storeMode: o.key } });
 						if (o.key === 'none') { fb.ShowPopupMessage('In this mode new data files are never saved. Every time a track is shown, it will be (re)analyzed, no matter if it was analyzed before too -even during the same session-.\n\nNote already created data files will not be deleted. If that\'s desired, use \'Auto-delete analysis files\' setting.\n\nIf wou want data files to be cleaned when closing foobar2000 but available to be reused during the same session, then check the auto-delete option and any of the other storage modes.', 'Not-A-Waveform-seekbar-SMP'); }
 						this.saveProperties();
-					}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
+					}, flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING
 				});
 			});
 			menu.newCheckMenuLast(() => options.findIndex(o => o.key === this.analysis.storeMode), options);
@@ -142,7 +142,7 @@ function settingsMenu(bClear = true) {
 				menuName: subMenuTwo, entryText: 'Auto-delete analysis files', func: () => {
 					this.updateConfig({ analysis: { bAutoRemove: !this.analysis.bAutoRemove } });
 					this.saveProperties();
-				}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
+				}, flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING
 			});
 			menu.newCheckMenuLast(() => this.analysis.bAutoRemove);
 			menu.newSeparator(subMenuTwo);
@@ -168,7 +168,7 @@ function settingsMenu(bClear = true) {
 					menuName: subMenu, entryText: o.name, func: () => {
 						this.updateConfig({ analysis: { [o.key]: !this.analysis[o.key] } });
 						this.saveProperties();
-					}, flags: this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
+					}, flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING
 				});
 				menu.newCheckMenuLast(() => this.analysis[o.key]);
 			});
@@ -227,7 +227,7 @@ function settingsMenu(bClear = true) {
 		});
 		menu.newCheckMenuLast((options, len) => {
 			const idx = options.findIndex(o => JSON.stringify(o.key) === JSON.stringify(this.analysis.trackMode));
-			return idx !== -1 ? idx : (len - 1);
+			return idx === -1 ? (len - 1) : idx;
 		}, options);
 	}
 	menu.newSeparator();
@@ -307,7 +307,7 @@ function settingsMenu(bClear = true) {
 			const subMenuTwo = menu.newMenu('Seconds', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
 			[Infinity, 2, 5, 10]
 				.forEach((s) => {
-					const entryText = (isFinite(s) ? s : 'Full');
+					const entryText = (Number.isFinite(s) ? s : 'Full');
 					menu.newEntry({
 						menuName: subMenuTwo, entryText, func: () => {
 							this.updateConfig({ preset: { futureSecs: s } });
@@ -368,7 +368,7 @@ function settingsMenu(bClear = true) {
 			menuName: subMenuFour, entryText: 'All', func: () => {
 				this.updateConfig({ preset: { displayChannels: [] } });
 				this.saveProperties();
-			}, flags: !this.analysis.bMultiChannel ? MF_GRAYED : MF_STRING
+			}, flags: this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED
 		});
 		menu.newCheckMenuLast(() => this.preset.displayChannels.length === 0);
 		menu.newSeparator(subMenuFour);
@@ -391,7 +391,7 @@ function settingsMenu(bClear = true) {
 							: [];
 						this.updateConfig({ preset: { displayChannels } });
 						this.saveProperties();
-					}, flags: !this.analysis.bMultiChannel ? MF_GRAYED : MF_STRING
+					}, flags: this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED
 				});
 				menu.newCheckMenuLast(() => oldVal.isSuperset(opt.val));
 			});
@@ -400,7 +400,7 @@ function settingsMenu(bClear = true) {
 			menuName: subMenuFour, entryText: 'Downmix to mono', func: () => {
 				this.updateConfig({ preset: { bDownMixToMono: !this.preset.bDownMixToMono } });
 				this.saveProperties();
-			}, flags: !this.analysis.bMultiChannel ? MF_GRAYED : MF_STRING
+			}, flags: this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED
 		});
 		menu.newCheckMenuLast(() => this.preset.bDownMixToMono);
 	}
@@ -667,9 +667,9 @@ function settingsMenu(bClear = true) {
 						// Ensure it's applied with compatible settings
 						background.changeConfig({
 							bRepaint: false, callbackArgs: { bSaveProperties: true },
-							config: !background.useCover
-								? { coverMode: background.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } }
-								: { coverModeOptions: { bProcessColors: true } },
+							config: background.useCover
+								? { coverModeOptions: { bProcessColors: true } }
+								: { coverMode: background.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } },
 						});
 						background.updateImageBg(true);
 					} else {
@@ -703,9 +703,9 @@ function settingsMenu(bClear = true) {
 						else if (!background.useCoverColors) {
 							background.changeConfig({
 								bRepaint: false, callbackArgs: { bSaveProperties: true },
-								config: !background.useCover
-									? { coverMode: background.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } }
-									: { coverModeOptions: { bProcessColors: true } },
+								config: background.useCover
+									? { coverModeOptions: { bProcessColors: true } }
+									: { coverMode: background.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } },
 							});
 						}
 					}
