@@ -1,9 +1,9 @@
 ﻿'use strict';
-//17/04/26
+//27/04/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
-/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable */
+/* global MF_GRAYED:readable, _isFile:readable, MF_STRING:readable,seekbarProperties:readable, require:readable, _b:readable, _scale:readable, VK_CONTROL:readable, checkUpdate:readable, globSettings:readable, background:readable, folders:readable, TTDT_INITIAL:readable, TTDT_AUTOPOP:readable */
 
 include('..\\..\\helpers\\helpers_xxx_file.js');
 /* global _open:readable, utf8:readable, WshShell:readable, popup:readable, _deleteFolder:readable, _isFolder:readable, _explorer:readable, _renameFolder:readable */
@@ -808,8 +808,8 @@ function settingsMenu(bClear = true) {
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Show tooltip only click', func: () => {
 				seekbarProperties.bShowTooltipOnClick[1] = !seekbarProperties.bShowTooltipOnClick[1];
-				this.tooltip.SetDelayTime(3, seekbarProperties.bShowTooltipOnClick[1] ? 500 : 1500);
-				this.tooltip.SetDelayTime(2, seekbarProperties.bShowTooltipOnClick[1] ? Infinity : 3000);
+				this.tooltip.SetDelayTime(TTDT_INITIAL, seekbarProperties.bShowTooltipOnClick[1] ? 500 : 1500);
+				this.tooltip.SetDelayTime(TTDT_AUTOPOP, seekbarProperties.bShowTooltipOnClick[1] ? Infinity : 3000);
 				this.saveProperties();
 			}, flags: seekbarProperties.bShowTooltip[1] ? MF_STRING : MF_GRAYED
 		});
@@ -868,7 +868,7 @@ function settingsMenu(bClear = true) {
 	{	// Readme
 		const path = folders.xxx + 'helpers\\readme\\seekbar.txt';
 		menu.newEntry({
-			entryText: 'Open readme...', func: () => {
+			entryText: 'Open help...', func: () => {
 				const readme = _open(path, utf8);
 				if (readme.length) { fb.ShowPopupMessage(readme, window.ScriptInfo.Name); }
 				else { console.log('Seekbar: Readme not found\n\t ' + path); }

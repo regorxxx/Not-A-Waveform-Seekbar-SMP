@@ -53,6 +53,7 @@
 - UI: improvements on dynamic colors handling for almost B&W art or with a lightly tinted by a single color.
 - UI: improvements on dynamic colors handling related to K-means++ with OKLAB color space when using JSplitter v3.7.10+ or v4.1.0+ as JS host. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1078415.html#msg1078415).
 - Helpers: support for long paths (>260 chars) in multiple internal file handling functions.
+- Readmes: readmes submenus are now renamed to 'Help' in all instances.
 ### Removed
 ### Fixed
 - UI: small fixes for background blend color mode.
