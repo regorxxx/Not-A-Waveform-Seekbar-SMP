@@ -1,11 +1,11 @@
 'use strict';
-//17/04/26
+//27/04/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
 /* global _gdiFont:readable, _scale:readable, invert:readable */
 /* global convertCharsetToCodepage:readable, throttle:readable, deepAssign:readable, clone:readable, _p:readable, _q:readable, round:readable addNested:readable, getNested:readable */
-/* global DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, MK_LBUTTON:readable, SmoothingMode:readable */
+/* global DT_VCENTER:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, MK_LBUTTON:readable, SmoothingMode:readable, IDC_APPSTARTING:readable, IDC_HAND:readable, IDC_ARROW:readable */
 
 include('..\\..\\helpers-external\\lz-utf8\\lzutf8.js'); // For string compression
 /* global LZUTF8:readable */
@@ -928,7 +928,7 @@ function _seekbar({
 		// Update time if needed
 		if (this.isTrackPlaying()) { this.time = fb.PlaybackTime < Number.MAX_SAFE_INTEGER ? fb.PlaybackTime : 0; }
 		// And paint
-		if (window.IsVisible) { throttlePaint(); }
+		if (window.IsVisible) { this.move(this.mX, this.my); throttlePaint(); }
 	};
 	/**
 	 * Normalize data to have amplitudes between [0, 1]. Alternatively, it may also normalize quantity of points according to panel width.
@@ -2708,6 +2708,21 @@ function _seekbar({
 		return (x >= this.x && y >= this.y && x <= this.x + this.w && y <= this.y + this.h);
 	};
 	/**
+	 * Checks if position is over waveform element
+	 *
+	 * @property
+	 * @name traceWaveform
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {boolean}
+	*/
+	this.traceWaveform = (x, y) => {
+		const margin = this.getDisplayChannels().length > 1 ? _scale(5) : 0;
+		return (x >= this.x + this.marginW && x <= this.x + (this.w - this.marginW * 2) && y >= this.h - (this.h - this.y - margin) * this.scaleH && y <= (this.h - this.y - margin) * this.scaleH);
+	};
+	/**
 	 * Called on on_mouse_lbtn_up
 	 *
 	 * @property
@@ -2813,8 +2828,12 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.move = (x, y, mask) => {
+		if (!this.active) { return; }
 		this.mX = x;
 		this.mY = y;
+		if (this.frames === 0 && this.bBinaryFound && !this.isError && this.isAllowedFile) { window.SetCursor(IDC_APPSTARTING); }
+		else if (this.traceWaveform(x, y)) { window.SetCursor(IDC_HAND); }
+		else { window.SetCursor(IDC_ARROW); }
 		if (mask === MK_LBUTTON && this.lbtnUp(x, y, mask)) {
 			this.mouseDown = true;
 		}

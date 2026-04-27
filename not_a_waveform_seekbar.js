@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/04/26
+//27/04/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '3.4.0' }); }
 
@@ -7,7 +7,7 @@ if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-
 window.DrawMode = Math.max(Math.min(window.GetProperty('Draw mode: GDI (0), D2D (1)', 0), 1), 0);
 
 include('helpers\\helpers_xxx.js');
-/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable, VK_RIGHT:readable, VK_UP:readable, VK_LEFT:readable, VK_DOWN:readable  */
+/* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable, VK_RIGHT:readable, VK_UP:readable, VK_LEFT:readable, VK_DOWN:readable, TTDT_INITIAL:readable, TTDT_AUTOPOP:readable */
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable, MK_LBUTTON:readable */
 include('helpers\\helpers_xxx_UI.js');
@@ -268,8 +268,8 @@ seekbar.applyUiSettings = function (settings, bForce) {
 };
 
 seekbar.tooltip = new _tt(null);
-seekbar.tooltip.SetDelayTime(3, seekbarProperties.bShowTooltipOnClick[1] ? 500 : 1500);
-seekbar.tooltip.SetDelayTime(2, seekbarProperties.bShowTooltipOnClick[1] ? Infinity : 3000);
+seekbar.tooltip.SetDelayTime(TTDT_INITIAL, seekbarProperties.bShowTooltipOnClick[1] ? 500 : 1500);
+seekbar.tooltip.SetDelayTime(TTDT_AUTOPOP, seekbarProperties.bShowTooltipOnClick[1] ? Infinity : 3000);
 
 globProfiler.Print('seekbar');
 
@@ -475,6 +475,7 @@ addEventListener('on_notify_data', (name, info) => {
 {
 	const initHandle = seekbar.getHandle();
 	if (initHandle) {
+		seekbar.checkAllowedFile(initHandle);
 		if (window.IsVisible) { window.Repaint(); }
 		if (seekbar.getPreferredTrackMode() === 'selected') {
 			setTimeout(() => { on_item_focus_change(); }, 0);
