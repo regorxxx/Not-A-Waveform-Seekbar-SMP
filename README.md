@@ -10,6 +10,7 @@ A [foobar2000](https://www.foobar2000.org/) UI [Spider Monkey Panel](https://the
 * [ffprobe](https://ffmpeg.org/download.html) can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\ffprobe\'.
 * Visualizer mode to simply show an animation which changes according to BPM (if tag exists).
 * VU Meter mode by RMS or peak levels.
+* D2D support (requires JSplitter).
 * Fully configurable using the R. Click menu:
 	* Colors
 	* Waveform modes
