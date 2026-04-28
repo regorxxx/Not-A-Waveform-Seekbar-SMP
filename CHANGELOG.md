@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [4.0.0](#400---2026-04-28)
 - [3.4.0](#340---2026-01-12)
 - [3.3.0](#330---2025-12-23)
 - [3.2.1](#321---2025-12-12)
@@ -37,6 +38,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [4.0.0] - 2026-04-28
 ### Added
 - Console: added on paint profile logging setting. Can be used to compare D2D vs GDI painting performance for ex. Only enable it while needed, it will flood the console log while playing every 60 seconds! See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1078621.html#msg1078621)
 - UI: new available values for normalized width, specially at low range.
@@ -452,7 +459,8 @@
 ### Fixed
 
 
-[Unreleased]: ../../compare/v3.4.0...HEAD
+[Unreleased]: ../../compare/v4.0.0...HEAD
+[4.0.0]: ../../compare/v3.4.0...v4.0.0
 [3.4.0]: ../../compare/v3.3.0...v3.4.0
 [3.3.0]: ../../compare/v3.2.1...v3.3.0
 [3.2.1]: ../../compare/v3.2.0...v3.2.1
