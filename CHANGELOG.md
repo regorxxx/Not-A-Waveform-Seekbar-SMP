@@ -40,6 +40,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: support for dark themed popups if JS host allows it.
 ### Removed
 ### Fixed
 
