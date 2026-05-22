@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/04/26
+//22/05/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '4.0.0' }); }
 
@@ -17,7 +17,7 @@ include('helpers\\helpers_xxx_file.js');
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isJSON:readable, isBoolean:readable, isString:readable, clone:readable, isInt:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
-/* global extendGR:readable */
+/* global extendGR:readable, checkCompatible:readable */
 include('helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, checkJsonProperties:readable */
 include('helpers\\menu_xxx.js');
@@ -33,6 +33,7 @@ include('main\\window\\window_xxx_dynamic_colors.js');
 /* global dynamicColors:readable, mostContrastColor */
 
 globProfiler.Print('dependencies');
+checkCompatible();
 
 _copyDependencies(['', 'ffprobe'], void (0), true);
 if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'audiowaveform'], void (0), false); }
