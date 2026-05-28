@@ -41,6 +41,7 @@
 ### Added
 ### Changed
 - UI: support for dark themed popups if JS host allows it.
+- UI: improved blend color mode to use a mix of CUI/DUI colors when no art is available (like Biograhpy and Library-Tree-SMP do).
 ### Removed
 ### Fixed
 
