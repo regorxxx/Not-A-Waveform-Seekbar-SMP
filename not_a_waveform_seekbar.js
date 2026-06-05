@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/05/26
+//05/06/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '4.0.0' }); }
 
@@ -468,6 +468,16 @@ addEventListener('on_notify_data', (name, info) => {
 			if (info && seekbarProperties.bNotifyColors[1] && background.scheme) {
 				window.NotifyOthers(String(info), background.scheme);
 			}
+			break;
+		}
+		case window.ScriptInfo.Name + ': switch enable panel':
+		case window.ScriptInfo.Name + ': disable panel':
+		case window.ScriptInfo.Name + ': enable panel': {
+			if (info && info.window && !info.window.includes(window.Name)) { break; }
+			if (name === (window.ScriptInfo.Name + ': switch enable panel')) { seekbar.switch(); }
+			else  { seekbar.switch(name === (window.ScriptInfo.Name + ': enable panel')); }
+			seekbarProperties.bEnabled[1] = seekbar.active;
+			seekbar.saveProperties();
 			break;
 		}
 	}

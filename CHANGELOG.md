@@ -39,6 +39,10 @@
 
 ## [Unreleased][]
 ### Added
+- External integration: new callbacks.
+	* 'Not-A-Waveform-Seekbar-SMP: switch enable panel'		-> { window: string[] }
+	* 'Not-A-Waveform-Seekbar-SMP: enable panel'			-> { window: string[] }
+	* 'Not-A-Waveform-Seekbar-SMP: disable panel'			-> { window: string[] }
 ### Changed
 - UI: support for dark themed popups if JS host allows it.
 - UI: improved blend color mode to use a mix of CUI/DUI colors when no art is available (like Biograhpy and Library-Tree-SMP do).
