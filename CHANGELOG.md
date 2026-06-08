@@ -45,7 +45,9 @@
 	* 'Not-A-Waveform-Seekbar-SMP: disable panel'			-> { window: string[] }
 ### Changed
 - UI: support for dark themed popups if JS host allows it.
-- UI: improved blend color mode to use a mix of CUI/DUI colors when no art is available (like Biograhpy and Library-Tree-SMP do).
+- UI: improved blend color mode to use a mix of CUI/DUI colors when no art is available (like Biography and Library-Tree-SMP do).
+- Helpers: updated curl.exe to v8.20.0-slim. See [here](https://github.com/lordmulder/cURL-build-win32).
+- Helpers: updated 7za.exe to v26.01. See [here](https://www.7-zip.org/download.html).
 ### Removed
 ### Fixed
 
