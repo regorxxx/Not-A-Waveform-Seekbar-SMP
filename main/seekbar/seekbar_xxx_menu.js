@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/26
+//06/06/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -385,7 +385,7 @@ function settingsMenu(bClear = true) {
 				menu.newEntry({
 					menuName: subMenuFour, entryText: opt.key, func: () => {
 						const displayChannels = opt.val.size
-							? oldVal.isSuperset(opt.val)
+							? oldVal.isSupersetOf(opt.val)
 								? [...oldVal.difference(opt.val)]
 								: [...oldVal.union(opt.val)]
 							: [];
@@ -393,7 +393,7 @@ function settingsMenu(bClear = true) {
 						this.saveProperties();
 					}, flags: this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED
 				});
-				menu.newCheckMenuLast(() => oldVal.isSuperset(opt.val));
+				menu.newCheckMenuLast(() => oldVal.isSupersetOf(opt.val));
 			});
 		menu.newSeparator(subMenuFour);
 		menu.newEntry({
