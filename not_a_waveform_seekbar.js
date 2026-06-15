@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/26
+//12/06/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '4.0.0' }); }
 
@@ -285,7 +285,7 @@ if (!seekbarProperties.firstPopup[1]) {
 
 // Update check
 if (seekbarProperties.bAutoUpdateCheck[1]) {
-	include('helpers\\helpers_xxx_web_update.js');
+	include('helpers\\helpers_xxx_web.js');
 	/* global checkUpdate:readable */
 	setTimeout(checkUpdate, 120000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb });
 }
