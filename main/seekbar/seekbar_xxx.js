@@ -1,5 +1,5 @@
 'use strict';
-//27/04/26
+//15/06/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -1035,14 +1035,13 @@ function _seekbar({
 			} else if (['audiowaveform', 'visualizer'].includes(this.analysis.binaryMode) || this.isFallback || bFallbackMode.paint) {
 				for (let c = 0; c < this.channels; c++) {
 					// Calculate max values
-					let max = 0;
 					this.current[c].forEach((frame) => {
 						upper[c] = Math.max(upper[c], frame);
 						lower[c] = Math.min(lower[c], frame);
 					});
-					max = Math.max(Math.abs(upper[c]), Math.abs(lower[c]));
-					// Calculate point scale
-					this.current[c] = this.current[c].map((frame) => round(frame / max, 3));
+					const max = Math.max(Math.abs(upper[c]), Math.abs(lower[c]));
+					// Normalize
+					if (max !== 0 && max !== 1) { this.current[c] = this.current[c].map((frame) => round(frame / max, 3)); }
 				}
 			}
 		}
@@ -2915,24 +2914,23 @@ function _seekbar({
 	 * @memberof _seekbar
 	 * @param {object} processedData - Processed seekbar data
 	 * @param {string} seekbarFile - Track ID file path
-	 * @param {'.ff'|'.aw'} prefix - Binary mode prefix
+	 * @param {'.aw.m.lz16'|'.aw.m.lz'|'.aw.m.json'|'.aw.lz16'|'.aw.lz'|'.aw.json'|'.ff.m.lz16'|'.ff.m.lz'|'.ff.m.json'|'.ff.lz16'|'.ff.lz'|'.ff.json'} ext - Extension. Ending with '.lz16' (UTF-16) or '.lz' (UTF-8) enables associated compression mode
 	 * @returns {boolean} True on success
 	*/
-	this.saveData = (processedData, seekbarFile, prefix) => {
+	this.saveData = (processedData, seekbarFile, ext = this.getExtension()) => {
 		const str = JSON.stringify(processedData);
-		if (this.analysis.bMultiChannel) { prefix += '.m'; }
-		if (this.analysis.compressionMode === 'utf-16') {
+		if (ext.endsWith('.lz16')) {
 			// To save UTF16-LE files, FSO is needed.
 			// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 			const compressed = LZString.compressToUTF16(str);
-			return _saveFSO(seekbarFile + prefix + '.lz16', compressed, true);
-		} else if (this.analysis.compressionMode === 'utf-8') {
+			return _saveFSO(seekbarFile + ext, compressed, true);
+		} else if (ext.endsWith('.lz')) {
 			// Only Base64 strings can be saved on UTF8 files...
 			// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
 			const compressed = LZUTF8.compress(str, { outputEncoding: 'Base64' });
-			return _save(seekbarFile + prefix + '.lz', compressed);
+			return _save(seekbarFile + ext, compressed);
 		} else {
-			return _save(seekbarFile + prefix + '.json', str);
+			return _save(seekbarFile + ext, str);
 		}
 	};
 	/**
@@ -2953,6 +2951,31 @@ function _seekbar({
 		const seekbarFile = this.folder + id;
 		const sourceFile = this.isZippedFile ? handle.Path.split('|')[0] : handle.Path;
 		return { seekbarFolder, seekbarFile, sourceFile };
+	};
+	/**
+	 * Retrieves associated data extension for given binary mode
+	 *
+	 * @property
+	 * @name getExtension
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} binaryMode
+	 * @param {'utf-16'|'utf-8'|'none'} compressionMode
+	 * @returns {'.aw.m.lz16'|'.aw.m.lz'|'.aw.m.json'|'.aw.lz16'|'.aw.lz'|'.aw.json'|'.ff.m.lz16'|'.ff.m.lz'|'.ff.m.json'|'.ff.lz16'|'.ff.lz'|'.ff.json'}
+	*/
+	this.getExtension = (binaryMode = this.analysis.binaryMode, compressionMode = this.analysis.compressionMode) => {
+		let ext = '';
+		switch (binaryMode) {
+			case 'audiowaveform': ext += '.aw'; break;
+			case 'ffprobe': ext += '.ff'; break;
+		};
+		if (this.analysis.bMultiChannel) { ext += '.m'; }
+		switch (compressionMode) {
+			case 'utf-16': ext += '.lz16'; break;
+			case 'utf-8': ext += '.lz'; break;
+			default: ext += '.json';
+		}
+		return ext;
 	};
 	/**
 	 * Analyzes a track, saves data file if needed and sets current data for panel.
@@ -3044,50 +3067,18 @@ function _seekbar({
 			const bDisplayVisualizer = this.isFallback || bVisualizer || bFallbackMode.analysis;
 			if (data) {
 				if (bNotFallback) {
-					if (bFfProbe && data.frames) { data = data.frames; }
-					else if (bAuWav && data.data) { data = data.data; }
-				}
-				const len = data.length;
-				if (bNotFallback && bFfProbe && len) {
-					const processedData = Array.from({ length: channels }, () => []);
-					if (this.analysis.bMultiChannel) {
-						for (let i = 1; i <= channels; i++) {
-							data.forEach((frame) => {
-								processedData[i - 1].push(this.processFfmpegFrame(frame, i));
-							});
+					const type = bFfProbe ? 'ffprobe' : bAuWav ? 'audiowaveform' : bAuWiz ? 'audiowizard' : 'none';
+					const processedData = this.processRawData(data, type, channels);
+					if (processedData.length) {
+						if (bSameHandle) { this.current = processedData; }
+						// Save data and optionally compress it
+						if (this.allowedSaveData(handle)) {
+							const ext = this.getExtension();
+							this.saveData(processedData, seekbarFile, ext);
+							if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + ext); }
 						}
-					} else {
-						data.forEach((frame) => {
-							processedData[0].push(this.processFfmpegFrame(frame, 'Overall'));
-						});
 					}
-					if (bSameHandle) { this.current = processedData; }
-					// Save data and optionally compress it
-					if (this.allowedSaveData(handle)) {
-						this.saveData(processedData, seekbarFile, '.ff');
-						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + '.ff'); }
-					}
-				} else if (bNotFallback && bAuWav && len) {
-					const processedData = Array.from({ length: channels }, () => []);
-					if (this.analysis.bMultiChannel) {
-						let c = 0, i = 0;
-						data.forEach((frame) => {
-							if (i === 2) {
-								c = c === (channels - 1) ? 0 : c + 1;
-								i = 0;
-							}
-							processedData[c].push(frame);
-							i++;
-						});
-					} else {
-						processedData[0] = data;
-					}
-					if (bSameHandle) { this.current = processedData; }
-					if (this.allowedSaveData(handle)) {
-						this.saveData(processedData, seekbarFile, '.aw');
-						if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + '.aw'); }
-					}
-				} else if (bDisplayVisualizer && len && (this.isTrackPlaying() || bSameHandle && this.isOnDemandTrack())) {
+				} else if (bDisplayVisualizer && data.length && (this.isTrackPlaying() || bSameHandle && this.isOnDemandTrack())) {
 					this.current = data;
 				}
 			}
@@ -3105,6 +3096,118 @@ function _seekbar({
 			}
 		}
 		return bDone;
+	};
+	/**
+	 * Process raw data as provided by analysis binaries
+	 *
+	 * @property
+	 * @name processRawData
+	 * @kind method
+	 * @async
+	 * @memberof _seekbar
+	 * @param {object} data
+	 * @param {'ffprobe'|'audiowaveform'} type - Data type
+	 * @param {number} channels
+	 * @returns {Promise.<Boolean>}
+	*/
+	this.processRawData = (data, type, channels = this.channels) => {
+		let processedData = [];
+		if (data) {
+			switch (type) {
+				case 'ffprobe': {
+					if (data.frames) { data = data.frames; }
+					const len = data.length;
+					if (len) {
+						processedData = Array.from({ length: channels }, () => []);
+						if (this.analysis.bMultiChannel) {
+							for (let i = 1; i <= channels; i++) {
+								data.forEach((frame) => {
+									processedData[i - 1].push(this.processFfmpegFrame(frame, i));
+								});
+							}
+						} else {
+							data.forEach((frame) => {
+								processedData[0].push(this.processFfmpegFrame(frame, 'Overall'));
+							});
+						}
+					}
+					break;
+				}
+				case 'audiowaveform': {
+					if (data.data) { data = data.data; }
+					const len = data.length;
+					if (len) {
+						processedData = Array.from({ length: channels }, () => []);
+						if (this.analysis.bMultiChannel) {
+							let c = 0, i = 0;
+							data.forEach((frame) => {
+								if (i === 2) {
+									c = c === (channels - 1) ? 0 : c + 1;
+									i = 0;
+								}
+								processedData[c].push(frame);
+								i++;
+							});
+						} else {
+							processedData[0] = data;
+						}
+					}
+					break;
+				}
+			}
+		}
+		return processedData;
+	};
+	/**
+	 * Extracts waveform data using Audio Wizard for given handles
+	 *
+	 * @property
+	 * @name runAudioWizard
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle[]|FbMetadbHandleList|FbMetadbHandle} handles - ffmpeg raw data frame
+	 * @param {number} resolution - Resolution in points per second [1-1000]
+	 * @param {boolean} bMultiChannel - Flag for multi-channel analysis (if false it's downmixed to mono)
+	 * @returns {Promise.<Boolean>} this.audioWizardData is filled on success
+	*/
+	this.runAudioWizard = (handles, resolution, bMultiChannel) => {
+		if (!this.binaries.audiowizard) { return Promise.resolve(false); }
+		if (!AudioWizard) { AudioWizard = new ActiveXObject('AudioWizard'); };
+		if (!AudioWizard) { return Promise.resolve(false); };
+		if (!Array.isArray(handles)) { handles = handles instanceof FbMetadbHandleList ? handles.Convert() : [handles]; }
+		return new Promise((resolve) => {
+			const metadb = handles.map((handle) => handle.Path + '\u001F' + handle.SubSong);
+			const trackCount = metadb.length;
+			AudioWizard.StartWaveformAnalysis(metadb, resolution, !bMultiChannel);
+			AudioWizard.SetFullTrackWaveformCallback((success) => {
+				try {
+					if (!success) { return resolve(false); }
+					for (let i = 0; i < trackCount; i++) {
+						this.internalAnalysisDataBuffer.push({ handle: handles[i], waveformData: AudioWizard.GetWaveformData(i) });
+					}
+					return resolve(true);
+				}
+				catch (e) { // eslint-disable-line no-unused-vars
+					AudioWizard.StopWaveformAnalysis();
+					return resolve(false);
+				}
+			});
+		});
+	};
+	this.internalAnalysisDataBuffer = [];
+	/**
+	 * Retrieves internal analysis data from buffer for given handle.
+	 *
+	 * @property
+	 * @name internalAnalysisData
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle} handle
+	 * @returns {Number[][]}
+	*/
+	this.internalAnalysisData = (handle) => {
+		const data = this.internalAnalysisDataBuffer.find((data) => data.handle === handle);
+		return data ? data.waveformData || null : null;
 	};
 	/**
 	 * Extracts Time, RMS level, RMS peak and Peak level ffmpeg data for a given channel.
