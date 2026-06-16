@@ -46,6 +46,7 @@
 - Configuration: added new "userAgent" (Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36) and "curlImpersonate" (curl_chrome146.bat) at global settings (globSettings.json) for arbitrary downloads using curl and/or JS-host methods.
 - Helpers: added curl-impersonate.exe v1.5.6. See [here](https://github.com/lexiforest/curl-impersonate).
 ### Changed
+- UI: 'Open data file' menu entry now shows explorer window with such file selected (instead of just the folder).
 - UI: support for dark themed popups if JS host allows it.
 - UI: improved blend color mode to use a mix of CUI/DUI colors when no art is available (like Biography and Library-Tree-SMP do).
 - Helpers: updated curl.exe to v8.20.0-slim. See [here](https://github.com/lordmulder/cURL-build-win32).

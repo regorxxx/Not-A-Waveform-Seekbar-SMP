@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/26
+//15/06/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -857,10 +857,11 @@ function settingsMenu(bClear = true) {
 	menu.newSeparator();
 	{
 		const handle = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem(false);
-		const { seekbarFolder } = this.getPaths(handle);
+		const { seekbarFolder, seekbarFile } = this.getPaths(handle);
 		menu.newEntry({
 			entryText: 'Open data file...', func: () => {
-				if (_isFolder(seekbarFolder)) { _explorer(seekbarFolder); }
+				const path = _isFile(seekbarFile + this.getExtension()) ? seekbarFile + this.getExtension() : seekbarFolder;
+				_explorer(path);
 			}, flags: handle && _isFolder(seekbarFolder) && this.analysis.binaryMode !== 'visualizer' ? MF_STRING : MF_GRAYED
 		});
 	}
