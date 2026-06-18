@@ -1,5 +1,5 @@
 'use strict';
-//15/06/26
+//18/06/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -480,6 +480,12 @@ function _seekbar({
 	const waveModesWide = new Set(['soundcloud', 'soundcloudgradient', 'bars', 'halfbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree']);
 	/** @type {Set<Preset['waveMode']>} - Wavemodes which use gradient painting */
 	const waveModesGrad = new Set(['soundcloudgradient', 'barsgradient', 'halfbarsgradient', 'processbargradient', 'processbargradientscaled']);
+	/** @type {{['ffprobe'|'audiowaveform'|'visualizer'|'audiowizard']: { name: string, type: string }}} - Info for every binary mode */
+	const binariesInfo = {
+		ffprobe: { name: 'ffprobe', type: 'Binary' },
+		audiowaveform: { name: 'Audiowaveform', type: 'Binary' },
+		visualizer: { name: 'Visualizer', type: 'JS-Host' }
+	};
 	/** @type {Number} - Last time update */
 	this.lastUpdate = Date.now();
 	/** @type {Number[]} - Frames around current time to draw VU animation */
@@ -2628,7 +2634,7 @@ function _seekbar({
 			? this.callbacks.backgroundColor ? invert(this.callbacks.backgroundColor(), true) : 0xFFFFFFFF
 			: invert(colors.bg, true);
 		if (!this.bBinaryFound) {
-			gr.GdiDrawText('Binary ' + _p(this.analysis.binaryMode) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			gr.GdiDrawText(this.getBinaryType(this.analysis.binaryMode)+ ' ' + _p(this.getBinaryName(this.analysis.binaryMode)) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
 			if (!fb.IsPlaying && this.analysis.binaryMode === 'visualizer') {
 				gr.GdiDrawText('Visualizer only works while playing', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
@@ -3268,6 +3274,56 @@ function _seekbar({
 			}
 		}
 		return data;
+	};
+	/**
+	 * Gets all binary modes (even if disabled by settings)
+	 *
+	 * @property
+	 * @name getAllAvailableBinaries
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {string[]}
+	*/
+	this.getAllAvailableBinaries = () => {
+		return Object.keys(binariesInfo);
+	};
+	/**
+	 * Gets all available binary modes (according to settings)
+	 *
+	 * @property
+	 * @name getAvailableBinaries
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {string[]}
+	*/
+	this.getAvailableBinaries = () => {
+		return this.getAllAvailableBinaries().filter((key) => typeof this.binaries[key] !== 'string' || this.binaries[key].length);
+	};
+	/**
+	 * Gets formatted name for every binary
+	 *
+	 * @property
+	 * @name getBinaryName
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} key
+	 * @returns {string}
+	*/
+	this.getBinaryName = (key) => {
+		return binariesInfo[key].name || '- not valid -';
+	};
+	/**
+	 * Gets formatted type for every binary. e.g. Component, Binary, ...
+	 *
+	 * @property
+	 * @name getBinaryType
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} key
+	 * @returns {string}
+	*/
+	this.getBinaryType = (key) => {
+		return binariesInfo[key].type || '- not valid -';
 	};
 	/**
 	 * Clamps RGBA components

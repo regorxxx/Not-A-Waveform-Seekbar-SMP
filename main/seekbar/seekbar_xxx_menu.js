@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/06/26
+//18/06/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -59,11 +59,7 @@ function settingsMenu(bClear = true) {
 	// Menus
 	{
 		const subMenu = menu.newMenu('Mode');
-		const options = [
-			{ name: 'FFprobe', key: 'ffprobe' },
-			{ name: 'Audiowaveform', key: 'audiowaveform' },
-			{ name: 'Visualizer', key: 'visualizer' }
-		].filter((o) => typeof this.binaries[o.key] !== 'string' || this.binaries[o.key].length);
+		const options = this.getAvailableBinaries().map((key) => { return {name: this.getBinaryName(key), key};} );
 		if (options.length) {
 			options.forEach((o) => {
 				const source = this.binaries[o.key];
