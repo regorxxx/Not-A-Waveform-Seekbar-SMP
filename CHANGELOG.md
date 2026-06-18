@@ -39,6 +39,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: added fallback to front art setting for Art by TF, if no file was found.
 - External integration: new callbacks.
 	* 'Not-A-Waveform-Seekbar-SMP: switch enable panel'		-> { window: string[] }
 	* 'Not-A-Waveform-Seekbar-SMP: enable panel'			-> { window: string[] }
