@@ -2643,9 +2643,10 @@ function _seekbar({
 			if (x <= currX && x >= currX - 2 * barW) { color = altColor = colors.currPos; }
 		}
 		let z = bVisualizer ? Math.abs(y) : y;
+		const steps = Math.max(Math.floor(barW / 2), 4);
 		if (z > 0) {
 			const tipCoords = [];
-			for (let i = 0; i <= 20; i++) { tipCoords.push(x + barW / 2 + barW / 2 * Math.cos(Math.PI * i / 20), axisY - z + 0.25 + barW / 2 * Math.sin(Math.PI + Math.PI * i / 20)); }
+			for (let i = 0; i <= steps; i++) { tipCoords.push(x + barW / 2 + barW / 2 * Math.cos(Math.PI * i / steps), axisY - z + 0.25 + barW / 2 * Math.sin(Math.PI + Math.PI * i / steps)); }
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
@@ -2658,7 +2659,7 @@ function _seekbar({
 		z = bVisualizer ? - Math.abs(y) : y;
 		if (z < 0) {
 			const tipCoords = [];
-			for (let i = 0; i <= 20; i++) { tipCoords.push(x + barW / 2 + barW / 2 * Math.cos(Math.PI * i / 20), axisY - z - 0.25 + barW / 2 * Math.sin(Math.PI * i / 20)); }
+			for (let i = 0; i <= steps; i++) { tipCoords.push(x + barW / 2 + barW / 2 * Math.cos(Math.PI * i / steps), axisY - z - 0.25 + barW / 2 * Math.sin(Math.PI * i / steps)); }
 			if (altColor !== color) {
 				if (color !== -1 && altColor !== -1) {
 					const topColor = this.blendColors(altColor, color, scale);
