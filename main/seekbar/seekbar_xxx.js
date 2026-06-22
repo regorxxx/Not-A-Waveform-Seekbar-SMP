@@ -1,5 +1,5 @@
 'use strict';
-//18/06/26
+//22/06/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -1655,22 +1655,7 @@ function _seekbar({
 			const bIsTrackPlaying = this.isTrackPlaying();
 			const bPartial = this.preset.paintMode === 'partial';
 			const bPrePaint = bPartial && this.preset.bPrePaint;
-			const bBars = this.preset.waveMode === 'bars';
 			const bHalfBars = this.preset.waveMode === 'halfbars';
-			const bWaveForm = this.preset.waveMode === 'waveform';
-			const bPoints = this.preset.waveMode === 'points';
-			const bBarsFilled = this.preset.waveMode === 'barsfilled';
-			const bBarsGrad = this.preset.waveMode === 'barsgradient';
-			const bHalfBarsFilled = this.preset.waveMode === 'halfbarsfilled';
-			const bHalfBarsGrad = this.preset.waveMode === 'halfbarsgradient';
-			const bWaveFormFilled = this.preset.waveMode === 'waveformfilled';
-			const bTree = this.preset.waveMode === 'tree';
-			const bSoundCloud = this.preset.waveMode === 'soundcloud';
-			const bSoundCloudGrad = this.preset.waveMode === 'soundcloudgradient';
-			const bProcessbar = this.preset.waveMode === 'processbar';
-			const bProcessbarFilled = this.preset.waveMode === 'processbarfilled';
-			const bProcessbarGrad = this.preset.waveMode === 'processbargradient';
-			const bProcessbarGradScaled = this.preset.waveMode === 'processbargradientscaled';
 			const bVuMeter = this.preset.waveMode === 'vumeter';
 			let bPaintedVu = false;
 			let bFilledVu = framesVu.length >= this.maxStepVu;
@@ -1682,6 +1667,7 @@ function _seekbar({
 			const size = (this.h - this.y - margin) * this.scaleH / channelsNum;
 			const barW = (this.w - this.marginW * 2) / this.frames;
 			const bPaintCurrent = barW > _scale(2);
+			const bPaintCurrenStyle = ['waveform', 'points', 'waveformfilled'].includes(this.preset.waveMode);
 			const minPointDiff = 1; // in px
 			const timeConstant = this.timeConstant;
 			gr.SetSmoothingMode(SmoothingMode.AntiAlias);
@@ -1738,38 +1724,55 @@ function _seekbar({
 							}
 						}
 					} else if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
-						if (bWaveForm) {
-							this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
-						} else if (bHalfBars) {
-							this.paintHalfBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bBars) {
-							this.paintBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bPoints) {
-							this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
-						} else if (bBarsFilled) {
-							this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bBarsGrad) {
-							this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bHalfBarsFilled) {
-							this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bHalfBarsGrad) {
-							this.paintHalfBarsGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bWaveFormFilled) {
-							this.paintWaveFill(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
-						} else if (bTree) {
-							this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
-						} else if (bSoundCloud) {
-							this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bSoundCloudGrad) {
-							this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
-						} else if (bProcessbar) {
-							this.paintProcessBar(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
-						} else if (bProcessbarFilled) {
-							this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
-						} else if (bProcessbarGrad) {
-							this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
-						} else if (bProcessbarGradScaled) {
-							this.processBarGradScale(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bPaintCurrent, colors);
+						switch (this.preset.waveMode) {
+							case 'waveform':
+								this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								break;
+							case 'waveformfilled':
+								this.paintWaveFilled(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								break;
+							case 'halfbars':
+								this.paintHalfBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'halfbarsfilled':
+								this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'halfbarsgradient':
+								this.paintHalfBarsGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'bars':
+								this.paintBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'barsfilled':
+								this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'barsgradient':
+								this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'points':
+								this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								break;
+							case 'tree':
+								this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								break;
+							case 'soundcloud':
+								this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'soundcloudgradient':
+								this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								break;
+							case 'processbar':
+								this.paintProcessBar(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								break;
+							case 'processbarfilled':
+								this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								break;
+							case 'processbargradient':
+								this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								break;
+							case 'processbargradientscaled':
+								this.processBarGradScale(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								break;
 						}
 						past.shift();
 						past.push({ x, y: Math.sign(scale) });
@@ -1777,7 +1780,7 @@ function _seekbar({
 					n++;
 				}
 				// Current position
-				if ((!bPaintCurrent || bWaveForm || bPoints || bWaveFormFilled || bVuMeter) && bIsTrackPlaying) {
+				if ((!bPaintCurrent || bPaintCurrenStyle || bVuMeter) && bIsTrackPlaying) {
 					this.paintCurrentPos(gr, currX, barW, colors);
 				}
 			}
@@ -2212,7 +2215,7 @@ function _seekbar({
 	 * Draws waveform (filled) wave mode.
 	 *
 	 * @property
-	 * @name paintWaveFill
+	 * @name paintWaveFilled
 	 * @kind method
 	 * @memberof _seekbar
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
@@ -2228,7 +2231,7 @@ function _seekbar({
 	 * @param {{bg:number, main:number, alt:number, bgFuture:number, mainFuture:number, altFuture:number}} colors - Colors used
 	 * @returns {void}
 	*/
-	this.paintWaveFill = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
+	this.paintWaveFilled = (gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors) => { // NOSONAR
 		barW = barW * 1.05;
 		const scaledSize = size / 2 * scale;
 		this.offset[n] += ((bPrePaint && bIsFuture || this.preset.paintMode === 'full') && this.preset.bAnimate || bVisualizer ? - Math.sign(scale) * Math.random() * scaledSize / 10 * this.step / this.maxStep : 0); // Add movement when painting future
