@@ -77,6 +77,7 @@ function _seekbar({
 		bVariableRefreshRate: false,
 		bNormalizeWidth: false,
 		normalizeWidth: _scale(4),
+		offSetNegAxis: 0,
 		bLogScale: true
 	},
 	analysis = {
@@ -309,6 +310,7 @@ function _seekbar({
 	 * @property {Boolean} bVariableRefreshRate - Flag to change refresh rate around the selected value to ensure code is run smoothly (for too low refresh rates)
 	 * @property {Boolean} bNormalizeWidth - Flag to use data interpolation to display it normalized to the window width adjusted by normalizeWidth param (instead of showing more or less points according to track length). Any track with any length will display with the same amount of detail this way.
 	 * @property {number} normalizeWidth - Size unit for normalization.
+	 * @property {number} offSetNegAxis - X-offset for negative Y-Axis.
 	 * @property {Boolean} bLogScale - Flag to display VU Meter scale in log (dB) or linear scale.
 	 */
 	/** @type {UI} - Panel UI related settings */
@@ -1694,8 +1696,10 @@ function _seekbar({
 					const x = this.x + this.marginW + barW * n;
 					// Paint the alt background at the proper point
 					if (bIsFuture && bPrePaint && !bPaintedBg && bIsTrackPlaying) {
-						if (colors.bgFuture !== -1) { gr.FillSolidRect(currX, this.y, this.w, this.h, colors.bgFuture); }
-						bPaintedBg = true;
+						if (!this.ui.offSetNegAxis || scale > 0) {
+							if (colors.bgFuture !== -1) { gr.FillSolidRect(currX, this.y, this.w, this.h, colors.bgFuture); }
+							bPaintedBg = true;
+						}
 					}
 					// Don't calculate waveform if not needed
 					if ([colors.main, colors.alt, colors.mainFuture, colors.altFuture].every((col) => col === -1)) {
@@ -1724,58 +1728,59 @@ function _seekbar({
 							}
 						}
 					} else if (past.every((p) => (p.y !== Math.sign(scale) && !bHalfBars) || (p.y === Math.sign(scale) || bHalfBars) && (x - p.x) >= minPointDiff)) {
+						const px = this.ui.offSetNegAxis && scale < 0 ? x + this.ui.offSetNegAxis * barW : x;
 						switch (this.preset.waveMode) {
 							case 'waveform':
 								this.paintWave(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 								break;
 							case 'waveformfilled':
-								this.paintWaveFilled(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								this.paintWaveFilled(gr, n, px, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 								break;
 							case 'halfbars':
-								this.paintHalfBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintHalfBars(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'halfbarsfilled':
-								this.paintHalfBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintHalfBarsFilled(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'halfbarsgradient':
-								this.paintHalfBarsGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintHalfBarsGrad(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'bars':
-								this.paintBars(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintBars(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'barsfilled':
-								this.paintBarsFilled(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintBarsFilled(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'barsgradient':
-								this.paintBarsGradient(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintBarsGradient(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'points':
-								this.paintPoints(gr, n, x, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								this.paintPoints(gr, n, px, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 								break;
 							case 'tree':
-								this.paintTree(gr, n, x, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
+								this.paintTree(gr, n, px, barW, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, colors);
 								break;
 							case 'soundcloud':
-								this.paintSoundCloud(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintSoundCloud(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'soundcloudgradient':
-								this.paintSoundCloudGrad(gr, n, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
+								this.paintSoundCloudGrad(gr, n, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bVisualizer, bPaintCurrent, colors);
 								break;
 							case 'processbar':
-								this.paintProcessBar(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								this.paintProcessBar(gr, px, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
 								break;
 							case 'processbarfilled':
-								this.paintProcessBarFilled(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								this.paintProcessBarFilled(gr, px, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
 								break;
 							case 'processbargradient':
-								this.paintProcessBarGrad(gr, x, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								this.paintProcessBarGrad(gr, px, barW, currX, offsetY, size, bPrePaint, bIsFuture, bPaintCurrent, colors);
 								break;
 							case 'processbargradientscaled':
-								this.processBarGradScale(gr, x, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bPaintCurrent, colors);
+								this.processBarGradScale(gr, px, barW, currX, offsetY, size, scale, bPrePaint, bIsFuture, bPaintCurrent, colors);
 								break;
 						}
 						past.shift();
-						past.push({ x, y: Math.sign(scale) });
+						past.push({ x: px, y: Math.sign(scale) });
 					}
 					n++;
 				}
@@ -2637,7 +2642,7 @@ function _seekbar({
 			? this.callbacks.backgroundColor ? invert(this.callbacks.backgroundColor(), true) : 0xFFFFFFFF
 			: invert(colors.bg, true);
 		if (!this.bBinaryFound) {
-			gr.GdiDrawText(this.getBinaryType(this.analysis.binaryMode)+ ' ' + _p(this.getBinaryName(this.analysis.binaryMode)) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
+			gr.GdiDrawText(this.getBinaryType(this.analysis.binaryMode) + ' ' + _p(this.getBinaryName(this.analysis.binaryMode)) + ' not found', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);
 		} else if (this.isError) {
 			if (!fb.IsPlaying && this.analysis.binaryMode === 'visualizer') {
 				gr.GdiDrawText('Visualizer only works while playing', this.ui.gFont, textColor, this.x + this.marginW, 0, this.w - this.marginW * 2, this.h, center);

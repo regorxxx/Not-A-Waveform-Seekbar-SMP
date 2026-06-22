@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/06/26
+//22/06/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -59,7 +59,7 @@ function settingsMenu(bClear = true) {
 	// Menus
 	{
 		const subMenu = menu.newMenu('Mode');
-		const options = this.getAvailableBinaries().map((key) => { return {name: this.getBinaryName(key), key};} );
+		const options = this.getAvailableBinaries().map((key) => { return { name: this.getBinaryName(key), key }; });
 		if (options.length) {
 			options.forEach((o) => {
 				const source = this.binaries[o.key];
@@ -300,7 +300,7 @@ function settingsMenu(bClear = true) {
 			menu.newCheckMenuLast(() => this.preset[o.key]);
 		});
 		if (menu.getLastEntry().flags !== MF_GRAYED) {
-			const subMenuTwo = menu.newMenu('Seconds', subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
+			const subMenuTwo = menu.newMenu('Seconds\t' + _b(this.preset.futureSecs === Infinity ? 'Full' : this.preset.futureSecs), subMenu, () => this.preset.paintMode === 'full' || !this.preset.bPrePaint ? MF_GRAYED : MF_STRING);
 			[Infinity, 2, 5, 10]
 				.forEach((s) => {
 					const entryText = (Number.isFinite(s) ? s : 'Full');
@@ -339,7 +339,7 @@ function settingsMenu(bClear = true) {
 			menu.newCheckMenuLast(() => this.ui[o.key]);
 		});
 		if (menu.getLastEntry().flags !== MF_GRAYED) {
-			const subMenuThree = menu.newMenu('Width', subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
+			const subMenuThree = menu.newMenu('Width\t' + _b(this.ui.bNormalizeWidth ? this.ui.normalizeWidth : '-N/A-'), subMenu, () => this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED);
 			[...new Set([_scale(20), _scale(10), _scale(8), _scale(6), _scale(4), _scale(3), _scale(2), _scale(1), 3, 2, 1.5, 1, 0.5].sort((a, b) => b - a))]
 				.forEach((s) => {
 					menu.newEntry({
@@ -358,6 +358,15 @@ function settingsMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => this.ui.bLogScale);
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Negative wave offset\t' + _b(this.ui.offSetNegAxis), func: () => {
+				const input = Input.number('real', this.ui.offSetNegAxis, 'Enter value:\n(number ≥-1 and ≤0)\n\nAt -1, the positive and negative part of the waveform will be aligned and for greater values the negative side will be displaced at right (proportional to the width setting).', 'Seekbar: negative wave offset', 0, [(n) => n >= -1 && n <= 0]);
+				if (input === null) { return; }
+				this.updateConfig({ ui: { offSetNegAxis:  input } });
+				this.saveProperties();
+			}
+		});
 		menu.newSeparator(subMenu);
 		const subMenuFour = menu.newMenu('Channels display' + (this.analysis.bMultiChannel ? '' : '\t(multi-channel only)'), subMenu, () => this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED);
 		menu.newEntry({
