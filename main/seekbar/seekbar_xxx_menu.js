@@ -235,6 +235,7 @@ function settingsMenu(bClear = true) {
 			{ name: 'Bars', key: 'bars' },
 			{ name: 'Bars (filled)', key: 'barsfilled' },
 			{ name: 'Bars (gradient)', key: 'barsgradient' },
+			{ name: 'Rounded Bars (gradient)', key: 'barsroundgradient' },
 			{ name: 'Points', key: 'points' },
 			{ name: 'Half-Bars', key: 'halfbars' },
 			{ name: 'Half-Bars (filled)', key: 'halfbarsfilled' },

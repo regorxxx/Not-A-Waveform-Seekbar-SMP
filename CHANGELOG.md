@@ -41,6 +41,7 @@
 ### Added
 - UI: added fallback to front art setting for Art by TF, if no file was found.
 - UI: added setting to control offset for the negative part of the waveform (lower). Previous behavior was equivalent to 0 value, but setting it to -1 will ensure top and bottom parts are aligned.
+- Styles: added 'Rounded Bars (gradient)', meant to be used along the negative wave offset setting above at -1, to mimic [Namida style](https://github.com/namidaco/waveform_extractor).
 - External integration: new callbacks.
 	* 'Not-A-Waveform-Seekbar-SMP: switch enable panel'		-> { window: string[] }
 	* 'Not-A-Waveform-Seekbar-SMP: enable panel'			-> { window: string[] }
