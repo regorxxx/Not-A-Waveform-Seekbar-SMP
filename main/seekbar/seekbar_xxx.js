@@ -1,5 +1,5 @@
 'use strict';
-//22/06/26
+//24/06/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable */
@@ -1297,10 +1297,15 @@ function _seekbar({
 		const bNoVisual = this.analysis.binaryMode !== 'visualizer';
 		const bNoSubSong = !this.isSubSong(handle);
 		const bValidExt = this.isCompatibleFileExtension(handle);
-		this.isFile = _isFile(handle.Path);
-		this.isLink = _isLink(handle.Path);
 		this.isZippedFile = handle.RawPath.startsWith('unpack://');
-		this.isAllowedFile = bNoVisual && bNoSubSong && bValidExt && !this.isZippedFile;
+		const path = handle.Path ?
+			this.isZippedFile
+				? handle.Path.split('|')[0]
+				: handle.Path
+			: '';
+		this.isFile = _isFile(path);
+		this.isLink = _isLink(path);
+		this.isAllowedFile = bNoVisual && bNoSubSong && !this.isZippedFile && bValidExt && !this.isLink;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
 		this.channels = this.analysis.bMultiChannel
 			? Number(new FbTitleFormat('$info(channels)').EvalWithMetadb(handle))
