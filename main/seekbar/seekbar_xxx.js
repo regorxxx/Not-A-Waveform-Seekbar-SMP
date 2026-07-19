@@ -1345,7 +1345,7 @@ function _seekbar({
 		}
 	};
 	/**
-	 *  Checks if schema is valid for current analysis data (either from file or processing)
+	 * Checks if schema is valid for current analysis data (either from file or processing)
 	 *
 	 * @property
 	 * @name isSchemaValid
@@ -3271,11 +3271,10 @@ function _seekbar({
 			// Break if it takes too much time: 10 secs per 3 min of track
 			const id = setInterval(() => {
 				if (_isFile(seekbarFolder + 'data.json')) {
-					if (!bFfProbe) { clearInterval(id); resolve(true); }
-					else { // ffmpeg writes sequentially so wait until it finish... cache it for later use
+					if (bFfProbe) { // ffmpeg writes sequentially so wait until it finish... cache it for later use
 						data = _jsonParseFile(seekbarFolder + 'data.json', this.codePage);
 						if (data) { clearInterval(id); resolve(true); }
-					}
+					} else { clearInterval(id); resolve(true); }
 				} else if (Date.now() > timeout) { clearInterval(id); resolve(false); }
 			}, 300);
 		}));
