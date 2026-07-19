@@ -898,58 +898,58 @@ function _seekbar({
 			const bMulti = this.analysis.bMultiChannel;
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.json')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.json'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.json'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) { return; }
 			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.lz'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) { return; }
 			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz16')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.lz16'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.json')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.json'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.json'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.m.json', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.lz')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.lz'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.m.lz', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.lz16')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.lz16'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.m.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.json')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.json'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.json'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.lz')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.lz'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.lz16')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.lz16'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.json')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.json'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.json'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.json', bIsRetry)) { return; }
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.lz'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz', bIsRetry)) { return; }
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz16')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.lz16'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz16', bIsRetry)) { return; }
 			} else if (bAuWiz && !bMulti && _isFile(seekbarFile + '.awz.json')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.json'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.json'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.json', bIsRetry)) { return; }
 			} else if (bAuWiz && !bMulti && _isFile(seekbarFile + '.awz.lz')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.lz'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.lz', bIsRetry)) { return; }
 			} else if (bAuWiz && !bMulti && _isFile(seekbarFile + '.awz.lz16')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.lz16'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.lz16', bIsRetry)) { return; }
-			}  else if (bAuWiz && bMulti && _isFile(seekbarFile + '.awz.m.json')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.json'));
+			} else if (bAuWiz && bMulti && _isFile(seekbarFile + '.awz.m.json')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.json'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.m.json', bIsRetry)) { return; }
 			} else if (bAuWiz && bMulti && _isFile(seekbarFile + '.awz.m.lz')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.lz'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.m.lz', bIsRetry)) { return; }
 			} else if (bAuWiz && bMulti && _isFile(seekbarFile + '.awz.m.lz16')) {
-				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.lz16'));
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.m.lz16', bIsRetry)) { return; }
 			} else if (this.analysis.bAutoAnalysis && (this.isFile || this.isLink) && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
@@ -957,7 +957,7 @@ function _seekbar({
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
 					if (this.currentHandle && !this.compareTrack(handle)) { return; }
 					// Calculate waveform on the fly
-					if (this.current[0]) { this.normalizePoints(); }
+					if (this.current[0]) { this.calcFrameStats(); this.normalizePoints(); }
 					// Set animation using BPM if possible
 					if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 					// Update time if needed
@@ -975,6 +975,7 @@ function _seekbar({
 			if (this.current[0]) {
 				// Calculate waveform on the fly
 				if (this.analysis.bMultiChannel && this.preset.bDownMixToMono) { this.downMixToMono(); }
+				this.calcFrameStats();
 				this.normalizePoints(!bVisualizer && this.ui.bNormalizeWidth);
 				this.timeConstant = handle.Length / this.frames;
 			}
@@ -989,7 +990,24 @@ function _seekbar({
 		if (window.IsVisible) { this.move(this.mX, this.my); throttlePaint(); }
 	};
 	/**
-	 * Normalize data to have amplitudes between [0, 1]. Alternatively, it may also normalize quantity of points according to panel width.
+	 * Calculates frame stats from current data
+	 *
+	 * @property
+	 * @name calcFrameStats
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {number}
+	*/
+	this.calcFrameStats = () => {
+		switch (this.analysis.binaryMode) {
+			case 'audiowaveform':
+			case 'audiowizard': this.framesSource = this.frames = this.current[0].length * 2; break;
+			default: this.framesSource = this.frames = this.current[0].length; break;
+		}
+		return this.frames;
+	};
+	/**
+	 * Normalize data regarding amplitude and structure. Alternatively, it may also normalize quantity of points according to panel width.
 	 *
 	 * @property
 	 * @name normalizePoints
@@ -999,7 +1017,6 @@ function _seekbar({
 	 * @returns {void}
 	*/
 	this.normalizePoints = (bNormalizeWidth = false) => {
-		this.framesSource = this.frames = this.current[0].length;
 		if (this.frames) {
 			const bDiscardedSamples = this.clampResolution(Math.max(this.w / _scale(1), 40000));
 			const limits = this.normalizeAmplitude();
@@ -1029,7 +1046,7 @@ function _seekbar({
 		return false;
 	};
 	/**
-	 * Normalize data to have amplitudes between [0, 1].
+	 * Normalize data to have amplitudes between [0, 1] and flats raw data if required, extracting only the selected metric.
 	 *
 	 * @property
 	 * @name normalizeAmplitude
@@ -1091,10 +1108,9 @@ function _seekbar({
 					max = Math.max(Math.abs(upper[c]), Math.abs(lower[c]));
 				}
 			} else if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'audiowizard') {
-				this.framesSource = this.frames = this.frames * 2;
 				const [posIdx, negIdx] = [this.currentSchema.max_sample.pos - 1, this.currentSchema.min_sample.pos - 1];
 				for (let c = 0; c < this.channels; c++) {
-					// Expand sample scale values
+					// Expand sample scale values and flat data
 					this.current[c] = this.current[c].flatMap((x) => [x[negIdx], x[posIdx]]);
 					// Calculate max values
 					this.current[c].forEach((frame) => {
@@ -1105,7 +1121,19 @@ function _seekbar({
 					// Normalize
 					if (max !== 0 && max !== 1) { this.current[c] = this.current[c].map((frame) => round(frame / max, 3)); }
 				}
-			} else if (['audiowaveform', 'visualizer'].includes(this.analysis.binaryMode) || this.isFallback || bFallbackMode.paint) {
+			} else if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'audiowaveform') {
+				for (let c = 0; c < this.channels; c++) {
+					this.current[c] = this.current[c].flat();
+					// Calculate max values
+					this.current[c].forEach((frame) => {
+						upper[c] = Math.max(upper[c], frame);
+						lower[c] = Math.min(lower[c], frame);
+					});
+					const max = Math.max(Math.abs(upper[c]), Math.abs(lower[c]));
+					// Normalize
+					if (max !== 0 && max !== 1) { this.current[c] = this.current[c].map((frame) => round(frame / max, 3)); }
+				}
+			} else if (this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint) {
 				for (let c = 0; c < this.channels; c++) {
 					// Calculate max values
 					this.current[c].forEach((frame) => {
@@ -1303,8 +1331,11 @@ function _seekbar({
 					if (!handle) { return false; }
 					if (!this.channels) { return false; }
 				}
+				return this.current.every((channel) => channel.every((frame) => frame.every((point) => {
+					return (point >= -128 && point <= 127);
+				})));
 			}
-			default: { // eslint-disable-line no-fallthrough
+			default: {
 				return this.current.every((channel) => channel.every((frame) => {
 					return (frame >= -128 && frame <= 127);
 				}));
@@ -3280,7 +3311,7 @@ function _seekbar({
 	 * @param {object} data
 	 * @param {'ffprobe'|'audiowaveform'|'audiowizard'} type - Data type
 	 * @param {number} channels
-	 * @returns {Promise.<{ processedData: number[][]|number[][][], schema: {[string]: {key: string, pos: number }}} >}
+	 * @returns {Promise.<{ processedData: number[][][], schema: {[string]: {key: string, pos: number }}} >}
 	*/
 	this.processRawData = (data, type, channels = this.channels) => {
 		let processedData = [];
@@ -3314,22 +3345,34 @@ function _seekbar({
 						processedData = Array.from({ length: channels }, () => []);
 						schema = audiowaveformModes;
 						if (this.analysis.bMultiChannel) {
-							let c = 0, i = 0;
-							data.forEach((frame) => {
+							let i = 0;
+							let c = 0;
+							let frame = [];
+							data.forEach((point) => {
 								if (i === 2) {
 									c = c === (channels - 1) ? 0 : c + 1;
 									i = 0;
+									processedData[c].push(frame);
+									frame = [];
 								}
-								processedData[c].push(frame);
+								frame.push(point);
 								i++;
 							});
+							if (frame.length) { processedData[c].push(frame); }
 						} else {
-							processedData[0] = data;
+							let i = 0;
+							let frame = [];
+							data.forEach((point) => {
+								if (i === 2) { i = 0; processedData[0].push(frame); frame = []; }
+								frame.push(point);
+								i++;
+							});
+							if (frame.length) { processedData[0].push(frame); }
 						}
 					}
 					break;
 				}
-				case 'audiowizard': { // [[RMS channelN, RMSPeak channelN, SamplePeak channelN, Min channelN, Max channelN, ....], ...]
+				case 'audiowizard': {
 					const len = data.length;
 					if (len && channels === len) {
 						processedData = Array.from({ length: channels }, () => []);
@@ -3342,7 +3385,7 @@ function _seekbar({
 								frame.push(point);
 								i++;
 							});
-							processedData[c].push(frame);
+							if (frame.length) { processedData[c].push(frame); }
 						});
 					}
 					break;
