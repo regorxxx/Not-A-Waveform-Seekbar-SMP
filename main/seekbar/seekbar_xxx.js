@@ -415,6 +415,8 @@ function _seekbar({
 	this.codePageV2 = convertCharsetToCodepage('UTF-16LE');
 	/** @type {number[][]} - Current track data per channel */
 	this.current = [];
+	/** @type {{schema: {[string]: {key: string, pos: number } }}} - Current track data schema, if not available, fallbacks to hardcoded values */
+	this.currentSchema = {};
 	/** @type {number} - Number of data points (frames) per channel after normalization */
 	this.frames = 0;
 	/** @type {number} - Number of data points (frames) per channel before normalization */
@@ -466,7 +468,9 @@ function _seekbar({
 	const ffprobeModes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 } };
 	/** @type {number} - Used with ffprobe binary, analysis data length (+ time)*/
 	const ffprobeDataLen = Object.keys(ffprobeModes).length;
-	/** @type {{ffprobeList: string[], audiowaveformList: string[], ffprobe: RegExp, audiowaveform: RegExp}} - Helpers to check for compatible files for different binaries */
+	/** @type {{ min_sample: { key:string, pos:number }, max_sample: { key:string, pos:number }}} - Used with audiowaveform to unpack analysis data */
+	const audiowaveformModes = { min_sample: { key: '', pos: 1 }, max_sample: { key: '', pos: 2 } };
+	/** @type {{ffprobeList: string[], audiowaveformList: string[], audiowizardList: string[], ffprobe: RegExp, audiowaveform: RegExp, audiowizard: RegExp}} - Helpers to check for compatible files for different binaries */
 	const compatibleFiles = {
 		ffprobeList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv'],
 		ffprobe: null,
@@ -596,7 +600,7 @@ function _seekbar({
 		return config;
 	};
 	/**
-	 * Loads a JSON data file
+	 * Loads a JSON data file, outputs track data along data schema if available
 	 *
 	 * @property
 	 * @name loadDataFile
@@ -604,27 +608,42 @@ function _seekbar({
 	 * @memberof _seekbar
 	 * @param {string} file - File path without extension
 	 * @param {string} ext - Extension
-	 * @returns {number[][]}
+	 * @returns {{ data: number[][], schema: {[string]: {key: string, pos: number } }}
 	*/
 	this.loadDataFile = (file, ext) => {
 		let data = [];
+		let schema = {};
+		let temp;
 		if (this.logging.bLoad) { console.log('Seekbar: Analysis file path -> ' + _foldPath(file) + ext); }
 		if (ext.endsWith('.json')) {
-			data = _jsonParseFile(file + ext, this.codePage) || [];
+			temp = _jsonParseFile(file + ext, this.codePage);
+			data = temp ? temp.data || temp || [] : [];
+			schema = temp ? temp.schema || {} : {};
 		} else if (ext.endsWith('.lz')) {
 			let str = _open(file + ext, this.codePage) || '';
 			str = LZUTF8.decompress(str, { inputEncoding: 'Base64' }) || null;
-			data = str ? JSON.parse(str) || [] : [];
+			temp = _jsonParse(str);
+			data = temp ? temp.data || temp || [] : [];
+			schema = temp ? temp.schema || {} : {};
+
 		} else if (ext.endsWith('.lz16')) {
 			let str = _open(file + ext, this.codePageV2) || '';
 			str = LZString.decompressFromUTF16(str) || null;
-			data = str ? JSON.parse(str) || [] : [];
+			temp = _jsonParse(str);
+			data = temp ? temp.data || temp || [] : [];
+			schema = temp ? temp.schema || {} : {};
 		}
 		// Support both old and new file format for single channel files
 		if (this.channels === 1 && /\.m\.(json|lz(16)?)$/i.test(ext) && data.length !== 1) {
 			data = [data];
 		}
-		return data;
+		// Support both old and new file format for schema
+		if (Object.keys(schema).length === 0) {
+			if (ext.startsWith('.ff.')) { schema = ffprobeModes; }
+			else if (ext.startsWith('.aw.')) { schema = audiowaveformModes; }
+			else if (ext.startsWith('.awz.')) { schema = audiowizardModes; }
+		}
+		return { data, schema };
 	};
 	/**
 	 * Switches panel functionality
@@ -866,40 +885,40 @@ function _seekbar({
 			const bMulti = this.analysis.bMultiChannel;
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.json')) {
-				this.current = this.loadDataFile(seekbarFile, '.ff.json');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.json'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.json', bIsRetry)) { return; }
 			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz')) {
-				this.current = this.loadDataFile(seekbarFile, '.ff.lz');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz', bIsRetry)) { return; }
 			} else if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.lz16')) {
-				this.current = this.loadDataFile(seekbarFile, '.ff.lz16');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.lz16', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.json')) {
-				this.current = this.loadDataFile(seekbarFile, '.ff.m.json');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.json'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.m.json', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.lz')) {
-				this.current = this.loadDataFile(seekbarFile, '.ff.m.lz');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.m.lz', bIsRetry)) { return; }
 			} else if (bFfProbe && bMulti && _isFile(seekbarFile + '.ff.m.lz16')) {
-				this.current = this.loadDataFile(seekbarFile, '.ff.m.lz16');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.ff.m.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.ff.m.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.json')) {
-				this.current = this.loadDataFile(seekbarFile, '.aw.json');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.json'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.json', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.lz')) {
-				this.current = this.loadDataFile(seekbarFile, '.aw.lz');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz', bIsRetry)) { return; }
 			} else if (bAuWav && !bMulti && _isFile(seekbarFile + '.aw.lz16')) {
-				this.current = this.loadDataFile(seekbarFile, '.aw.lz16');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.lz16', bIsRetry)) { return; }
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.json')) {
-				this.current = this.loadDataFile(seekbarFile, '.aw.m.json');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.json'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.json', bIsRetry)) { return; }
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz')) {
-				this.current = this.loadDataFile(seekbarFile, '.aw.m.lz');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.lz'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz', bIsRetry)) { return; }
 			} else if (bAuWav && bMulti && _isFile(seekbarFile + '.aw.m.lz16')) {
-				this.current = this.loadDataFile(seekbarFile, '.aw.m.lz16');
+				({data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.aw.m.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.aw.m.lz16', bIsRetry)) { return; }
 			} else if (this.analysis.bAutoAnalysis && (this.isFile || this.isLink) && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
@@ -1468,10 +1487,11 @@ function _seekbar({
 		const bPartial = this.preset.paintMode === 'partial';
 		const bPrePaint = bPartial && this.preset.bPrePaint;
 		const bFullAnimated = !bPartial && this.preset.bAnimate;
-		if (this.analysis.binaryMode === 'visualizer' || bFullAnimated || this.preset.waveMode === 'vumeter' || !frames || bFull) {
+		const bVisualizer = this.analysis.binaryMode === 'visualizer' || this.isFallback || bFallbackMode.paint;
+		if (bVisualizer || bFullAnimated || this.preset.waveMode === 'vumeter' || !frames || bFull) {
 			throttlePaint(bFull);
 		} else if (bPrePaint || this.preset.bPaintCurrent || bPartial) {
-			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
+			const widerModesScale = (this.isWideWaveMode(this.preset.waveMode) ? 2 : 1) + Math.abs(this.ui.offSetNegAxis);
 			const currX = this.x + this.marginW + (this.w - this.marginW * 2) * time / this.getHandleLength();
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.25 : 1) * widerModesScale;
@@ -2760,7 +2780,7 @@ function _seekbar({
 		}
 		if (bVisualizer || bFullAnimated || (bVuMeter && frames)) { throttlePaint(); }
 		else if ((bPrePaint || this.preset.bPaintCurrent || bPartial) && frames) {
-			const widerModesScale = this.isWideWaveMode(this.preset.waveMode) ? 2 : 1;
+			const widerModesScale = (this.isWideWaveMode(this.preset.waveMode) ? 2 : 1) + Math.abs(this.ui.offSetNegAxis);
 			const barW = Math.ceil(Math.max((this.w - this.marginW * 2) / frames, _scale(2))) * widerModesScale;
 			const extraNormOffset = (this.framesSource < this.frames ? Math.ceil(this.frames / this.framesSource) * 1.25 : 1) * widerModesScale;
 			const prePaintW = Math.min(
@@ -2998,13 +3018,13 @@ function _seekbar({
 	 * @name saveData
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {object} processedData - Processed seekbar data
+	 * @param {{ schema: {[string]: {key: string, pos: number }}, data: number[][]}} data - Processed seekbar data
 	 * @param {string} seekbarFile - Track ID file path
 	 * @param {'.aw.m.lz16'|'.aw.m.lz'|'.aw.m.json'|'.aw.lz16'|'.aw.lz'|'.aw.json'|'.ff.m.lz16'|'.ff.m.lz'|'.ff.m.json'|'.ff.lz16'|'.ff.lz'|'.ff.json'} ext - Extension. Ending with '.lz16' (UTF-16) or '.lz' (UTF-8) enables associated compression mode
 	 * @returns {boolean} True on success
 	*/
-	this.saveData = (processedData, seekbarFile, ext = this.getExtension()) => {
-		const str = JSON.stringify(processedData);
+	this.saveData = (data, seekbarFile, ext = this.getExtension()) => {
+		const str = JSON.stringify(data);
 		if (ext.endsWith('.lz16')) {
 			// To save UTF16-LE files, FSO is needed.
 			// https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/200
@@ -3131,7 +3151,7 @@ function _seekbar({
 		const channels = this.channels; // If playback is changed during analysis it may change
 		let bDone = cmd ? _runCmd(cmd, false) : true;
 		bDone = bDone && (await new Promise((resolve) => {
-			if (this.isFallback || bVisualizer || bFallbackMode.analysis) { resolve(true); }
+			if (this.isFallback || bVisualizer || bFallbackMode.analysis) { return resolve(true); }
 			const timeout = Date.now() + Math.round(10000 * (handle.Length / 180));
 			// Break if it takes too much time: 10 secs per 3 min of track
 			const id = setInterval(() => {
@@ -3151,16 +3171,16 @@ function _seekbar({
 			const bSameHandle = this.compareTrack(handle);
 			const bNotFallback = cmd && !this.isFallback && !bFallbackMode.analysis;
 			const bDisplayVisualizer = this.isFallback || bVisualizer || bFallbackMode.analysis;
-			if (data) {
+			if (data && Object.hasOwn(data, 'length')) {
 				if (bNotFallback) {
 					const type = bFfProbe ? 'ffprobe' : bAuWav ? 'audiowaveform' : bAuWiz ? 'audiowizard' : 'none';
-					const processedData = this.processRawData(data, type, channels);
+					const { processedData, schema } = this.processRawData(data, type, channels);
 					if (processedData.length) {
-						if (bSameHandle) { this.current = processedData; }
+						if (bSameHandle) { this.current = processedData; this.currentSchema = schema;}
 						// Save data and optionally compress it
 						if (this.allowedSaveData(handle)) {
 							const ext = this.getExtension();
-							this.saveData(processedData, seekbarFile, ext);
+							this.saveData({ schema, data: processedData }, seekbarFile, ext);
 							if (this.logging.bSave) { console.log('Seekbar: Analysis file path -> ' + _foldPath(seekbarFile) + ext); }
 						}
 					}
@@ -3194,10 +3214,11 @@ function _seekbar({
 	 * @param {object} data
 	 * @param {'ffprobe'|'audiowaveform'} type - Data type
 	 * @param {number} channels
-	 * @returns {Promise.<Boolean>}
+	 * @returns {Promise.<{ processedData: number[][], schema: {[string]: {key: string, pos: number }}} >}
 	*/
 	this.processRawData = (data, type, channels = this.channels) => {
 		let processedData = [];
+		let schema = {};
 		if (data) {
 			switch (type) {
 				case 'ffprobe': {
@@ -3205,6 +3226,7 @@ function _seekbar({
 					const len = data.length;
 					if (len) {
 						processedData = Array.from({ length: channels }, () => []);
+						schema = ffprobeModes;
 						if (this.analysis.bMultiChannel) {
 							for (let i = 1; i <= channels; i++) {
 								data.forEach((frame) => {
@@ -3224,6 +3246,7 @@ function _seekbar({
 					const len = data.length;
 					if (len) {
 						processedData = Array.from({ length: channels }, () => []);
+						schema = audiowaveformModes;
 						if (this.analysis.bMultiChannel) {
 							let c = 0, i = 0;
 							data.forEach((frame) => {
@@ -3242,7 +3265,7 @@ function _seekbar({
 				}
 			}
 		}
-		return processedData;
+		return { processedData, schema };
 	};
 	/**
 	 * Extracts waveform data using Audio Wizard for given handles
