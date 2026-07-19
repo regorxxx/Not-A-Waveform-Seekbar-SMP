@@ -891,7 +891,6 @@ function _seekbar({
 			this.checkAllowedFile(handle);
 			let bAnalysis = false;
 			const { seekbarFolder, seekbarFile, sourceFile } = this.getPaths(handle);
-			const bVisualizer = this.analysis.binaryMode === 'visualizer';
 			const bAuWav = this.analysis.binaryMode === 'audiowaveform';
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			const bAuWiz = this.analysis.binaryMode === 'audiowizard';
@@ -957,7 +956,7 @@ function _seekbar({
 					await this.analyze(handle, seekbarFolder, seekbarFile, sourceFile);
 					if (this.currentHandle && !this.compareTrack(handle)) { return; }
 					// Calculate waveform on the fly
-					if (this.current[0]) { this.calcFrameStats(); this.normalizePoints(); }
+					if (this.current[0]) { this.calcFrameStats(true); this.normalizePoints(this.ui.bNormalizeWidth); }
 					// Set animation using BPM if possible
 					if (this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 					// Update time if needed
@@ -975,8 +974,8 @@ function _seekbar({
 			if (this.current[0]) {
 				// Calculate waveform on the fly
 				if (this.analysis.bMultiChannel && this.preset.bDownMixToMono) { this.downMixToMono(); }
-				this.calcFrameStats();
-				this.normalizePoints(!bVisualizer && this.ui.bNormalizeWidth);
+				this.calcFrameStats(true);
+				this.normalizePoints(this.ui.bNormalizeWidth);
 				this.timeConstant = handle.Length / this.frames;
 			}
 		}
@@ -996,14 +995,17 @@ function _seekbar({
 	 * @name calcFrameStats
 	 * @kind method
 	 * @memberof _seekbar
+	 * @param {boolean} [bSetSource] - [=false] Flag to set source frames
 	 * @returns {number}
 	*/
-	this.calcFrameStats = () => {
+	this.calcFrameStats = (bSetSource = false) => {
 		switch (this.analysis.binaryMode) {
+			case 'visualizer':
 			case 'audiowaveform':
-			case 'audiowizard': this.framesSource = this.frames = this.current[0].length * 2; break;
-			default: this.framesSource = this.frames = this.current[0].length; break;
+			case 'audiowizard': this.frames = this.current[0].length * 2; break;
+			default: this.frames = this.current[0].length; break;
 		}
+		if (bSetSource) { this.framesSource = this.frames; }
 		return this.frames;
 	};
 	/**
@@ -1039,7 +1041,7 @@ function _seekbar({
 			if (this.frames > maxFrames) {
 				const scale = Math.ceil(this.frames / maxFrames);
 				this.current = this.current.map((channel) => channel.filter((val, i) => !(i % scale)));
-				this.frames = this.current[0].length;
+				this.calcFrameStats();
 				return true;
 			}
 		}
@@ -1798,7 +1800,7 @@ function _seekbar({
 					const scale = this.ui.bLogScale
 						? Math.sign(frame) * Math.log10((10 - 1) / 1 * Math.abs(frame) + 1)
 						: frame;
-					const x = this.x + this.marginW + barW * n;
+					const x = this.x + this.marginW + barW * (bVisualizer ? 2 * n : n);
 					// Paint the alt background at the proper point
 					if (bIsFuture && bPrePaint && !bPaintedBg && bIsTrackPlaying) {
 						if (!this.ui.offSetNegAxis || scale > 0) {

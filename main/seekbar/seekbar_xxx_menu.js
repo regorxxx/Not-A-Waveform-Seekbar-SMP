@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/06/26
+//19/07/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -328,7 +328,7 @@ function settingsMenu(bClear = true) {
 		});
 		menu.newSeparator(subMenu);
 		[
-			{ name: 'Normalize width', key: 'bNormalizeWidth', flags: this.analysis.binaryMode === 'visualizer' || this.preset.waveMode === 'vumeter' ? MF_GRAYED : MF_STRING ? MF_GRAYED : MF_STRING }
+			{ name: 'Normalize width', key: 'bNormalizeWidth', flags: this.preset.waveMode === 'vumeter' ? MF_GRAYED : MF_STRING ? MF_GRAYED : MF_STRING }
 		].forEach((o) => {
 			menu.newEntry({
 				menuName: subMenu, entryText: o.name, func: () => {
@@ -347,7 +347,7 @@ function settingsMenu(bClear = true) {
 						menuName: subMenuThree, entryText: s, func: () => {
 							this.updateConfig({ ui: { normalizeWidth: s } });
 							this.saveProperties();
-						}, flags: (this.analysis.binaryMode === 'visualizer' || !this.ui.bNormalizeWidth) ? MF_GRAYED : MF_STRING
+						}, flags: this.ui.bNormalizeWidth ? MF_STRING : MF_GRAYED
 					});
 					menu.newCheckMenuLast(() => (this.ui.normalizeWidth === s));
 				});
@@ -366,7 +366,7 @@ function settingsMenu(bClear = true) {
 				if (input === null) { return; }
 				this.updateConfig({ ui: { offSetNegAxis:  input } });
 				this.saveProperties();
-			}
+			}, flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING
 		});
 		menu.newSeparator(subMenu);
 		const subMenuFour = menu.newMenu('Channels display' + (this.analysis.bMultiChannel ? '' : '\t(multi-channel only)'), subMenu, () => this.analysis.bMultiChannel ? MF_STRING : MF_GRAYED);

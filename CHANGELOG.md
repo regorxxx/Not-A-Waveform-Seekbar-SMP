@@ -39,6 +39,7 @@
 
 ## [Unreleased][]
 ### Added
+- UI: visualizer mode is now compatible with normalized width, so it's display can be tweaked like any other mode. Is now also compatible with all waveform styles, producing different effects for each of them.
 - UI: added fallback to front art setting for Art by TF (background setting), if no file was found.
 - UI: added new mask effect setting to background. See [here](https://hydrogenaudio.org/index.php/topic,112914.msg1084108.html#msg1084108).
 - UI: added setting to control offset for the negative part of the waveform (lower). Previous behavior was equivalent to 0 value, but setting it to -1 will ensure top and bottom parts are aligned.
