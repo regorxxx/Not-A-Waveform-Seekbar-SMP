@@ -1063,7 +1063,7 @@ function _seekbar({
 			if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'ffprobe') {
 				for (let c = 0; c < this.channels; c++) {
 					// Calculate max values
-					const pos = ffprobeModes[this.preset.analysisMode].pos;
+					const pos = this.currentSchema[this.preset.analysisMode].pos;
 					let max = 0;
 					this.current[c].forEach((frame) => {
 						// After parsing JSON, restore infinity values
@@ -1345,6 +1345,33 @@ function _seekbar({
 		}
 	};
 	/**
+	 *  Checks if schema is valid for current analysis data (either from file or processing)
+	 *
+	 * @property
+	 * @name isSchemaValid
+	 * @kind method
+	 * @memberof _seekbar
+	 * @returns {boolean}
+	*/
+	this.isSchemaValid = () => {
+		if (!this.currentSchema) { return false; }
+		switch (this.analysis.binaryMode) {
+			case 'audiowizard': {
+				if (!Object.hasOwn(this.currentSchema, 'max_sample') || !Object.hasOwn(this.currentSchema.max_sample, 'pos') || this.currentSchema.max_sample.pos === -1) {
+					return false;
+				}
+				break;
+			}
+			case 'ffprobe': {
+				if (!Object.hasOwn(this.currentSchema, this.preset.analysisMode) || !Object.hasOwn(this.currentSchema[this.preset.analysisMode], 'pos') || this.currentSchema[this.preset.analysisMode].pos === -1) {
+					return false;
+				}
+				break;
+			}
+		}
+		return true;
+	};
+	/**
 	 * Checks if data is valid for a given track, sets associated flags and handles errors.
 	 *
 	 * @property
@@ -1357,7 +1384,7 @@ function _seekbar({
 	 * @returns {boolean}
 	*/
 	this.verifyData = (handle, file, bIsRetry = false) => {
-		if (!this.isDataValid(handle)) {
+		if (!this.isDataValid(handle) || !this.isSchemaValid()) {
 			if (bIsRetry) {
 				if (this.logging.bError) { console.log('Seekbar: Track was not successfully analyzed after retrying'); }
 				file && _deleteFile(file);
