@@ -1333,7 +1333,7 @@ function _seekbar({
 					if (!handle) { return false; }
 					if (!this.channels) { return false; }
 				}
-				return this.current.every((channel) => channel.every((frame) => frame.every((point) => {
+				return this.current.every((channel) => channel.every((frame) => Array.isArray(frame) && frame.every((point) => {
 					return (point >= -128 && point <= 127);
 				})));
 			}

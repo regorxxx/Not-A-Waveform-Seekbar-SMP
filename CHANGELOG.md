@@ -51,7 +51,7 @@
 - Configuration: added new "userAgent" (Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36) and "curlImpersonate" (curl_firefox147.bat) at global settings (globSettings.json) for arbitrary downloads using curl and/or JS-host methods.
 - Helpers: added curl-impersonate.exe v1.5.6. See [here](https://github.com/lexiforest/curl-impersonate).
 ### Changed
-- Data: changed Audiowaveform data structure, not compatible with analysis data files from previous versions. Delete old files after updating.
+- Data: changed Audiowaveform data structure, not compatible with analysis data files from previous versions. Delete old files after updating (or the script will do it automatically while playing tracks).
 - Data: schema is now saved along track's waveform data, to ensure compatibility in future versions and/or other software. Any previous data file is still fully compatible (except Audiowaveform), using hardcoded schema as fallback.
 - UI: improved messages related to binaries/components.
 - UI: 'Open data file' menu entry now shows explorer window with such file selected (instead of just the folder).
