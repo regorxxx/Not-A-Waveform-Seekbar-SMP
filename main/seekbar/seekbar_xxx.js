@@ -1355,19 +1355,13 @@ function _seekbar({
 	*/
 	this.isSchemaValid = () => {
 		if (!this.currentSchema) { return false; }
+		let key;
 		switch (this.analysis.binaryMode) {
-			case 'audiowizard': {
-				if (!Object.hasOwn(this.currentSchema, 'max_sample') || !Object.hasOwn(this.currentSchema.max_sample, 'pos') || this.currentSchema.max_sample.pos === -1) {
-					return false;
-				}
-				break;
-			}
-			case 'ffprobe': {
-				if (!Object.hasOwn(this.currentSchema, this.preset.analysisMode) || !Object.hasOwn(this.currentSchema[this.preset.analysisMode], 'pos') || this.currentSchema[this.preset.analysisMode].pos === -1) {
-					return false;
-				}
-				break;
-			}
+			case 'audiowizard': key = 'max_sample'; break;
+			case 'ffprobe': key = this.preset.analysisMode; break;
+		}
+		if (key && (!Object.hasOwn(this.currentSchema, key) || !Object.hasOwn(this.currentSchema[key], 'pos') || this.currentSchema[key].pos === -1)) {
+			return false;
 		}
 		return true;
 	};
