@@ -39,7 +39,8 @@
 
 ## [Unreleased][]
 ### Added
-- UI: added fallback to front art setting for Art by TF, if no file was found.
+- UI: added fallback to front art setting for Art by TF (background setting), if no file was found.
+- UI: added new mask effect setting to background. See [here](https://hydrogenaudio.org/index.php/topic,112914.msg1084108.html#msg1084108).
 - UI: added setting to control offset for the negative part of the waveform (lower). Previous behavior was equivalent to 0 value, but setting it to -1 will ensure top and bottom parts are aligned.
 - Styles: added 'Rounded Bars (gradient)', meant to be used along the negative wave offset setting above at -1, to mimic [Namida style](https://github.com/namidaco/waveform_extractor).
 - External integration: new callbacks.
@@ -56,6 +57,7 @@
 - Helpers: updated curl.exe to v8.20.0-slim. See [here](https://github.com/lordmulder/cURL-build-win32).
 - Helpers: updated 7za.exe to v26.01. See [here](https://www.7-zip.org/download.html).
 - Helpers: code cleanup.
+- Helpers: updated helpers.
 ### Removed
 ### Fixed
 
