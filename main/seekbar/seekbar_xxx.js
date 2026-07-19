@@ -1,5 +1,5 @@
 'use strict';
-//30/06/26
+//19/07/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, _jsonParse:readable */
@@ -3204,6 +3204,7 @@ function _seekbar({
 			if (this.logging.bError) { console.log('Seekbar: Skipping incompatible file -> ' + sourceFile); }
 		}
 		const channels = this.channels; // If playback is changed during analysis it may change
+		let data;
 		let bDone = cmd
 			? _runCmd(cmd, false)
 			: prom
@@ -3216,29 +3217,32 @@ function _seekbar({
 			// Break if it takes too much time: 10 secs per 3 min of track
 			const id = setInterval(() => {
 				if (_isFile(seekbarFolder + 'data.json')) {
-					// ffmpeg writes sequentially so wait until it finish...
-					if (!bFfProbe || _jsonParseFile(seekbarFolder + 'data.json', this.codePage)) {
-						clearInterval(id); resolve(true);
+					if (!bFfProbe) { clearInterval(id); resolve(true); }
+					else { // ffmpeg writes sequentially so wait until it finish... cache it for later use
+						data = _jsonParseFile(seekbarFolder + 'data.json', this.codePage);
+						if (data) { clearInterval(id); resolve(true); }
 					}
 				} else if (Date.now() > timeout) { clearInterval(id); resolve(false); }
 			}, 300);
 		}));
 		if (bDone) {
-			let data = cmd
-				? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
-				: prom
-					? this.internalAnalysisData(handle)
-					: this.visualizerData(handle);
+			if (!data) {
+				data = cmd
+					? _jsonParseFile(seekbarFolder + 'data.json', this.codePage)
+					: prom
+						? this.internalAnalysisData(handle)
+						: this.visualizerData(handle);
+			}
 			_deleteFile(seekbarFolder + 'data.json');
 			const bSameHandle = this.compareTrack(handle);
 			const bNotFallback = (cmd || prom) && !this.isFallback && !bFallbackMode.analysis;
 			const bDisplayVisualizer = this.isFallback || bVisualizer || bFallbackMode.analysis;
-			if (data && Object.hasOwn(data, 'length')) {
+			if (data && (Object.hasOwn(data, 'length') || Object.hasOwn(data, 'frames'))) {
 				if (bNotFallback) {
 					const type = bFfProbe ? 'ffprobe' : bAuWav ? 'audiowaveform' : bAuWiz ? 'audiowizard' : 'none';
 					const { processedData, schema } = this.processRawData(data, type, channels);
 					if (processedData.length) {
-						if (bSameHandle) { this.current = processedData; this.currentSchema = schema;}
+						if (bSameHandle) { this.current = processedData; this.currentSchema = schema; }
 						// Save data and optionally compress it
 						if (this.allowedSaveData(handle)) {
 							const ext = this.getExtension();
