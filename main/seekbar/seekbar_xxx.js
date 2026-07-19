@@ -2355,7 +2355,7 @@ function _seekbar({
 			? Math.min(Math.max(scaledSize + rand, 1), size / 2)
 			: Math.max(Math.min(scaledSize + rand, -1), - size / 2);
 		if (typeof waveFillCache[0] === 'undefined' || typeof waveFillCache[1] === 'undefined') { waveFillCache.shift(); waveFillCache.push(y); return; }
-		const yPrev = waveFillCache[0];
+		const yPrev = waveFillCache[0] || 0;
 		const axisY = this.h / 2 - offsetY;
 		const color = bPrePaint && bIsFuture ? colors.mainFuture : colors.main;
 		const altColor = bPrePaint && bIsFuture ? colors.altFuture : colors.alt;
@@ -2368,7 +2368,7 @@ function _seekbar({
 			} else if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev, x + barW, axisY - z, x + barW, axisY - z, x - barW, axisY - zPrev]); }
 		}
 		z = bVisualizer ? - Math.abs(y) : y;
-		zPrev = bVisualizer ? Math.abs(yPrev) : yPrev;
+		zPrev = bVisualizer ? - Math.abs(yPrev) : yPrev;
 		if (z < 0) {
 			if (altColor !== color) {
 				if (color !== -1) { gr.FillPolygon(color, 0, [x - barW, axisY - zPrev / 2, x + barW, axisY - z / 2, x + barW, axisY - z, x - barW, axisY - zPrev]); }
