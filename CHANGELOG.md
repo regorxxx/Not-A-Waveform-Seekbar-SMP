@@ -42,6 +42,7 @@
 - UI: visualizer mode is now compatible with normalized width, so it's display can be tweaked like any other mode. Is also compatible with all waveform styles, producing different effects for each of them (previously styles can only be "seen" if the analysis resolution setting was low enough or for tracks with small length).
 - UI: added fallback to front art setting for Art by TF (background setting), if no file was found.
 - UI: added new mask effect setting to background. See [here](https://hydrogenaudio.org/index.php/topic,112914.msg1084108.html#msg1084108).
+- UI: added new img counter setting to background while using Art by TF mode. See [here]https://hydrogenaudio.org/index.php/topic,116669.msg1083339.html#msg1083339).
 - UI: added setting to control offset for the negative part of the waveform (lower). Previous behavior was equivalent to 0 value, but setting it to -1 will ensure top and bottom parts are aligned.
 - Styles: added 'Rounded Bars (gradient)', meant to be used along the negative wave offset setting above at -1, to mimic [Namida style](https://github.com/namidaco/waveform_extractor).
 - External integration: new callbacks.
