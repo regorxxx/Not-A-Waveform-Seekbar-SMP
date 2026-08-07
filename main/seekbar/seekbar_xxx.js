@@ -31,7 +31,7 @@ function _seekbar({
 	binaries = {
 		ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
 		audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
-		audiowizard: false,
+		audiowizard: utils.CheckComponent('foo_audio_wizard', true),
 		visualizer: true,
 	},
 	preset = {
@@ -118,7 +118,7 @@ function _seekbar({
 		const defBinaries = {
 			ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
 			audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
-			audiowizard: false,
+			audiowizard: utils.CheckComponent('foo_audio_wizard', true),
 			visualizer: true,
 		};
 		const defPreset = {
