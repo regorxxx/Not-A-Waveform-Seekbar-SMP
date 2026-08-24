@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [5.0.0](#500---2026-08-24)
 - [4.0.0](#400---2026-04-28)
 - [3.4.0](#340---2026-01-12)
 - [3.3.0](#330---2025-12-23)
@@ -38,6 +39,12 @@
 - [1.0.0-beta.1](#100-beta1---2023-05-09)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [5.0.0] - 2026-08-24
 ### Added
 - Analysis: added support for [foo_audio_wizard](https://github.com/The-Wizardium/Audio-Wizard) analysis, which should be compatible with any format as long as foobar2000 is able to play it, no longer requiring third party binaries.
 - UI: added new setting to control panel processing when panel is not visible (true by default), so changes are immediately displayed on panel visibility switching, without delays. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1083496.html#msg1083496).
@@ -487,7 +494,8 @@
 ### Fixed
 
 
-[Unreleased]: ../../compare/v4.0.0...HEAD
+[Unreleased]: ../../compare/v5.0.0...HEAD
+[5.0.0]: ../../compare/v4.0.0...v2.0.0
 [4.0.0]: ../../compare/v3.4.0...v4.0.0
 [3.4.0]: ../../compare/v3.3.0...v3.4.0
 [3.3.0]: ../../compare/v3.2.1...v3.3.0
