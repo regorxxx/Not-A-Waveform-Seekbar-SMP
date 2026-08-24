@@ -43,7 +43,7 @@ if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'a
 globProfiler.Print('helpers');
 
 let seekbarProperties = {
-	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0,1]] }],
+	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0, 1]] }],
 	binaries: ['Binaries paths',
 		JSON.stringify({
 			ffprobe: _foldPath(folders.binaries) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
@@ -362,7 +362,7 @@ addEventListener('on_playback_pause', (state) => {
 addEventListener('on_paint', (gr) => {
 	if (!window.ID) { return; }
 	if (!window.Width || !window.Height) { return; }
-		if (!seekbarProperties.bProcessNotVisible[1]) { runDelayedEventListeners(); }
+	if (!seekbarProperties.bProcessNotVisible[1]) { runDelayedEventListeners(); }
 	if (globSettings.bDebugPaint) { extendGR(gr, { Repaint: true }); }
 	// Skip background if it will not be seen
 	if (Math.round(seekbar.ui.opacity.bg) !== 100 || seekbar.preset.paintMode === 'partial' && Math.round(seekbar.ui.opacity.bgFuture) !== 100) {
@@ -479,7 +479,7 @@ addEventListener('on_notify_data', (name, info) => {
 		case window.ScriptInfo.Name + ': enable panel': {
 			if (info && info.window && !info.window.includes(window.Name)) { break; }
 			if (name === (window.ScriptInfo.Name + ': switch enable panel')) { seekbar.switch(); }
-			else  { seekbar.switch(name === (window.ScriptInfo.Name + ': enable panel')); }
+			else { seekbar.switch(name === (window.ScriptInfo.Name + ': enable panel')); }
 			seekbarProperties.bEnabled[1] = seekbar.active;
 			seekbar.saveProperties();
 			break;

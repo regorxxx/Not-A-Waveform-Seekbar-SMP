@@ -838,7 +838,7 @@ function settingsMenu(bClear = true) {
 		menu.newCheckMenuLast(() => this.ui.bVariableRefreshRate);
 		menu.newSeparator(subMenu);
 		menu.newEntry({
-			menuName: subMenu, entryText: 'Proces panel while not visible', func: () => {
+			menuName: subMenu, entryText: 'Process panel while not visible', func: () => {
 				seekbarProperties.bProcessNotVisible[1] = !seekbarProperties.bProcessNotVisible[1];
 				this.saveProperties();
 				window.Reload();
