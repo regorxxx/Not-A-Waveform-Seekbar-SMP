@@ -1,5 +1,5 @@
 'use strict';
-//19/07/26
+//24/08/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, _jsonParse:readable */
@@ -487,7 +487,7 @@ function _seekbar({
 		audiowizard: null
 	};
 	['ffprobe', 'audiowaveform', 'audiowizard'].forEach((key) => {
-		compatibleFiles[key] = new RegExp('\\.(' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
+		compatibleFiles[key] = new RegExp('\\.(?:' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
 	/** @type {Preset['waveMode'][]} - Supported wavemodes */
 	const waveModes = ['waveform', 'waveformfilled', 'bars', 'barsfilled', 'barsgradient', 'points', 'halfbars', 'halfbarsfilled', 'halfbarsgradient', 'tree', 'soundcloud', 'soundcloudgradient', 'processbar', 'processbarfilled', 'processbargradient', 'processbargradientscaled', 'barsroundgradient', 'vumeter'];
@@ -646,7 +646,7 @@ function _seekbar({
 			schema = temp ? temp.schema || {} : {};
 		}
 		// Support both old and new file format for single channel files
-		if (this.channels === 1 && /\.m\.(json|lz(16)?)$/i.test(ext) && data.length !== 1) {
+		if (this.channels === 1 && /\.m\.(?:json|lz(16)?)$/i.test(ext) && data.length !== 1) {
 			data = [data];
 		}
 		// Support both old and new file format for schema
