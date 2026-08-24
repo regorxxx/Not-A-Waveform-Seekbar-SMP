@@ -364,7 +364,7 @@ function settingsMenu(bClear = true) {
 			menuName: subMenu, entryText: 'Negative wave offset\t' + _b(this.ui.offSetNegAxis), func: () => {
 				const input = Input.number('real', this.ui.offSetNegAxis, 'Enter value:\n(number ≥-1 and ≤0)\n\nAt -1, the positive and negative part of the waveform will be aligned and for greater values the negative side will be displaced at right (proportional to the width setting).', 'Seekbar: negative wave offset', 0, [(n) => n >= -1 && n <= 0]);
 				if (input === null) { return; }
-				this.updateConfig({ ui: { offSetNegAxis:  input } });
+				this.updateConfig({ ui: { offSetNegAxis: input } });
 				this.saveProperties();
 			}, flags: this.analysis.binaryMode === 'visualizer' ? MF_GRAYED : MF_STRING
 		});
@@ -836,6 +836,15 @@ function settingsMenu(bClear = true) {
 			}
 		});
 		menu.newCheckMenuLast(() => this.ui.bVariableRefreshRate);
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Proces panel while not visible', func: () => {
+				seekbarProperties.bProcessNotVisible[1] = !seekbarProperties.bProcessNotVisible[1];
+				this.saveProperties();
+				window.Reload();
+			}
+		});
+		menu.newCheckMenuLast(() => seekbarProperties.bProcessNotVisible[1]);
 	}
 	menu.newSeparator();
 	{
