@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [5.1.0](#510---2026-09-14)
 - [5.0.0](#500---2026-08-24)
 - [4.0.0](#400---2026-04-28)
 - [3.4.0](#340---2026-01-12)
@@ -41,6 +42,13 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+### Removed
+### Fixed
+
+## [5.1.0] - 2026-09-14
+### Added
+### Changed
+- UI: support for D2D draw mode has been changed at the properties panel to ('- Draw mode: GDI (0), D2D (1)'). After script update, it will need to be set again if desired.
 ### Removed
 ### Fixed
 - UI: menu typo fixes.
@@ -496,8 +504,9 @@
 ### Fixed
 
 
-[Unreleased]: ../../compare/v5.0.0...HEAD
-[5.0.0]: ../../compare/v4.0.0...v2.0.0
+[Unreleased]: ../../compare/v5.1.0...HEAD
+[5.1.0]: ../../compare/v5.0.0...v5.1.0
+[5.0.0]: ../../compare/v4.0.0...v5.0.0
 [4.0.0]: ../../compare/v3.4.0...v4.0.0
 [3.4.0]: ../../compare/v3.3.0...v3.4.0
 [3.3.0]: ../../compare/v3.2.1...v3.3.0

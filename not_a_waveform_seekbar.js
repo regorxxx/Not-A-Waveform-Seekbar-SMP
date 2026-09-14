@@ -1,10 +1,10 @@
 ﻿'use strict';
-//24/08/26
+//14/09/26
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '5.0.0' }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '5.1.0' }); }
 
 // GDI/D2D draw mode
-window.DrawMode = Math.max(Math.min(window.GetProperty('Draw mode: GDI (0), D2D (1)', 0), 1), 0);
+if (typeof window.DrawMode !== 'undefined') { window.DrawMode = Math.max(Math.min(window.GetProperty('- Draw mode: GDI (0), D2D (1)', 0), 1), 0); }
 
 include('helpers\\helpers_xxx.js');
 /* global folders:readable, globSettings:readable, globTags:readable, soFeat:readable, globFonts:readable, globProfiler:readable, VK_CONTROL:readable, popup:readable, VK_ALT:readable, VK_SHIFT:readable, VK_RIGHT:readable, VK_UP:readable, VK_LEFT:readable, VK_DOWN:readable, TTDT_INITIAL:readable, TTDT_AUTOPOP:readable */
@@ -43,7 +43,7 @@ if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'a
 globProfiler.Print('helpers');
 
 let seekbarProperties = {
-	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0, 1]] }],
+	drawMode: ['- Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0, 1]] }],
 	binaries: ['Binaries paths',
 		JSON.stringify({
 			ffprobe: _foldPath(folders.binaries) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
