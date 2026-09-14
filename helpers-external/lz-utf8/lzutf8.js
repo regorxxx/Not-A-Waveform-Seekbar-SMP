@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  LZ-UTF8 v0.6.3
 
  Copyright (c) 2021, Rotem Dan

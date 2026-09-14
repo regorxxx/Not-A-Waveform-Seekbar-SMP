@@ -44,6 +44,7 @@
 ### Removed
 ### Fixed
 - UI: menu typo fixes.
+- Fixed UTF-8 script files without BOM not being properly recognized on windows.
 
 ## [5.0.0] - 2026-08-24
 ### Added
