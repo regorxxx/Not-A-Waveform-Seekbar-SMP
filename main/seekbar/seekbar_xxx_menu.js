@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/07/26
+//21/09/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -172,7 +172,7 @@ function settingsMenu(bClear = true) {
 		menu.newSeparator(subMenu);
 		{ // NOSONAR [menu block]
 			[
-				{ name: 'Multi-channel mode', key: 'bMultiChannel' }
+				{ name: 'Multi-channel mode', key: 'bMultiChannel', flags: this.analysis.binaryMode === 'jsplitter' ? MF_GRAYED : MF_STRING }
 			].forEach((o) => {
 				if (menu.isSeparator(o)) { menu.newEntry({ menuName: subMenu, entryText: o.name }); return; }
 				menu.newEntry({
@@ -180,7 +180,7 @@ function settingsMenu(bClear = true) {
 						this.updateConfig({ analysis: { [o.key]: !this.analysis[o.key] } });
 						this.saveProperties();
 						fb.ShowPopupMessage('By changing this setting, already existing analysis data files will not be compatible. \n\nRe-analysis will be required for previously played files. It will be done automatically on playback if required.', 'Seekbar');
-					}
+					}, flags: o.flags || MF_STRING
 				});
 				menu.newCheckMenuLast(() => this.analysis[o.key]);
 			});
@@ -362,7 +362,7 @@ function settingsMenu(bClear = true) {
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Negative wave offset\t' + _b(this.ui.offSetNegAxis), func: () => {
-				const input = Input.number('real', this.ui.offSetNegAxis, 'Enter value:\n(number ≥-1 and ≤0)\n\nAt -1, the positive and negative part of the waveform will be aligned and for greater values the negative side will be displaced at right (proportional to the width setting).', 'Seekbar: negative wave offset', 0, [(n) => n >= -1 && n <= 0]);
+				const input = Input.number('real', this.ui.offSetNegAxis, 'Enter value:\n(number ≥-1 and ≤0)\n\nAt -1, the positive and negative part of the waveform will be aligned and for greater values the negative side will be displaced at right (proportional to the width setting).', 'Seekbar: negative wave offset', 0, [(n) => n >= -1 && n <= 1]);
 				if (input === null) { return; }
 				this.updateConfig({ ui: { offSetNegAxis: input } });
 				this.saveProperties();

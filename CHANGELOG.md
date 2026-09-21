@@ -41,8 +41,10 @@
 
 ## [Unreleased][]
 ### Added
+- Analysis: added support for [foo_uie_jsplitter](https://hydrogenaudio.org/index.php/topic,126743.msg1087367.html#msg1087367) analysis, which should be compatible with any format as long as foobar2000 is able to play it, no longer requiring third party binaries. Note this mode is currently limited to a downmix of all channels.
 ### Changed
 - Analysis: improved default File name TF format to better handle tags with '|' or non ASCII chars at end of folder names, so they match foobar2000 converter output paths. This is in fact a workaround to a [foobar2000 undesired behaviour](https://hydrogenaudio.org/index.php/topic,129623.0.html).
+- UI: expanded range to control offset for the negative part of the waveform (lower) from -1 to 1.
 ### Removed
 ### Fixed
 

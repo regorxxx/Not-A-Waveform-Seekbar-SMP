@@ -1,5 +1,5 @@
 'use strict';
-//24/08/26
+//21/09/26
 
 /* exported _seekbar */
 /* global _isFolder:readable, _isFile:readable, _isLink:readable, _createFolder:readable, _jsonParseFile:readable, _open:readable, _deleteFile:readable, _deleteFolder:readable, sanitizePath:readable, _runCmd:readable, _saveFSO:readable, _save:readable, _resolvePath:readable, _foldPath:readable, _jsonParse:readable */
@@ -32,6 +32,7 @@ function _seekbar({
 		ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
 		audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
 		audiowizard: utils.CheckComponent('foo_audio_wizard', true),
+		jsplitter: window.Parent === 'foo_uie_jsplitter',
 		visualizer: true,
 	},
 	preset = {
@@ -119,6 +120,7 @@ function _seekbar({
 			ffprobe: '.\\profile\\binaries\\ffprobe\\ffprobe.exe',
 			audiowaveform: '.\\profile\\binaries\\audiowaveform\\audiowaveform.exe',
 			audiowizard: utils.CheckComponent('foo_audio_wizard', true),
+			jsplitter: window.Parent === 'foo_uie_jsplitter',
 			visualizer: true,
 		};
 		const defPreset = {
@@ -273,6 +275,7 @@ function _seekbar({
 	 * @property {string?} ffprobe - ffprobe path
 	 * @property {string?} audiowaveform - audiowaveform path
 	 * @property {boolean} audiowizard - foo_audio_wizard (set to false to disable it)
+	 * @property {boolean} jsplitter - foo_uie_jsplitter (set to false to disable it)
 	 * @property {boolean} visualizer - Internal visualizer (set to false to disable it)
 	 */
 	/** @type {Binaries} - Binaries paths */
@@ -336,7 +339,7 @@ function _seekbar({
 	this.preset = preset;
 	/**
 	 * @typedef {object} Analysis - Analysis related settings.
-	 * @property {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} binaryMode - Binary used. 'visualizer' is processed internally. 'audiowizard' is processed by foo_audio_wizard.
+	 * @property {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'|'jsplitter'} binaryMode - Binary used. 'visualizer' is processed internally. 'audiowizard' is processed by foo_audio_wizard. 'jsplitter' is processed by foo_uie_jsplitter
 	 * @property {number} resolution - Data points per second (every point has 2 values, i.e. + and -). On visualizer mode is adjusted per window width. Changing this setting requires re-analysis of files to apply, but previous data files will be compatible too (just with different number of points).
 	 * @property {'none'|'utf-8'|'utf-16'} compressionMode - Anything but 'none' applies compression to analysis data files. For comparison: utf-8 (~50% compression), utf-16 (~70%  compression) and 7zip (~80% compression).
 	 * @property {'library'|'all'|'none'} storeMode - Controls wether analysis data files are saved to disk, for library items only, any item or none.
@@ -475,6 +478,8 @@ function _seekbar({
 	const audiowizardModes = { rms_level: { key: 'rms', pos: 1 }, rms_peak: { key: 'rmsPeak', pos: 2 }, peak_level: { key: 'peak', pos: 3 }, min_sample: { key: 'sampleMin', pos: 4 }, max_sample: { key: 'sampleMax', pos: 5 } };
 	/** @type {number} - Used with foo_audio_wizard, analysis data length (+ time)*/
 	let audiowizardDataLen = Object.keys(audiowizardModes).length;
+	/** @type {{peak_level: { key:string, pos:number }}} - Used with foo_uie_jsplitter to unpack analysis data */
+	const jsplitterModes = { peak_level: { key: 'peak', pos: 1 } };
 	/** @type {{ min_sample: { key:string, pos:number }, max_sample: { key:string, pos:number }}} - Used with audiowaveform to unpack analysis data */
 	const audiowaveformModes = { min_sample: { key: '', pos: 1 }, max_sample: { key: '', pos: 2 } };
 	/** @type {{ffprobeList: string[], audiowaveformList: string[], audiowizardList: string[], ffprobe: RegExp, audiowaveform: RegExp, audiowizard: RegExp}} - Helpers to check for compatible files for different binaries */
@@ -483,10 +488,12 @@ function _seekbar({
 		ffprobe: null,
 		audiowaveformList: ['mp3', 'flac', 'wav', 'ogg', 'opus'],
 		audiowaveform: null,
-		audiowizardList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv', 'iso', 'dsf'],
-		audiowizard: null
+		audiowizardList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv', 'iso', 'dsf', 'zip', 'rar', '7z'],
+		audiowizard: null,
+		jsplitterList: ['2sf', 'aa', 'aac', 'ac3', 'ac4', 'aiff', 'ape', 'dff', 'dts', 'eac3', 'flac', 'hmi', 'la', 'lpcm', 'm4a', 'minincsf', 'mp2', 'mp3', 'mp4', 'mpc', 'ogg', 'ogx', 'opus', 'ra', 'snd', 'shn', 'spc', 'tak', 'tta', 'vgm', 'wav', 'wma', 'wv', 'iso', 'dsf', 'zip', 'rar', '7z'],
+		jsplitter: null
 	};
-	['ffprobe', 'audiowaveform', 'audiowizard'].forEach((key) => {
+	['ffprobe', 'audiowaveform', 'audiowizard', 'jsplitter'].forEach((key) => {
 		compatibleFiles[key] = new RegExp('\\.(?:' + compatibleFiles[key + 'List'].join('|') + ')$', 'i');
 	});
 	/** @type {Preset['waveMode'][]} - Supported wavemodes */
@@ -495,9 +502,10 @@ function _seekbar({
 	const waveModesWide = new Set(['soundcloud', 'soundcloudgradient', 'bars', 'halfbars', 'barsfilled', 'barsgradient', 'halfbarsfilled', 'waveformfilled', 'halfbarsgradient', 'tree', 'barsroundgradient']);
 	/** @type {Set<Preset['waveMode']>} - Wavemodes which use gradient painting */
 	const waveModesGrad = new Set(['soundcloudgradient', 'barsgradient', 'halfbarsgradient', 'processbargradient', 'processbargradientscaled', 'barsroundgradient']);
-	/** @type {{['ffprobe'|'audiowaveform'|'visualizer'|'audiowizard']: { name: string, type: string }}} - Info for every binary mode */
+	/** @type {{['ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'|'jsplitter']: { name: string, type: string }}} - Info for every binary mode */
 	const binariesInfo = {
 		audiowizard: { name: 'Audio-Wizard', type: 'Component' },
+		jsplitter: { name: 'JSplitter', type: 'JS-Host' },
 		ffprobe: { name: 'ffprobe', type: 'Binary' },
 		audiowaveform: { name: 'Audiowaveform', type: 'Binary' },
 		visualizer: { name: 'Visualizer', type: 'JS-Host' }
@@ -592,7 +600,7 @@ function _seekbar({
 		const config = {};
 		const notAllowed = new Set();
 		config.binaries = {};
-		if (bSkipPanelDependent) { notAllowed.add('visualizer').add('audiowizard'); }
+		if (bSkipPanelDependent) { notAllowed.add('visualizer').add('audiowizard').add('jsplitter'); }
 		for (const key in this.binaries) {
 			if (!notAllowed.has(key)) { config.binaries[key] = clone(this.binaries[key]); }
 		}
@@ -654,6 +662,7 @@ function _seekbar({
 			if (ext.startsWith('.ff.')) { schema = ffprobeModes; }
 			else if (ext.startsWith('.aw.')) { schema = audiowaveformModes; }
 			else if (ext.startsWith('.awz.')) { schema = audiowizardModes; }
+			else if (ext.startsWith('.jsp.')) { schema = jsplitterModes; }
 		}
 		return { data, schema };
 	};
@@ -894,6 +903,7 @@ function _seekbar({
 			const bAuWav = this.analysis.binaryMode === 'audiowaveform';
 			const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 			const bAuWiz = this.analysis.binaryMode === 'audiowizard';
+			const bJspl = this.analysis.binaryMode === 'jsplitter';
 			const bMulti = this.analysis.bMultiChannel;
 			// Uncompressed file -> Compressed UTF8 file -> Compressed UTF16 file -> Analyze
 			if (bFfProbe && !bMulti && _isFile(seekbarFile + '.ff.json')) {
@@ -950,6 +960,24 @@ function _seekbar({
 			} else if (bAuWiz && bMulti && _isFile(seekbarFile + '.awz.m.lz16')) {
 				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.awz.m.lz16'));
 				if (!this.verifyData(handle, seekbarFile + '.awz.m.lz16', bIsRetry)) { return; }
+			} else if (bJspl && !bMulti && _isFile(seekbarFile + '.jsp.json')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.jsp.json'));
+				if (!this.verifyData(handle, seekbarFile + '.jsp.json', bIsRetry)) { return; }
+			} else if (bJspl && !bMulti && _isFile(seekbarFile + '.jsp.lz')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.jsp.lz'));
+				if (!this.verifyData(handle, seekbarFile + '.jsp.lz', bIsRetry)) { return; }
+			} else if (bJspl && !bMulti && _isFile(seekbarFile + '.jsp.lz16')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.jsp.lz16'));
+				if (!this.verifyData(handle, seekbarFile + '.jsp.lz16', bIsRetry)) { return; }
+			} else if (bJspl && bMulti && _isFile(seekbarFile + '.jsp.m.json')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.jsp.m.json'));
+				if (!this.verifyData(handle, seekbarFile + '.jsp.m.json', bIsRetry)) { return; }
+			} else if (bJspl && bMulti && _isFile(seekbarFile + '.jsp.m.lz')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.jsp.m.lz'));
+				if (!this.verifyData(handle, seekbarFile + '.jsp.m.lz', bIsRetry)) { return; }
+			} else if (bJspl && bMulti && _isFile(seekbarFile + '.jsp.m.lz16')) {
+				({ data: this.current, schema: this.currentSchema } = this.loadDataFile(seekbarFile, '.jsp.m.lz16'));
+				if (!this.verifyData(handle, seekbarFile + '.jsp.m.lz16', bIsRetry)) { return; }
 			} else if (this.analysis.bAutoAnalysis && (this.isFile || this.isLink) && this.bBinaryFound) {
 				if (this.analysis.bVisualizerFallbackAnalysis && this.isAllowedFile) {
 					bFallbackMode.analysis = bFallbackMode.paint = true;
@@ -1002,6 +1030,7 @@ function _seekbar({
 		switch (this.analysis.binaryMode) {
 			case 'visualizer':
 			case 'audiowaveform':
+			case 'jsplitter':
 			case 'audiowizard': this.frames = this.current[0].length * 2; break;
 			default: this.frames = this.current[0].length; break;
 		}
@@ -1123,7 +1152,7 @@ function _seekbar({
 					// Normalize
 					if (max !== 0 && max !== 1) { this.current[c] = this.current[c].map((frame) => round(frame / max, 3)); }
 				}
-			} else if (!this.isFallback && !bFallbackMode.paint && this.analysis.binaryMode === 'audiowaveform') {
+			} else if (!this.isFallback && !bFallbackMode.paint && (this.analysis.binaryMode === 'audiowaveform' || this.analysis.binaryMode === 'jsplitter')) {
 				for (let c = 0; c < this.channels; c++) {
 					this.current[c] = this.current[c].flat();
 					// Calculate max values
@@ -1317,6 +1346,7 @@ function _seekbar({
 		// Same frames per channel
 		if ((new Set(this.current.map((channel) => channel.length))).size > 1) { return false; }
 		switch (this.analysis.binaryMode) {
+			case 'jsplitter':
 			case 'audiowizard': { // NOSONAR
 				return true;
 			}
@@ -1357,6 +1387,7 @@ function _seekbar({
 		if (!this.currentSchema) { return false; }
 		let key;
 		switch (this.analysis.binaryMode) {
+			case 'jsplitter': key = 'peak_level'; break;
 			case 'audiowizard': key = 'max_sample'; break;
 			case 'ffprobe': key = this.preset.analysisMode; break;
 		}
@@ -1427,9 +1458,9 @@ function _seekbar({
 			: '';
 		this.isFile = _isFile(path);
 		this.isLink = _isLink(path);
-		this.isAllowedFile = bNoVisual && (bNoSubSong || this.analysis.binaryMode === 'audiowizard') && !this.isZippedFile && bValidExt && !this.isLink;
+		this.isAllowedFile = bNoVisual && (bNoSubSong || ['jsplitter', 'audiowizard'].includes(this.analysis.binaryMode)) && !this.isZippedFile && bValidExt && !this.isLink;
 		this.isFallback = !this.isAllowedFile && this.analysis.bVisualizerFallback;
-		this.channels = this.analysis.bMultiChannel
+		this.channels = this.analysis.bMultiChannel && this.analysis.binaryMode !== 'jsplitter'
 			? Number(new FbTitleFormat('$info(channels)').EvalWithMetadb(handle))
 			: 1;
 	};
@@ -1445,7 +1476,7 @@ function _seekbar({
 	 * @returns {boolean}
 	*/
 	this.isCompatibleFileExtension = (handle = this.getHandle(), mode = this.analysis.binaryMode) => {
-		return mode === 'visualizer' || mode === 'audiowizard'
+		return mode === 'visualizer' || mode === 'audiowizard' || mode === 'jsplitter'
 			? true
 			: handle
 				? compatibleFiles[mode].test(handle.Path)
@@ -3168,16 +3199,17 @@ function _seekbar({
 	 * @name getExtension
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} binaryMode
+	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'|'jsplitter'} binaryMode
 	 * @param {'utf-16'|'utf-8'|'none'} compressionMode
-	 * @returns {'.aw.m.lz16'|'.aw.m.lz'|'.aw.m.json'|'.aw.lz16'|'.aw.lz'|'.aw.json'|'.ff.m.lz16'|'.ff.m.lz'|'.ff.m.json'|'.ff.lz16'|'.ff.lz'|'.ff.json'|'.awz.m.lz16'|'.awz.m.lz'|'.awz.m.json'|'.awz.lz16'|'.awz.lz'|'.awz.json'}
+	 * @returns {'.aw.m.lz16'|'.aw.m.lz'|'.aw.m.json'|'.aw.lz16'|'.aw.lz'|'.aw.json'|'.ff.m.lz16'|'.ff.m.lz'|'.ff.m.json'|'.ff.lz16'|'.ff.lz'|'.ff.json'|'.awz.m.lz16'|'.awz.m.lz'|'.awz.m.json'|'.awz.lz16'|'.awz.lz'|'.awz.json'|'.jsp.m.lz16'|'.jsp.m.lz'|'.jsp.m.json'|'.jsp.lz16'|'.jsp.lz'|'.jsp.json'}
 	*/
 	this.getExtension = (binaryMode = this.analysis.binaryMode, compressionMode = this.analysis.compressionMode) => {
 		let ext = '';
 		switch (binaryMode) {
 			case 'audiowaveform': ext += '.aw'; break;
 			case 'ffprobe': ext += '.ff'; break;
-			case 'audiowizard': ext += '.awz';
+			case 'audiowizard': ext += '.awz'; break;
+			case 'jsplitter': ext += '.jsp'; break;
 		};
 		if (this.analysis.bMultiChannel) { ext += '.m'; }
 		switch (compressionMode) {
@@ -3212,6 +3244,7 @@ function _seekbar({
 		const bAuWav = this.analysis.binaryMode === 'audiowaveform';
 		const bFfProbe = this.analysis.binaryMode === 'ffprobe';
 		const bAuWiz = this.analysis.binaryMode === 'audiowizard';
+		const bJspl = this.analysis.binaryMode === 'jsplitter';
 		const sampleRate = fb.TitleFormat('%SAMPLERATE%').EvalWithMetadb(handle);
 		if (this.isAllowedFile && !bFallbackMode.analysis && bAuWav) {
 			if (this.logging.bProfile) { profiler = new FbProfiler('audiowaveform'); }
@@ -3247,6 +3280,10 @@ function _seekbar({
 		} else if (this.isAllowedFile && !bFallbackMode.analysis && bAuWiz) {
 			if (this.logging.bProfile) { profiler = new FbProfiler('audiowizard'); }
 			prom = this.runAudioWizard;
+			promRes = this.analysis.resolution;
+		} else if (this.isAllowedFile && !bFallbackMode.analysis && bJspl) {
+			if (this.logging.bProfile) { profiler = new FbProfiler('jsplitter'); }
+			prom = this.runJsplitter;
 			promRes = this.analysis.resolution;
 		} else if (this.isFallback || bVisualizer || bFallbackMode.analysis) {
 			if (this.logging.bProfile) { profiler = new FbProfiler('visualizer'); }
@@ -3292,7 +3329,7 @@ function _seekbar({
 			const bDisplayVisualizer = this.isFallback || bVisualizer || bFallbackMode.analysis;
 			if (data && (Object.hasOwn(data, 'length') || Object.hasOwn(data, 'frames'))) {
 				if (bNotFallback) {
-					const type = bFfProbe ? 'ffprobe' : bAuWav ? 'audiowaveform' : bAuWiz ? 'audiowizard' : 'none';
+					const type = bFfProbe ? 'ffprobe' : bAuWav ? 'audiowaveform' : bAuWiz ? 'audiowizard' : bJspl ? 'jsplitter' : 'none';
 					const { processedData, schema } = this.processRawData(data, type, channels);
 					if (processedData.length) {
 						if (bSameHandle) { this.current = processedData; this.currentSchema = schema; }
@@ -3331,7 +3368,7 @@ function _seekbar({
 	 * @async
 	 * @memberof _seekbar
 	 * @param {object} data
-	 * @param {'ffprobe'|'audiowaveform'|'audiowizard'} type - Data type
+	 * @param {'ffprobe'|'audiowaveform'|'audiowizard'|'jsplitter'} type - Data type
 	 * @param {number} channels
 	 * @returns {Promise.<{ processedData: number[][][], schema: {[string]: {key: string, pos: number }}} >}
 	*/
@@ -3412,6 +3449,22 @@ function _seekbar({
 					}
 					break;
 				}
+				case 'jsplitter': {
+					const len = data.length;
+					if (len) {
+						processedData = Array.from({ length: channels }, () => []);
+						schema = jsplitterModes;
+						let i = 0;
+						let frame = [];
+						data.forEach((point) => {
+							if (i === 2) { i = 0; processedData[0].push(frame); frame = []; }
+							frame.push((i % 2 ? -1 : 1) * point);
+							i++;
+						});
+						if (frame.length) { processedData[0].push(frame); }
+					}
+					break;
+				}
 			}
 		}
 		return { processedData, schema };
@@ -3426,7 +3479,7 @@ function _seekbar({
 	 * @param {FbMetadbHandle[]|FbMetadbHandleList|FbMetadbHandle} handles - ffmpeg raw data frame
 	 * @param {number} resolution - Resolution in points per second [1-1000]
 	 * @param {boolean} bMultiChannel - Flag for multi-channel analysis (if false it's downmixed to mono)
-	 * @returns {Promise.<Boolean>} this.audioWizardData is filled on success
+	 * @returns {Promise.<Boolean>} this.internalAnalysisDataBuffer is filled on success
 	*/
 	this.runAudioWizard = (handles, resolution, bMultiChannel) => {
 		if (!this.binaries.audiowizard) { return Promise.resolve(false); }
@@ -3470,6 +3523,34 @@ function _seekbar({
 					return resolve(false);
 				}
 			});
+		});
+	};
+	/**
+	 * Extracts waveform data using JSplitter for given handles
+	 *
+	 * @property
+	 * @name runJsplitter
+	 * @kind method
+	 * @memberof _seekbar
+	 * @param {FbMetadbHandle[]|FbMetadbHandleList|FbMetadbHandle} handles - ffmpeg raw data frame
+	 * @param {number} resolution - Resolution in points per second [1-1000]
+	 * @returns {Promise.<Boolean>} this.internalAnalysisDataBuffer is filled on success
+	*/
+	this.runJsplitter = (handles, resolution) => {
+		if (!this.binaries.jsplitter) { return Promise.resolve(false); }
+		if (!Array.isArray(handles)) { handles = handles instanceof FbMetadbHandleList ? handles.Convert() : [handles]; }
+		return new Promise((resolve) => {
+			Promise.serial(
+				handles,
+				(h, i) => {
+					const len = Math.min(h.Length, 60000);
+					const res = Math.min(Math.ceil(len * resolution / 2), 65536);
+					return utils.GetWaveformAsync(h, res, 0, len).then((data) => {
+						this.internalAnalysisDataBuffer.push({ handle: handles[i], waveformData: [...data] });
+						return true;
+					}).catch(() => false);
+				}
+			).then((arr) => resolve(arr.every(Boolean)));
 		});
 	};
 	this.internalAnalysisDataBuffer = [];
@@ -3578,7 +3659,7 @@ function _seekbar({
 	 * @name getBinaryName
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} key
+	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'|'jsplitter'} key
 	 * @returns {string}
 	*/
 	this.getBinaryName = (key) => {
@@ -3591,7 +3672,7 @@ function _seekbar({
 	 * @name getBinaryType
 	 * @kind method
 	 * @memberof _seekbar
-	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'} key
+	 * @param {'ffprobe'|'audiowaveform'|'visualizer'|'audiowizard'|'jsplitter'} key
 	 * @returns {string}
 	*/
 	this.getBinaryType = (key) => {
