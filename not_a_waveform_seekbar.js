@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/26
+//25/09/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '5.1.0' }); }
 
@@ -28,7 +28,6 @@ include('main\\seekbar\\seekbar_xxx.js');
 /* global _seekbar:readable */
 include('main\\seekbar\\seekbar_xxx_menu.js');
 /* global settingsMenu:readable, onRbtnUpImportSettings:readable, Input:readable */
-include('helpers\\callbacks_xxx.js');
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
 include('main\\window\\window_xxx_dynamic_colors.js');
