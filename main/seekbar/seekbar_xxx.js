@@ -3348,7 +3348,7 @@ function _seekbar({
 			if (bSameHandle && this.preset.bAnimate && this.preset.bUseBPM) { this.bpmSteps(handle); }
 			// Console and paint
 			if (this.logging.bProfile) {
-				if (cmd) { profiler.Print('Retrieve volume levels. Compression ' + this.analysis.compressionMode + '.'); }
+				if (cmd || prom) { profiler.Print('File analyzed.'); }
 				else { profiler.Print('Visualizer.'); }
 			}
 			if (bSameHandle) {
@@ -3450,18 +3450,12 @@ function _seekbar({
 					break;
 				}
 				case 'jsplitter': {
-					const len = data.length;
-					if (len) {
+					if (data.length) {
 						processedData = Array.from({ length: channels }, () => []);
 						schema = jsplitterModes;
-						let i = 0;
-						let frame = [];
 						data.forEach((point) => {
-							if (i === 2) { i = 0; processedData[0].push(frame); frame = []; }
-							frame.push((i % 2 ? -1 : 1) * point);
-							i++;
+							processedData[0].push([point, -point]);
 						});
-						if (frame.length) { processedData[0].push(frame); }
 					}
 					break;
 				}

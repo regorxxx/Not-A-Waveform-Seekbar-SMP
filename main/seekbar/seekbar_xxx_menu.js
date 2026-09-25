@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/09/26
+//22/09/26
 
 /* exported settingsMenu, onRbtnUpImportSettings */
 
@@ -59,14 +59,13 @@ function settingsMenu(bClear = true) {
 	// Menus
 	{
 		const subMenu = menu.newMenu('Mode');
-		const options = this.getAvailableBinaries().map((key) => { return { name: this.getBinaryName(key), key }; });
+		const options = this.getAvailableBinaries().map((key) => { return { name: this.getBinaryName(key), key, type: this.getBinaryType(key) }; });
 		if (options.length) {
 			options.forEach((o) => {
 				const source = this.binaries[o.key];
 				const bFound = source === true || typeof source === 'string' && _isFile(source);
-				const bBundled = bFound && (typeof source !== 'string' || source.startsWith(folders.xxxRootName + 'helpers-external\\'));
 				menu.newEntry({
-					menuName: subMenu, entryText: o.name + (bFound ? (bBundled ? '\t(built-in)' : '\t(external)') : '\t(not found)'), func: () => {
+					menuName: subMenu, entryText: o.name + (bFound ? '\t(' + o.type + ')' : '\t(not found)'), func: () => {
 						this.updateConfig({ analysis: { binaryMode: o.key } });
 						this.saveProperties();
 					}, flags: bFound ? MF_STRING : MF_GRAYED
@@ -362,7 +361,7 @@ function settingsMenu(bClear = true) {
 		menu.newSeparator(subMenu);
 		menu.newEntry({
 			menuName: subMenu, entryText: 'Negative wave offset\t' + _b(this.ui.offSetNegAxis), func: () => {
-				const input = Input.number('real', this.ui.offSetNegAxis, 'Enter value:\n(number ≥-1 and ≤0)\n\nAt -1, the positive and negative part of the waveform will be aligned and for greater values the negative side will be displaced at right (proportional to the width setting).', 'Seekbar: negative wave offset', 0, [(n) => n >= -1 && n <= 1]);
+				const input = Input.number('real', this.ui.offSetNegAxis, 'Enter value:\n(number ≥-1 and ≤1)\n\nFor negative values the lower side of the waveform will be displaced to the left and for positive values to the right (proportional to width setting).', 'Seekbar: negative wave offset', 0, [(n) => n >= -1 && n <= 1]);
 				if (input === null) { return; }
 				this.updateConfig({ ui: { offSetNegAxis: input } });
 				this.saveProperties();
