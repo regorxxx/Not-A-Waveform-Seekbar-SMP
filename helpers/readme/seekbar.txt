@@ -1,17 +1,24 @@
-﻿UI panel which displays a seekbar, using a graphical representation of
-the track via audiowaveform or ffprobe. May be based on RMS, peak levels,
+﻿Interactive seekbar, using a graphical representation of the track with
+different analysis methods. May be based on RMS, peak levels, envelope,
 actual waveform or visualization presets.
 
-Mode:
+Mode: (from fastest to slowest)
 -----
-	• Audiowaveform: faster. Displays the waveform as is.
-
-	• ffprobe: slower. Multiple analysis options available (RMS, peak
-	 or RMS peaks).
-
 	• Visualizer: may be used to show a random animation which changes
 	according to BPM (if %BPM% tag exists). This mode does not analyze
-	tracks.
+	tracks. Built-in.
+
+	• JSplitter: fastest. Displays the waveform envelope (symmetric),
+	directly from foobar2000 audio output. Built-in (in JSplitter).
+
+	• Audio-Wizard: displays the waveform as is. Reads files directly
+	using foobar2000 handles. Requires third party component.
+
+	• Audiowaveform: displays the waveform as is. Requires third party
+	binary (pre-bundled).
+
+	• ffprobe: slowest. Multiple analysis options available (RMS, peak
+	 or RMS peaks). Requires third party binary (download apart).
 
 Analysis data:
 --------------
@@ -39,6 +46,8 @@ UI usage:
 ---------
 	• Fully configurable using the R. Click menu.
 
+	• L. Click to seek to position.
+
 	• Not recommended anything below 100 ms for refresh rate.
 
 	• Variable refresh rate may be used to automatically adjust it
@@ -63,11 +72,16 @@ Other UI usage:
 FAQ:
 ----
 • VU Meter smoothness:
-	◦ It's recommended to use ffprobe instead of Audiowaveform for
-	the VU Meter preset, since its analysis data may have higher
-	precision, resulting on a smoother animation.
+	◦ It's recommended to use ffprobe or Audio-Wizard instead of other
+	modes since the analysis data may have higher precision, resulting
+	on a smoother animation.
+
+	◦ Adjust refresh rate and resolution as needed.
 
 • Some tracks are not analyzed:
+	◦ Switch to a mode using audio directly from foobar2000 output
+	('JSplitter') or file handles ('Audio-Wizard').
+
 	◦ Check 'Mode\Show Compatible extensions'. The list of compatible
 	files depends on the mode (binary) used. You can convert them to
 	a compatible format, analyze them and delete the converted tracks
