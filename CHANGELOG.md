@@ -47,6 +47,7 @@
 - UI: expanded range to control offset for the negative part of the waveform (lower) from -1 to 1.
 - Console: minor improvements to analysis logging.
 - Readmes: greatly improved documentation with differences between all analysis modes and FAQ.
+- Helpers: replaced nircmd.exe with nircmdx.exe so all recycle bin errors are directly handled by console.
 ### Removed
 ### Fixed
 
