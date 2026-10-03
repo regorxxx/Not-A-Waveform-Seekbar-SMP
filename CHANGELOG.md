@@ -45,9 +45,11 @@
 ### Changed
 - Analysis: improved default File name TF format to better handle tags with '|' or non ASCII chars at end of folder names, so they match foobar2000 converter output paths. This is in fact a workaround to a [foobar2000 undesired behaviour](https://hydrogenaudio.org/index.php/topic,129623.0.html).
 - UI: expanded range to control offset for the negative part of the waveform (lower) from -1 to 1.
+- UI: minor improvements to some input popups requiring array of strings.
 - Console: minor improvements to analysis logging.
 - Readmes: greatly improved documentation with differences between all analysis modes and FAQ.
 - Helpers: replaced nircmd.exe with nircmdx.exe so all recycle bin errors are directly handled by console.
+- Helpers: create full folder tree on file/folder remove.
 ### Removed
 ### Fixed
 
