@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/26
+//27/10/26
 
 if (!window.ScriptInfo.PackageId) { window.DefineScript('Not-A-Waveform-Seekbar-SMP', { author: 'regorxxx', version: '5.1.0' }); }
 
@@ -42,7 +42,7 @@ if (_isFolder(folders.binaries + 'audiowaveform\\')) { _copyDependencies(['', 'a
 globProfiler.Print('helpers');
 
 let seekbarProperties = {
-	drawMode: ['- Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0, 1]] }],
+	drawMode: ['- Draw mode: GDI (0), D2D (1)', 1, { func: isInt, range: [[0, 1]] }],
 	binaries: ['Binaries paths',
 		JSON.stringify({
 			ffprobe: _foldPath(folders.binaries) + 'ffprobe\\ffprobe' + (soFeat.x64 ? '' : '_32') + '.exe',
