@@ -129,5 +129,5 @@ FAQ:
 	◦ Both waveform background colors must be disabled (-none-).
 
 	◦ Then background drawing will be skipped and panel may use
-	  pseudotransparency if the JS host supports it. Note it must
+	  pseudotransparency if the JS-Host supports it. Note it must
 	  be enabled at JSplitter/SMP configuration panel too.
